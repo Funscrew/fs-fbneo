@@ -10,8 +10,8 @@
 	extern struct VidOut VidOutDDraw;
 	extern struct VidOut VidOutD3D;
 	extern struct VidOut VidOutDDrawFX;
-	extern struct VidOut VidOutDX9;
-	extern struct VidOut VidOutDX9Alt;
+	extern struct VidOut VidOutDX9;           // Experimental
+	extern struct VidOut VidOutDX9Alt;        // DirectX9 Alt
 #elif defined (BUILD_MACOS)
 	extern struct VidOut VidOutMacOS;
 #elif defined (BUILD_PI)
