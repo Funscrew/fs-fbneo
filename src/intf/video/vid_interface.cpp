@@ -1,6 +1,9 @@
 // Video Output - (calls all the Vid Out plugins)
 #include "burner.h"
 
+// TEMP:
+
+
 #define DEFAULT_IMAGE_WIDTH (304)
 #define DEFAULT_IMAGE_HEIGHT (224)
 
@@ -26,6 +29,8 @@
 	extern struct VidOut VidOutD3D;
 #elif defined (BUILD_QT)
 	extern struct VidOut VidOutOGL;
+#elif defined (BUILD_OGL)
+extern struct VidOut VidOutOGL;
 #endif
 
 static struct VidOut *pVidOut[] = {
@@ -49,6 +54,8 @@ static struct VidOut *pVidOut[] = {
 	&VidOutD3D,
 #elif defined (BUILD_QT)
 	&VidOutOGL,
+#elif defined (BUILD_OGL)
+  &VidOutOGL
 #endif
 };
 

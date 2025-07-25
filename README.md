@@ -27,6 +27,18 @@ You need to put NASM.EXE somewhere in your PATH. You can put it in your Windows 
 
 **9)** Run '*fcadefbneo.exe*' that was compiled in the 'build' directory, or you can use '*Debug*' it from Visual Studio, it will launch it from that folder (debug version is '*fcadefbneod.exe*'
 
+
+## NOTES ON OpenGL ##
+I think that we need this lib:
+https://sourceforge.net/projects/glew/files/glew/1.5.4/
+--> We probably want the win32 version since we are doing and x86 build of the emulator at this time.
+
+- I put the 1.5.4 version into src/dep/libs/glew-1.5.4 --> The license says that it is OK to redistribute, so we will!
+- glew32*s*.lib is the static library, which is what we want, always!
+--> Because we are using the static library, the GLEW_STATIC preprocessor is also defined:
+--> https://stackoverflow.com/questions/49741322/glew-why-should-i-define-glew-static
+--> Some jibberjabber about this is located in 'glew.h:175' which is an odd place to mention it.  I'm just glad that I was able to find the solution without having to pester ChatGPT.  Probably because GLEW linking problems aren't a hot topic on DDG or google for that matter :p
+
 <strike>
 **12)** If you want to test a new detector, put it in '*build\detector*'.
 </strike>

@@ -318,6 +318,7 @@
     <ClInclude Include="..\..\src\intf\input\inp_keys.h" />
     <ClInclude Include="..\..\src\intf\input\win32\dinput_core.h" />
     <ClInclude Include="..\..\src\intf\interface.h" />
+    <ClInclude Include="..\..\src\intf\video\opengl\shader.h" />
     <ClInclude Include="..\..\src\intf\video\scalers\hq2xs.h" />
     <ClInclude Include="..\..\src\intf\video\scalers\hq3xs.h" />
     <ClInclude Include="..\..\src\intf\video\scalers\hq_shared32.h" />
@@ -575,6 +576,8 @@
     <ClCompile Include="..\..\src\intf\audio\win32\aud_wasapi.cpp" />
     <ClCompile Include="..\..\src\intf\audio\win32\aud_xaudio2.cpp" />
     <ClCompile Include="..\..\src\intf\cd\win32\cd_img.cpp" />
+    <ClCompile Include="..\..\src\intf\video\opengl\shader.cpp" />
+    <ClCompile Include="..\..\src\intf\video\opengl\vid_opengl.cpp" />
     <ClCompile Include="..\..\src\intf\video\win32\vid_detector.cpp" />
     <ClCompile Include="..\..\src\intf\video\win32\vid_dynrender.cpp" />
     <ClCompile Include="..\..\src\intf\video\win32\vid_effect.cpp" />
@@ -1551,9 +1554,9 @@
     <ClCompile>
       <WarningLevel>Level3</WarningLevel>
       <Optimization>Disabled</Optimization>
-      <AdditionalIncludeDirectories>..\..\src\dep\libs\CLI11;..\..\ggpo\src\include;..\..\src\generated;..\..\src\dep\libs\zlib;..\..\src\dep\libs\lib7z;..\..\src\dep\libs\libpng;..\..\src\dep\libs\lua;..\..\src\dep\generated;..\..\src\burner\win32\resource;..\..\src\burn\drv\taito;..\..\src\burn\drv\misc_post90s;..\..\src\burn\devices;..\..\src\intf\audio\win32;..\..\src\intf\audio;..\..\src\intf\;..\..\src\intf\video\scalers;..\..\src\intf\video\win32;..\..\src\intf\video;..\..\src\intf\perfcount\win32;..\..\src\intf\perfcount;..\..\src\intf\input\win32;..\..\src\intf\input;..\..\src\intf\cd\win32;..\..\src\intf\cd;..\..\src\intf;..\..\src\burner\win32;..\..\src\burn\snd;..\..\src\cpu;..\..\src\burner;..\..\src\burn;..\..\src\cpu\z80;..\..\src\cpu\sh2;..\..\src\cpu\s2650;..\..\src\cpu\nec;..\..\src\cpu\m6809;..\..\src\cpu\m6805;..\..\src\cpu\m6800;..\..\src\cpu\m6502;..\..\src\cpu\m68k;..\..\src\cpu\i8039;..\..\src\cpu\konami;..\..\src\cpu\hd6309;..\..\src\cpu\h6280;..\..\src\cpu\arm7;..\..\src\cpu\arm;..\..\src\cpu\g65816;..\..\src\cpu\spc700;..\..\src\cpu\i8051;..\..\src\cpu\tms32010;..\..\src\cpu\tms34;..\..\src\cpu\i8x41;..\..\src\burn\drv\sega;..\..\src\burn\drv\dataeast;..\..\src\burn\drv\konami;..\..\src\cpu\z180;..\..\src\burn\drv\irem;..\..\src\cpu\upd7810;..\..\src\cpu\v60;..\..\src\cpu\upd7725;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>..\..\src\dep\libs\CLI11;..\..\ggpo\src\include;..\..\src\generated;..\..\src\dep\libs\zlib;..\..\src\dep\libs\lib7z;..\..\src\dep\libs\libpng;..\..\src\dep\libs\lua;..\..\src\dep\generated;..\..\src\burner\win32\resource;..\..\src\burn\drv\taito;..\..\src\burn\drv\misc_post90s;..\..\src\burn\devices;..\..\src\intf\audio\win32;..\..\src\intf\audio;..\..\src\intf\;..\..\src\intf\video\scalers;..\..\src\intf\video\win32;..\..\src\intf\video;..\..\src\intf\perfcount\win32;..\..\src\intf\perfcount;..\..\src\intf\input\win32;..\..\src\intf\input;..\..\src\intf\cd\win32;..\..\src\intf\cd;..\..\src\intf;..\..\src\burner\win32;..\..\src\burn\snd;..\..\src\cpu;..\..\src\burner;..\..\src\burn;..\..\src\cpu\z80;..\..\src\cpu\sh2;..\..\src\cpu\s2650;..\..\src\cpu\nec;..\..\src\cpu\m6809;..\..\src\cpu\m6805;..\..\src\cpu\m6800;..\..\src\cpu\m6502;..\..\src\cpu\m68k;..\..\src\cpu\i8039;..\..\src\cpu\konami;..\..\src\cpu\hd6309;..\..\src\cpu\h6280;..\..\src\cpu\arm7;..\..\src\cpu\arm;..\..\src\cpu\g65816;..\..\src\cpu\spc700;..\..\src\cpu\i8051;..\..\src\cpu\tms32010;..\..\src\cpu\tms34;..\..\src\cpu\i8x41;..\..\src\burn\drv\sega;..\..\src\burn\drv\dataeast;..\..\src\burn\drv\konami;..\..\src\cpu\z180;..\..\src\burn\drv\irem;..\..\src\cpu\upd7810;..\..\src\cpu\v60;..\..\src\cpu\upd7725;..\..\src\dep\libs\glew-1.5.4\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <CompileAs>Default</CompileAs>
-      <PreprocessorDefinitions>BUILD_WIN32;FASTCALL;_DEBUG;FBNEO_DEBUG;LSB_FIRST;INLINE=__inline static;INCLUDE_AVI_RECORDING;INCLUDE_LIB_PNGH;C_INLINE=__inline;MAME_INLINE=__inline static;_CRT_SECURE_NO_WARNINGS;WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>BUILD_WIN32;FASTCALL;GLEW_STATIC;_DEBUG;FBNEO_DEBUG;LSB_FIRST;INLINE=__inline static;INCLUDE_AVI_RECORDING;INCLUDE_LIB_PNGH;C_INLINE=__inline;MAME_INLINE=__inline static;_CRT_SECURE_NO_WARNINGS;WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <PreprocessToFile>false</PreprocessToFile>
       <LanguageStandard_C>stdc17</LanguageStandard_C>
@@ -1561,9 +1564,9 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration);C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration);..\..\src\dep\libs\glew-1.5.4\lib;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <ShowProgress>NotSet</ShowProgress>
-      <AdditionalDependencies>ggpo.lib;user32.lib;gdi32.lib;comdlg32.lib;comctl32.lib;shell32.lib;winmm.lib;advapi32.lib;setupapi.lib;vfw32.lib;wininet.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>ggpo.lib;user32.lib;gdi32.lib;comdlg32.lib;comctl32.lib;shell32.lib;winmm.lib;advapi32.lib;setupapi.lib;vfw32.lib;wininet.lib;ws2_32.lib;opengl32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <SubSystem>Windows</SubSystem>
       <IgnoreSpecificDefaultLibraries>winspool.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib</IgnoreSpecificDefaultLibraries>
@@ -1623,8 +1626,8 @@ XCOPY "$(SolutionDir)$(Configuration)\$(TargetName)$(TargetExt)" "../../build" /
       <Optimization>MaxSpeed</Optimization>
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
-      <AdditionalIncludeDirectories>..\..\src\dep\libs\CLI11;..\..\ggpo\src\include;..\..\src\generated;..\..\src\dep\libs\zlib;..\..\src\dep\libs\lib7z;..\..\src\dep\libs\libpng;..\..\src\dep\libs\lua;..\..\src\dep\generated;..\..\src\burner\win32\resource;..\..\src\burn\drv\taito;..\..\src\burn\drv\misc_post90s;..\..\src\burn\devices;..\..\src\intf\audio\win32;..\..\src\intf\audio;..\..\src\intf\;..\..\src\intf\video\scalers;..\..\src\intf\video\win32;..\..\src\intf\video;..\..\src\intf\perfcount\win32;..\..\src\intf\perfcount;..\..\src\intf\input\win32;..\..\src\intf\input;..\..\src\intf\cd\win32;..\..\src\intf\cd;..\..\src\intf;..\..\src\burner\win32;..\..\src\burn\snd;..\..\src\cpu;..\..\src\burner;..\..\src\burn;..\..\src\cpu\z80;..\..\src\cpu\sh2;..\..\src\cpu\s2650;..\..\src\cpu\nec;..\..\src\cpu\m6809;..\..\src\cpu\m6805;..\..\src\cpu\m6800;..\..\src\cpu\m6502;..\..\src\cpu\m68k;..\..\src\cpu\i8039;..\..\src\cpu\konami;..\..\src\cpu\hd6309;..\..\src\cpu\h6280;..\..\src\cpu\arm7;..\..\src\cpu\arm;..\..\src\cpu\g65816;..\..\src\cpu\spc700;..\..\src\cpu\i8051;..\..\src\cpu\tms32010;..\..\src\cpu\tms34;..\..\src\cpu\i8x41;..\..\src\burn\drv\sega;..\..\src\burn\drv\dataeast;..\..\src\burn\drv\konami;..\..\src\cpu\z180;..\..\src\burn\drv\irem;..\..\src\cpu\upd7810;..\..\src\cpu\v60;..\..\src\cpu\upd7725;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
-      <PreprocessorDefinitions>BUILD_WIN32;FASTCALL;LSB_FIRST;INLINE=__inline static;INCLUDE_LIB_PNGH;INCLUDE_AVI_RECORDING;C_INLINE=__inline;MAME_INLINE=__inline static;_CRT_SECURE_NO_WARNINGS;WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>..\..\src\dep\libs\CLI11;..\..\ggpo\src\include;..\..\src\generated;..\..\src\dep\libs\zlib;..\..\src\dep\libs\lib7z;..\..\src\dep\libs\libpng;..\..\src\dep\libs\lua;..\..\src\dep\generated;..\..\src\burner\win32\resource;..\..\src\burn\drv\taito;..\..\src\burn\drv\misc_post90s;..\..\src\burn\devices;..\..\src\intf\audio\win32;..\..\src\intf\audio;..\..\src\intf\;..\..\src\intf\video\scalers;..\..\src\intf\video\win32;..\..\src\intf\video;..\..\src\intf\perfcount\win32;..\..\src\intf\perfcount;..\..\src\intf\input\win32;..\..\src\intf\input;..\..\src\intf\cd\win32;..\..\src\intf\cd;..\..\src\intf;..\..\src\burner\win32;..\..\src\burn\snd;..\..\src\cpu;..\..\src\burner;..\..\src\burn;..\..\src\cpu\z80;..\..\src\cpu\sh2;..\..\src\cpu\s2650;..\..\src\cpu\nec;..\..\src\cpu\m6809;..\..\src\cpu\m6805;..\..\src\cpu\m6800;..\..\src\cpu\m6502;..\..\src\cpu\m68k;..\..\src\cpu\i8039;..\..\src\cpu\konami;..\..\src\cpu\hd6309;..\..\src\cpu\h6280;..\..\src\cpu\arm7;..\..\src\cpu\arm;..\..\src\cpu\g65816;..\..\src\cpu\spc700;..\..\src\cpu\i8051;..\..\src\cpu\tms32010;..\..\src\cpu\tms34;..\..\src\cpu\i8x41;..\..\src\burn\drv\sega;..\..\src\burn\drv\dataeast;..\..\src\burn\drv\konami;..\..\src\cpu\z180;..\..\src\burn\drv\irem;..\..\src\cpu\upd7810;..\..\src\cpu\v60;..\..\src\cpu\upd7725;..\..\src\dep\libs\glew-1.5.4\include;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <PreprocessorDefinitions>BUILD_WIN32;FASTCALL;GLEW_STATIC;LSB_FIRST;INLINE=__inline static;INCLUDE_LIB_PNGH;INCLUDE_AVI_RECORDING;C_INLINE=__inline;MAME_INLINE=__inline static;_CRT_SECURE_NO_WARNINGS;WINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
@@ -1635,8 +1638,8 @@ XCOPY "$(SolutionDir)$(Configuration)\$(TargetName)$(TargetExt)" "../../build" /
       <GenerateDebugInformation>DebugFastLink</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>ggpo.lib;user32.lib;gdi32.lib;comdlg32.lib;comctl32.lib;shell32.lib;winmm.lib;advapi32.lib;setupapi.lib;vfw32.lib;wininet.lib;ws2_32.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration);C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86;..\..\src\dep\ggpo\lib;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
+      <AdditionalDependencies>ggpo.lib;user32.lib;gdi32.lib;comdlg32.lib;comctl32.lib;shell32.lib;winmm.lib;advapi32.lib;setupapi.lib;vfw32.lib;wininet.lib;ws2_32.lib;opengl32.lib;glew32s.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalLibraryDirectories>$(SolutionDir)$(Configuration);..\..\src\dep\libs\glew-1.5.4\lib;C:\Program Files (x86)\Microsoft DirectX SDK (June 2010)\Lib\x86;%(AdditionalLibraryDirectories)</AdditionalLibraryDirectories>
       <IgnoreAllDefaultLibraries>false</IgnoreAllDefaultLibraries>
       <IgnoreSpecificDefaultLibraries>winspool.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib</IgnoreSpecificDefaultLibraries>
       <SubSystem>Windows</SubSystem>

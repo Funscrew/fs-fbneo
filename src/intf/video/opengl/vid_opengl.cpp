@@ -209,4 +209,4 @@ static INT32 oglGetPluginSettings(InterfaceInfo* pInfo)
 
 struct VidOut VidOutOGL = { oglInit, oglExit, oglFrame, oglPaint,
                           oglImageSize, oglGetPluginSettings,
-                          ("ogl-video") };
+                          (L"ogl-video") };

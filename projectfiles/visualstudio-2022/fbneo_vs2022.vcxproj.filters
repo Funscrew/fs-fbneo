@@ -341,64 +341,64 @@
       <Filter>burner\win32</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\interface.h">
-      <Filter>interfaces</Filter>
+      <Filter>intf</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\audio\aud_dsp.h">
-      <Filter>interfaces\audio</Filter>
+      <Filter>intf\audio</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\audio\lowpass2.h">
-      <Filter>interfaces\audio</Filter>
+      <Filter>intf\audio</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\audio\win32\dsound_core.h">
-      <Filter>interfaces\audio\win32</Filter>
+      <Filter>intf\audio\win32</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\cd\cd_interface.h">
-      <Filter>interfaces\cd</Filter>
+      <Filter>intf\cd</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\input\inp_keys.h">
-      <Filter>interfaces\input</Filter>
+      <Filter>intf\input</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\input\win32\dinput_core.h">
-      <Filter>interfaces\input\win32</Filter>
+      <Filter>intf\input\win32</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\video\vid_softfx.h">
-      <Filter>interfaces\video</Filter>
+      <Filter>intf\video</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\video\vid_support.h">
-      <Filter>interfaces\video</Filter>
+      <Filter>intf\video</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\video\win32\ddraw_core.h">
-      <Filter>interfaces\video\win32</Filter>
+      <Filter>intf\video\win32</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\video\win32\rgb_pattern.h">
-      <Filter>interfaces\video\win32</Filter>
+      <Filter>intf\video\win32</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\video\win32\vid_directx_support.h">
-      <Filter>interfaces\video\win32</Filter>
+      <Filter>intf\video\win32</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\video\scalers\hq_shared32.h">
-      <Filter>interfaces\video\scalers</Filter>
+      <Filter>intf\video\scalers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\video\scalers\hq2xs.h">
-      <Filter>interfaces\video\scalers</Filter>
+      <Filter>intf\video\scalers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\video\scalers\hq3xs.h">
-      <Filter>interfaces\video\scalers</Filter>
+      <Filter>intf\video\scalers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\video\scalers\interp.h">
-      <Filter>interfaces\video\scalers</Filter>
+      <Filter>intf\video\scalers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\video\scalers\scale2x.h">
-      <Filter>interfaces\video\scalers</Filter>
+      <Filter>intf\video\scalers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\video\scalers\scale2x_vc.h">
-      <Filter>interfaces\video\scalers</Filter>
+      <Filter>intf\video\scalers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\video\scalers\scale3x.h">
-      <Filter>interfaces\video\scalers</Filter>
+      <Filter>intf\video\scalers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\video\scalers\xbr.h">
-      <Filter>interfaces\video\scalers</Filter>
+      <Filter>intf\video\scalers</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\dep\libs\zlib\crc32.h">
       <Filter>libs\zlib</Filter>
@@ -809,25 +809,25 @@
       <Filter>Burn\snd</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\video\win32\stb_image.h">
-      <Filter>interfaces\video\win32</Filter>
+      <Filter>intf\video\win32</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\video\win32\vid_detector.h">
-      <Filter>interfaces\video\win32</Filter>
+      <Filter>intf\video\win32</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\video\win32\vid_dynrender.h">
-      <Filter>interfaces\video\win32</Filter>
+      <Filter>intf\video\win32</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\video\win32\vid_effect.h">
-      <Filter>interfaces\video\win32</Filter>
+      <Filter>intf\video\win32</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\video\win32\vid_font.h">
-      <Filter>interfaces\video\win32</Filter>
+      <Filter>intf\video\win32</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\video\win32\vid_memorybuffer.h">
-      <Filter>interfaces\video\win32</Filter>
+      <Filter>intf\video\win32</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\intf\video\win32\vid_overlay.h">
-      <Filter>interfaces\video\win32</Filter>
+      <Filter>intf\video\win32</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\burn\drv\capcom\cps.h">
       <Filter>Burn\drv\capcom</Filter>
@@ -957,6 +957,9 @@
     </ClInclude>
     <ClInclude Include="..\..\src\dep\libs\CLI11\CLI11.hpp">
       <Filter>libs\CLI11</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\intf\video\opengl\shader.h">
+      <Filter>intf\video\opengl</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
@@ -2419,91 +2422,91 @@
       <Filter>burner\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\audio\aud_dsp.cpp">
-      <Filter>interfaces\audio</Filter>
+      <Filter>intf\audio</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\audio\aud_interface.cpp">
-      <Filter>interfaces\audio</Filter>
+      <Filter>intf\audio</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\audio\lowpass2.cpp">
-      <Filter>interfaces\audio</Filter>
+      <Filter>intf\audio</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\audio\win32\aud_dsound3.cpp">
-      <Filter>interfaces\audio\win32</Filter>
+      <Filter>intf\audio\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\audio\win32\dsound_core.cpp">
-      <Filter>interfaces\audio\win32</Filter>
+      <Filter>intf\audio\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\cd\cd_interface.cpp">
-      <Filter>interfaces\cd</Filter>
+      <Filter>intf\cd</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\input\inp_interface.cpp">
-      <Filter>interfaces\input</Filter>
+      <Filter>intf\input</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\input\win32\dinput_core.cpp">
-      <Filter>interfaces\input\win32</Filter>
+      <Filter>intf\input\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\input\win32\inp_dinput.cpp">
-      <Filter>interfaces\input\win32</Filter>
+      <Filter>intf\input\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\video\vid_interface.cpp">
-      <Filter>interfaces\video</Filter>
+      <Filter>intf\video</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\video\vid_softfx.cpp">
-      <Filter>interfaces\video</Filter>
+      <Filter>intf\video</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\video\vid_support.cpp">
-      <Filter>interfaces\video</Filter>
+      <Filter>intf\video</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\video\win32\ddraw_core.cpp">
-      <Filter>interfaces\video\win32</Filter>
+      <Filter>intf\video\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\video\win32\vid_d3d.cpp">
-      <Filter>interfaces\video\win32</Filter>
+      <Filter>intf\video\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\video\win32\vid_ddraw.cpp">
-      <Filter>interfaces\video\win32</Filter>
+      <Filter>intf\video\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\video\win32\vid_ddrawfx.cpp">
-      <Filter>interfaces\video\win32</Filter>
+      <Filter>intf\video\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\video\win32\vid_directx_support.cpp">
-      <Filter>interfaces\video\win32</Filter>
+      <Filter>intf\video\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\video\win32\vid_directx9.cpp">
-      <Filter>interfaces\video\win32</Filter>
+      <Filter>intf\video\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\video\scalers\2xpm.cpp">
-      <Filter>interfaces\video\scalers</Filter>
+      <Filter>intf\video\scalers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\video\scalers\2xsai.cpp">
-      <Filter>interfaces\video\scalers</Filter>
+      <Filter>intf\video\scalers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\video\scalers\ddt3x.cpp">
-      <Filter>interfaces\video\scalers</Filter>
+      <Filter>intf\video\scalers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\video\scalers\epx.cpp">
-      <Filter>interfaces\video\scalers</Filter>
+      <Filter>intf\video\scalers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\video\scalers\hq_shared32.cpp">
-      <Filter>interfaces\video\scalers</Filter>
+      <Filter>intf\video\scalers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\video\scalers\hq2xs.cpp">
-      <Filter>interfaces\video\scalers</Filter>
+      <Filter>intf\video\scalers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\video\scalers\hq2xs_16.cpp">
-      <Filter>interfaces\video\scalers</Filter>
+      <Filter>intf\video\scalers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\video\scalers\hq3xs.cpp">
-      <Filter>interfaces\video\scalers</Filter>
+      <Filter>intf\video\scalers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\video\scalers\xbr.cpp">
-      <Filter>interfaces\video\scalers</Filter>
+      <Filter>intf\video\scalers</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\perfcount\prf_interface.cpp">
-      <Filter>interfaces\perf</Filter>
+      <Filter>intf\perf</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\perfcount\win32\prf_performance_counter.cpp">
-      <Filter>interfaces\perf\win32</Filter>
+      <Filter>intf\perf\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\dep\libs\zlib\adler32.c">
       <Filter>libs\zlib</Filter>
@@ -3913,7 +3916,7 @@
       <Filter>libs\7z</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\interface.cpp">
-      <Filter>interfaces\video</Filter>
+      <Filter>intf\video</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\burner\win32\avi.cpp">
       <Filter>burner\win32</Filter>
@@ -3958,7 +3961,7 @@
       <Filter>Burn\drv\taito</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\cd\win32\cd_img.cpp">
-      <Filter>interfaces\cd\win32</Filter>
+      <Filter>intf\cd\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\cpu\z80\z80ctc.cpp">
       <Filter>cpus\z80</Filter>
@@ -4033,22 +4036,22 @@
       <Filter>Burn\snd</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\video\win32\vid_detector.cpp">
-      <Filter>interfaces\video\win32</Filter>
+      <Filter>intf\video\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\video\win32\vid_dynrender.cpp">
-      <Filter>interfaces\video\win32</Filter>
+      <Filter>intf\video\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\video\win32\vid_effect.cpp">
-      <Filter>interfaces\video\win32</Filter>
+      <Filter>intf\video\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\video\win32\vid_font.cpp">
-      <Filter>interfaces\video\win32</Filter>
+      <Filter>intf\video\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\video\win32\vid_memorybuffer.cpp">
-      <Filter>interfaces\video\win32</Filter>
+      <Filter>intf\video\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\video\win32\vid_overlay.cpp">
-      <Filter>interfaces\video\win32</Filter>
+      <Filter>intf\video\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\burner\win32\fbn_ggpo.cpp">
       <Filter>burner\win32</Filter>
@@ -4126,7 +4129,7 @@
       <Filter>Burn\drv\megadrive</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\audio\win32\aud_xaudio2.cpp">
-      <Filter>interfaces\audio\win32</Filter>
+      <Filter>intf\audio\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\burner\win32\luaconsole.cpp">
       <Filter>burner\win32</Filter>
@@ -4234,10 +4237,16 @@
       <Filter>cpus</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\intf\audio\win32\aud_wasapi.cpp">
-      <Filter>interfaces\audio\win32</Filter>
+      <Filter>intf\audio\win32</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\generated\m68kops.c">
       <Filter>generated</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\intf\video\opengl\shader.cpp">
+      <Filter>intf\video\opengl</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\intf\video\opengl\vid_opengl.cpp">
+      <Filter>intf\video\opengl</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -4321,45 +4330,6 @@
     </Filter>
     <Filter Include="burner\win32">
       <UniqueIdentifier>{d8cca765-414c-4d1f-b707-0fcce579f63f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="interfaces">
-      <UniqueIdentifier>{bd20b85f-0fc1-48e9-9300-5512f0b48d32}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="interfaces\audio">
-      <UniqueIdentifier>{7b46bc32-63cc-4d07-926c-6521e5e3734a}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="interfaces\audio\win32">
-      <UniqueIdentifier>{b75322ce-7e8d-4ebb-9417-0c21fc7ca996}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="interfaces\cd">
-      <UniqueIdentifier>{30900300-8680-4de9-949f-e5730750f260}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="interfaces\cd\win32">
-      <UniqueIdentifier>{38ae639d-7a13-425e-8992-6ccfb38ebff9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="interfaces\input">
-      <UniqueIdentifier>{abfb0299-f5db-42c5-9d0e-8d4f719efcc5}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="interfaces\input\win32">
-      <UniqueIdentifier>{bb4aef48-9a9c-44da-95e9-c62d6e6b026f}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="interfaces\video">
-      <UniqueIdentifier>{258c1673-602b-41dc-b192-6ef0c1c21e99}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="interfaces\video\win32">
-      <UniqueIdentifier>{3c2c0e48-8c0b-4de2-bc84-a6b2ad8dd9df}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="interfaces\video\win32\resource">
-      <UniqueIdentifier>{c1631cbb-48f8-4fcd-9b5d-f978c18d97e1}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="interfaces\video\scalers">
-      <UniqueIdentifier>{216c2b82-0104-409a-98c6-c6368441eb39}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="interfaces\perf">
-      <UniqueIdentifier>{7bc6d679-0841-4db6-b257-8070b73933b9}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="interfaces\perf\win32">
-      <UniqueIdentifier>{7caa12c1-b685-4ae8-964a-dc887e3b0aa4}</UniqueIdentifier>
     </Filter>
     <Filter Include="libs">
       <UniqueIdentifier>{fb178d63-1f81-415e-8cd7-a48079015c54}</UniqueIdentifier>
@@ -4484,31 +4454,73 @@
     <Filter Include="libs\CLI11">
       <UniqueIdentifier>{76d31bba-49c0-4fdf-84f5-9d7686244899}</UniqueIdentifier>
     </Filter>
+    <Filter Include="intf">
+      <UniqueIdentifier>{bd20b85f-0fc1-48e9-9300-5512f0b48d32}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="intf\audio">
+      <UniqueIdentifier>{7b46bc32-63cc-4d07-926c-6521e5e3734a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="intf\audio\win32">
+      <UniqueIdentifier>{b75322ce-7e8d-4ebb-9417-0c21fc7ca996}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="intf\cd">
+      <UniqueIdentifier>{30900300-8680-4de9-949f-e5730750f260}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="intf\cd\win32">
+      <UniqueIdentifier>{38ae639d-7a13-425e-8992-6ccfb38ebff9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="intf\input">
+      <UniqueIdentifier>{abfb0299-f5db-42c5-9d0e-8d4f719efcc5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="intf\input\win32">
+      <UniqueIdentifier>{bb4aef48-9a9c-44da-95e9-c62d6e6b026f}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="intf\video">
+      <UniqueIdentifier>{258c1673-602b-41dc-b192-6ef0c1c21e99}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="intf\video\win32">
+      <UniqueIdentifier>{3c2c0e48-8c0b-4de2-bc84-a6b2ad8dd9df}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="intf\video\win32\resource">
+      <UniqueIdentifier>{c1631cbb-48f8-4fcd-9b5d-f978c18d97e1}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="intf\video\scalers">
+      <UniqueIdentifier>{216c2b82-0104-409a-98c6-c6368441eb39}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="intf\perf">
+      <UniqueIdentifier>{7bc6d679-0841-4db6-b257-8070b73933b9}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="intf\perf\win32">
+      <UniqueIdentifier>{7caa12c1-b685-4ae8-964a-dc887e3b0aa4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="intf\video\opengl">
+      <UniqueIdentifier>{0fffba54-fa7d-4d83-bf70-b558f4bd035a}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\burn\burn_sound_a.asm">
       <Filter>Burn</Filter>
     </None>
     <None Include="..\..\src\intf\video\win32\resource\bicubic.fx">
-      <Filter>interfaces\video\win32\resource</Filter>
+      <Filter>intf\video\win32\resource</Filter>
     </None>
     <None Include="..\..\src\intf\video\scalers\2xsaimmx.asm">
-      <Filter>interfaces\video\scalers</Filter>
+      <Filter>intf\video\scalers</Filter>
     </None>
     <None Include="..\..\src\intf\video\scalers\eagle_fm.asm">
-      <Filter>interfaces\video\scalers</Filter>
+      <Filter>intf\video\scalers</Filter>
     </None>
     <None Include="..\..\src\intf\video\scalers\hq2x32.asm">
-      <Filter>interfaces\video\scalers</Filter>
+      <Filter>intf\video\scalers</Filter>
     </None>
     <None Include="..\..\src\intf\video\scalers\hq3x32.asm">
-      <Filter>interfaces\video\scalers</Filter>
+      <Filter>intf\video\scalers</Filter>
     </None>
     <None Include="..\..\src\intf\video\scalers\hq4x32.asm">
-      <Filter>interfaces\video\scalers</Filter>
+      <Filter>intf\video\scalers</Filter>
     </None>
     <None Include="..\..\src\intf\video\scalers\superscale.asm">
-      <Filter>interfaces\video\scalers</Filter>
+      <Filter>intf\video\scalers</Filter>
     </None>
     <None Include="..\..\src\dep\libs\zlib\zconf.h.in">
       <Filter>libs\zlib</Filter>
