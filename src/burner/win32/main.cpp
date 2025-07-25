@@ -790,7 +790,7 @@ static int AppInit()
   ComputeGammaLUT();
 
   if (VidSelect(nVidSelect)) {
-    nVidSelect = 4;
+    nVidSelect = 0;
     VidSelect(nVidSelect);
   }
 

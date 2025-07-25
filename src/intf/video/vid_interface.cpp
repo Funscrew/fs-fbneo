@@ -2,6 +2,7 @@
 #include "burner.h"
 
 // TEMP:
+#define BUILD_OGL
 
 
 #define DEFAULT_IMAGE_WIDTH (304)
@@ -10,11 +11,7 @@
 #define ENABLE_PREVIEW
 
 #if defined (BUILD_WIN32)
-	extern struct VidOut VidOutDDraw;
-	extern struct VidOut VidOutD3D;
-	extern struct VidOut VidOutDDrawFX;
-	extern struct VidOut VidOutDX9;           // Experimental
-	extern struct VidOut VidOutDX9Alt;        // DirectX9 Alt
+extern struct VidOut VidOutOGL;
 #elif defined (BUILD_MACOS)
 	extern struct VidOut VidOutMacOS;
 #elif defined (BUILD_PI)
@@ -30,16 +27,11 @@
 #elif defined (BUILD_QT)
 	extern struct VidOut VidOutOGL;
 #elif defined (BUILD_OGL)
-extern struct VidOut VidOutOGL;
 #endif
 
 static struct VidOut *pVidOut[] = {
 #if defined (BUILD_WIN32)
-	&VidOutDDraw,
-	&VidOutD3D,
-	&VidOutDDrawFX,
-	&VidOutDX9,
-	&VidOutDX9Alt,
+  &VidOutOGL
 #elif defined (BUILD_MACOS)
 	&VidOutMacOS,
 #elif defined (BUILD_PI)
@@ -70,7 +62,7 @@ static InterfaceInfo VidInfo = { NULL, NULL, NULL };
 // set SoftFX DDraw blitter as default for 64-bit builds (in case user doesn't have DX redistributable installed)
 UINT32 nVidSelect = 2;					// Which video output is selected
 #else
-UINT32 nVidSelect = 4;					// Which video output is selected
+UINT32 nVidSelect = 0;					// Which video output is selected
 #endif
 #else
 UINT32 nVidSelect = 0;					// Which video output is selected

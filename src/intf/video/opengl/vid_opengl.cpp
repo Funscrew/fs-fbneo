@@ -15,6 +15,7 @@ static int videoHeight = 0;
 static unsigned char *videoMemory = nullptr;
 static bool rotateVideo = false;
 
+// NOTE: This is always false, and evaluated once, so we should just remove it!
 static bool isGlewInitialized = false;
 static GLuint vao, texture;
 
@@ -84,7 +85,16 @@ static INT32 oglInit()
 {
     if (!isGlewInitialized) {
         glewExperimental = true;
-        glewInit();
+
+        auto gi = glewInit();
+        if (gi != GLEW_OK) {
+          if (gi == GLEW_ERROR_NO_GL_VERSION) {
+            throw std::exception("Missing GL version!");
+          }
+          else {
+            throw std::exception("glewInit failed!");
+          }
+        }
     }
 
     stockShader = new Shader(defaultVertexShader, defaultFragmentShader, true);
