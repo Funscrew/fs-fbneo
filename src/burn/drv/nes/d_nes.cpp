@@ -19327,7 +19327,7 @@ struct BurnDriver BurnDrvnes_ghostbustersii = {
 };
 
 static struct BurnRomInfo nes_ghostsngoblinsRomDesc[] = {
-	{ "Ghosts'n Goblins (USA).nes",          131088, 0x983dd1de, BRF_ESS | BRF_PRG },
+	{ "Ghosts'n Goblins (USA)(1986)(Capcom).nes",          131088, 0x87ed54aa, BRF_ESS | BRF_PRG },
 };
 
 STD_ROM_PICK(nes_ghostsngoblins)
@@ -22088,10 +22088,10 @@ STD_ROM_PICK(nes_kinni)
 STD_ROM_FN(nes_kinni)
 
 struct BurnDriver BurnDrvnes_kinni = {
-	"nes_kinni", NULL, NULL, NULL, "1985",
+	"nes_kinni", "nes_muscle", NULL, NULL, "1985",
 	"Kinnikuman - Muscle Tag Match (Japan)\0", NULL, "Bandai", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING, 2, HARDWARE_NES, GBF_MISC, 0,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_NES, GBF_MISC, 0,
 	NESGetZipName, nes_kinniRomInfo, nes_kinniRomName, NULL, NULL, NULL, NULL, NESInputInfo, NESDIPInfo,
 	NESInit, NESExit, NESFrame, NESDraw, NESScan, &NESRecalc, 0x40,
 	SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT
@@ -24732,17 +24732,18 @@ struct BurnDriver BurnDrvnes_nekkestrbas = {
 	SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT
 };
 
-// Nekketsu! Street Basket: Ganbare Dunk Heroes (T-Eng)
+// Nekketsu! Street Basket - Go for it, Dunk Heroes (Hack, English v1.2)
+// https://www.romhacking.net/translations/1548/
 static struct BurnRomInfo nes_nekkestrbasenRomDesc[] = {
-	{ "Nekketsu! Street Basket - Ganbare Dunk Heroes (T-Eng).nes",          262160, 0xa4680ca5, BRF_ESS | BRF_PRG },
+	{ "Nekketsu! Street Basket - Go for it, Dunk Heroes T-Eng v1.2 (2013)(Farid).nes",          262160, 0xa4680ca5, BRF_ESS | BRF_PRG },
 };
 
 STD_ROM_PICK(nes_nekkestrbasen)
 STD_ROM_FN(nes_nekkestrbasen)
 
 struct BurnDriver BurnDrvnes_nekkestrbasen = {
-	"nes_nekkestrbasen", "nes_nekkestrbas", NULL, NULL, "2010",
-	"Nekketsu! Street Basket - Ganbare Dunk Heroes (T-Eng)\0", NULL, "Farid", "Miscellaneous",
+	"nes_nekkestrbasen", "nes_nekkestrbas", NULL, NULL, "2013",
+	"Nekketsu! Street Basket - Go for it, Dunk Heroes (Hack, English v1.2)\0", NULL, "hack (Farid)", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HACK, 2, HARDWARE_NES, GBF_MISC, 0,
 	NESGetZipName, nes_nekkestrbasenRomInfo, nes_nekkestrbasenRomName, NULL, NULL, NULL, NULL, NESInputInfo, NESDIPInfo,
@@ -32290,6 +32291,28 @@ struct BurnDriver BurnDrvnes_zunousengal = {
 	SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT
 };
 
+// ----------
+// Extra Roms
+// ----------
+
+// Hoops (USA)
+static struct BurnRomInfo nes_hoopsRomDesc[] = {
+	{ "Hoops (USA)(1989)(Jaleco).nes",          262160, 0x08f89bb0, BRF_ESS | BRF_PRG },
+};
+
+STD_ROM_PICK(nes_hoops)
+STD_ROM_FN(nes_hoops)
+
+struct BurnDriver BurnDrvnes_hoops = {
+	"nes_hoops", NULL, NULL, NULL, "1989",
+	"Hoops (USA)\0", NULL, "Jaleco", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING, 2, HARDWARE_NES, GBF_SPORTSMISC, 0,
+	NESGetZipName, nes_hoopsRomInfo, nes_hoopsRomName, NULL, NULL, NULL, NULL, NESInputInfo, NESDIPInfo,
+	NESInit, NESExit, NESFrame, NESDraw, NESScan, &NESRecalc, 0x40,
+	SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT
+};
+
 // Kart Fighter (Unl)
 
 static struct BurnRomInfo nes_kartfighterRomDesc[] = {
@@ -32305,6 +32328,42 @@ struct BurnDriver BurnDrvnes_kartfighter = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 1, HARDWARE_NES, GBF_VSFIGHT, 0,
 	NESGetZipName, nes_kartfighterRomInfo, nes_kartfighterRomName, NULL, NULL, NULL, NULL, NESInputInfo, NESDIPInfo,
+	NESInit, NESExit, NESFrame, NESDraw, NESScan, &NESRecalc, 0x40,
+	SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT
+};
+
+//Little League Baseball - Championship Series (USA)
+static struct BurnRomInfo nes_littleleagueRomDesc[] = {
+	{ "Little League Baseball - Championship Series (1990)(SNK)(USA).nes",          262160, 0x7905ae67, BRF_ESS | BRF_PRG },
+};
+
+STD_ROM_PICK(nes_littleleague)
+STD_ROM_FN(nes_littleleague)
+
+struct BurnDriver BurnDrvnes_littleleague = {
+	"nes_littleleague", NULL, NULL, NULL, "1990",
+	"Little League Baseball - Championship Series (USA)\0", NULL, "SNK", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING, 2, HARDWARE_NES, GBF_SPORTSMISC, 0,
+	NESGetZipName, nes_littleleagueRomInfo, nes_littleleagueRomName, NULL, NULL, NULL, NULL, NESInputInfo, NESDIPInfo,
+	NESInit, NESExit, NESFrame, NESDraw, NESScan, &NESRecalc, 0x40,
+	SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT
+};
+
+// Moero!! Junior Basket: Two on Two (Japan)
+static struct BurnRomInfo nes_moerojrbasRomDesc[] = {
+	{ "Moero!! Junior Basket - Two on Two (Japan)(1988)(Jaleco).nes",          262160, 0x6ed22c25, BRF_ESS | BRF_PRG },
+};
+
+STD_ROM_PICK(nes_moerojrbas)
+STD_ROM_FN(nes_moerojrbas)
+
+struct BurnDriver BurnDrvnes_moerojrbas = {
+	"nes_moerojrbas", "nes_hoops", NULL, NULL, "1988",
+	"Moero!! Junior Basket: Two on Two (Japan)\0", NULL, "Jaleco", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_CLONE, 2, HARDWARE_NES, GBF_SPORTSMISC, 0,
+	NESGetZipName, nes_moerojrbasRomInfo, nes_moerojrbasRomName, NULL, NULL, NULL, NULL, NESInputInfo, NESDIPInfo,
 	NESInit, NESExit, NESFrame, NESDraw, NESScan, &NESRecalc, 0x40,
 	SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT
 };
@@ -32345,9 +32404,9 @@ struct BurnDriver BurnDrvnes_hackmatch = {
 	SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT
 };
 
-// Pacman CE
+// Pac-Man Championship Edition (World)
 static struct BurnRomInfo nes_pacmanceRomDesc[] = {
-	{ "pacman-ce (2020).nes",          262160, 0xb86c09af, BRF_ESS | BRF_PRG },
+	{ "Pac-Man CE (2020)(Namco - BNEI).nes",          262160, 0xb86c09af, BRF_ESS | BRF_PRG },
 };
 
 STD_ROM_PICK(nes_pacmance)
@@ -32355,11 +32414,29 @@ STD_ROM_FN(nes_pacmance)
 
 struct BurnDriver BurnDrvnes_pacmance = {
 	"nes_pacmance", NULL, NULL, NULL, "2020",
-	"Pac-Man Championship Edition\0", NULL, "Namco - BNEI", "Miscellaneous",
+	"Pac-Man Championship Edition (World)\0", NULL, "Namco - BNEI", "Miscellaneous",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING, 2, HARDWARE_NES, GBF_MAZE | GBF_ACTION, 0,
 	NESGetZipName, nes_pacmanceRomInfo, nes_pacmanceRomName, NULL, NULL, NULL, NULL, NESInputInfo, NESDIPInfo,
 	NESInit, NESExit, NESFrame, NESDraw, NESScan, &NESRecalc, 0x40,
+	SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT
+};
+
+// Mischief Castle (HB)
+static struct BurnRomInfo nes_miscastleRomDesc[] = {
+	{ "Mischief Castle (2024)(kn56k).nes",          524304, 0x39fc03f4, BRF_ESS | BRF_PRG },
+};
+
+STD_ROM_PICK(nes_miscastle)
+STD_ROM_FN(nes_miscastle)
+
+struct BurnDriver BurnDrvnes_miscastle = {
+	"nes_miscastle", NULL, NULL, NULL, "2024",
+	"Mischief Castle (HB)\0", NULL, "kn56k", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_HOMEBREW, 2, HARDWARE_NES, GBF_PLATFORM, 0,
+	NESGetZipName, nes_miscastleRomInfo, nes_miscastleRomName, NULL, NULL, NULL, NULL, NESInputInfo, NESDIPInfo,
+	NES4ScoreInit, NESExit, NESFrame, NESDraw, NESScan, &NESRecalc, 0x40,
 	SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT
 };
 
@@ -32433,6 +32510,24 @@ struct BurnDriver BurnDrvnes_contrafntg = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HACK, 2, HARDWARE_NES, GBF_RUNGUN | GBF_PLATFORM, 0,
 	NESGetZipName, nes_contrafntgRomInfo, nes_contrafntgRomName, NULL, NULL, NULL, NULL, NESInputInfo, NESDIPInfo,
+	NESInit, NESExit, NESFrame, NESDraw, NESScan, &NESRecalc, 0x40,
+	SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT
+};
+
+// Zed and Zee (HB)
+static struct BurnRomInfo nes_zednzeeRomDesc[] = {
+	{ "Zed and Zee (2024)(Tengen Games).nes",          524304, 0x506fb3fb, BRF_ESS | BRF_PRG },
+};
+
+STD_ROM_PICK(nes_zednzee)
+STD_ROM_FN(nes_zednzee)
+
+struct BurnDriver BurnDrvnes_zednzee = {
+	"nes_zednzee", NULL, NULL, NULL, "2024",
+	"Zed and Zee (HB)\0", NULL, "Tengen Games", "Miscellaneous",
+	NULL, NULL, NULL, NULL,
+	BDF_GAME_WORKING | BDF_HOMEBREW, 2, HARDWARE_NES, GBF_PLATFORM, 0,
+	NESGetZipName, nes_zednzeeRomInfo, nes_zednzeeRomName, NULL, NULL, NULL, NULL, NESInputInfo, NESDIPInfo,
 	NESInit, NESExit, NESFrame, NESDraw, NESScan, &NESRecalc, 0x40,
 	SCREEN_WIDTH, SCREEN_HEIGHT, SCREEN_WIDTH, SCREEN_HEIGHT
 };
