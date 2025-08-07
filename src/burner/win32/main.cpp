@@ -393,7 +393,7 @@ void CloseDebugLog()
 int OpenDebugLog()
 {
 #if defined (FBNEO_DEBUG)
-#if defined (APP_DEBUG_LOG)
+  #if defined (APP_DEBUG_LOG)
 
   time_t nTime;
   tm* tmTime;
@@ -1104,9 +1104,7 @@ int ProcessCommandLine(LPSTR lpCmdLine)
   {
     directOps.romName = romName;
     int res = HandleDirectConnection(directOps);
-    if (res != 0) {
-      return res;
-    }
+    return res;
   }
   else if (load->parsed())
   {
@@ -1117,14 +1115,14 @@ int ProcessCommandLine(LPSTR lpCmdLine)
       throw std::exception("File does not exist!");
     }
     if (ends_with(loadPath, ".fs")) {
-      if (!BurnStateLoad(ANSIToTCHAR(loadPath.data(), NULL, NULL), 1, &DrvInitCallback)) {
-        return 1;
+      if (BurnStateLoad(ANSIToTCHAR(loadPath.data(), NULL, NULL), 1, &DrvInitCallback)) {
+        return 0;
       }
     }
     else if (ends_with(loadPath, ".fr"))
     {
-      if (!StartReplay(ANSIToTCHAR(loadPath.data(), NULL, NULL))) {
-        return 1;
+      if (StartReplay(ANSIToTCHAR(loadPath.data(), NULL, NULL))) {
+        return 0;
       }
     }
     else {
@@ -1160,6 +1158,8 @@ int ProcessCommandLine(LPSTR lpCmdLine)
     }
   }
 
+
+    // NOTE: This is an arbitrary place to pick it back up :)
   POST_INITIALISE_MESSAGE;
 
   if (!nVidFullscreen) {
