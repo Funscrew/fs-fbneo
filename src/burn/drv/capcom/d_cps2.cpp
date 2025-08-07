@@ -3037,31 +3037,31 @@ STD_ROM_PICK(Vampjr1)
 STD_ROM_FN(Vampjr1)
 
 static struct BurnRomInfo VampjbhRomDesc[] = {
-	{ "vamjbh.03a",		0x080000, 0x55c1be82, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "vamjbh.04b",		0x080000, 0x9c12017e, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "vamj.05a",		0x080000, 0x6c497e92, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "vamj.06a",		0x080000, 0xf1bbecb6, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "vamj.07a",		0x080000, 0x1067ad84, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "vamj.08a",		0x080000, 0x4b89f41f, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "vamj.09a",		0x080000, 0xfc0a4aac, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "vamj.10a",		0x080000, 0x9270c26b, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "vamjbh.03",        0x080000, 0x55c1be82, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "vamjbh.04",        0x080000, 0x9c12017e, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "vamj.05a",         0x080000, 0x6c497e92, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "vamj.06a",         0x080000, 0xf1bbecb6, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "vamj.07a",         0x080000, 0x1067ad84, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "vamj.08a",         0x080000, 0x4b89f41f, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "vamj.09a",         0x080000, 0xfc0a4aac, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "vamj.10a",         0x080000, 0x9270c26b, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
 
-	{ "vam.13m",		0x400000, 0xc51baf99, CPS2_GFX | BRF_GRA },
-	{ "vam.15m",		0x400000, 0x3ce83c77, CPS2_GFX | BRF_GRA },
-	{ "vam.17m",		0x400000, 0x4f2408e0, CPS2_GFX | BRF_GRA },
-	{ "vam.19m",		0x400000, 0x9ff60250, CPS2_GFX | BRF_GRA },
-	{ "vam.14m",		0x100000, 0xbd87243c, CPS2_GFX | BRF_GRA },
-	{ "vam.16m",		0x100000, 0xafec855f, CPS2_GFX | BRF_GRA },
-	{ "vam.18m",		0x100000, 0x3a033625, CPS2_GFX | BRF_GRA },
-	{ "vam.20m",		0x100000, 0x2bff6a89, CPS2_GFX | BRF_GRA },
+	{ "vam.13m",          0x400000, 0xc51baf99, CPS2_GFX | BRF_GRA },
+	{ "vam.15m",          0x400000, 0x3ce83c77, CPS2_GFX | BRF_GRA },
+	{ "vam.17m",          0x400000, 0x4f2408e0, CPS2_GFX | BRF_GRA },
+	{ "vam.19m",          0x400000, 0x9ff60250, CPS2_GFX | BRF_GRA },
+	{ "vam.14m",          0x100000, 0xbd87243c, CPS2_GFX | BRF_GRA },
+	{ "vam.16m",          0x100000, 0xafec855f, CPS2_GFX | BRF_GRA },
+	{ "vam.18m",          0x100000, 0x3a033625, CPS2_GFX | BRF_GRA },
+	{ "vam.20m",          0x100000, 0x2bff6a89, CPS2_GFX | BRF_GRA },
 
-	{ "vam.01",			0x020000, 0x64b685d5, CPS2_PRG_Z80 | BRF_ESS | BRF_PRG },
-	{ "vam.02",			0x020000, 0xcf7c97c7, CPS2_PRG_Z80 | BRF_ESS | BRF_PRG },
+	{ "vam.01",           0x020000, 0x64b685d5, CPS2_PRG_Z80 | BRF_ESS | BRF_PRG },
+	{ "vam.02",           0x020000, 0xcf7c97c7, CPS2_PRG_Z80 | BRF_ESS | BRF_PRG },
 
-	{ "vam.11m",		0x200000, 0x4a39deb2, CPS2_QSND | BRF_SND },
-	{ "vam.12m",		0x200000, 0x1a3e5c03, CPS2_QSND | BRF_SND },
+	{ "vam.11m",         0x200000, 0x4a39deb2, CPS2_QSND | BRF_SND },
+	{ "vam.12m",         0x200000, 0x1a3e5c03, CPS2_QSND | BRF_SND },
 
-	{ "vampj.key",		0x000014, 0x8418cc6f, CPS2_ENCRYPTION_KEY },
+	{ "vampj.key",       0x000014, 0x8418cc6f, CPS2_ENCRYPTION_KEY },
 };
 
 STD_ROM_PICK(Vampjbh)
@@ -4426,41 +4426,6 @@ static struct BurnRomInfo Mshvsfu1RomDesc[] = {
 
 STD_ROM_PICK(Mshvsfu1)
 STD_ROM_FN(Mshvsfu1)
-
-// Marvel Super Heroes Vs. Street Fighter (Coop, Hack)
-// Modified by bankbank
-// 20240628
-
-static struct BurnRomInfo MshvsfcphRomDesc[] = {
-	{ "mvsecph.03f",	0x080000, 0x086f345a, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "mvse.04f",		0x080000, 0x6ef799f9, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "mvs.05a",		0x080000, 0x1a5de0cb, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "mvs.06a",		0x080000, 0x959f3030, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "mvs.07b",		0x080000, 0x7f915bdb, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "mvs.08a",		0x080000, 0xc2813884, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "mvs.09b",		0x080000, 0x3ba08818, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "mvs.10b",		0x080000, 0xcf0dba98, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-
-	{ "mvs.13m",		0x400000, 0x29b05fd9, CPS2_GFX | BRF_GRA },
-	{ "mvs.15m",		0x400000, 0xfaddccf1, CPS2_GFX | BRF_GRA },
-	{ "mvs.17m",		0x400000, 0x97aaf4c7, CPS2_GFX | BRF_GRA },
-	{ "mvs.19m",		0x400000, 0xcb70e915, CPS2_GFX | BRF_GRA },
-	{ "mvs.14m",		0x400000, 0xb3b1972d, CPS2_GFX | BRF_GRA },
-	{ "mvs.16m",		0x400000, 0x08aadb5d, CPS2_GFX | BRF_GRA },
-	{ "mvs.18m",		0x400000, 0xc1228b35, CPS2_GFX | BRF_GRA },
-	{ "mvs.20m",		0x400000, 0x366cc6c2, CPS2_GFX | BRF_GRA },
-
-	{ "mvs.01",			0x020000, 0x68252324, CPS2_PRG_Z80 | BRF_ESS | BRF_PRG },
-	{ "mvs.02",			0x020000, 0xb34e773d, CPS2_PRG_Z80 | BRF_ESS | BRF_PRG },
-
-	{ "mvs.11m",		0x400000, 0x86219770, CPS2_QSND | BRF_SND },
-	{ "mvs.12m",		0x400000, 0xf2fd7f68, CPS2_QSND | BRF_SND },
-	
-	{ "mshvsf.key",		0x000014, 0x64660867, CPS2_ENCRYPTION_KEY },
-};
-
-STD_ROM_PICK(Mshvsfcph)
-STD_ROM_FN(Mshvsfcph)
 
 static struct BurnRomInfo MsvsfbhRomDesc[] = {
 	{ "mvsbh.03i",      0x080000, 0x54ecd389, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
@@ -9760,7 +9725,7 @@ struct BurnDriver BurnDrvCpsCsclubjy = {
 
 struct BurnDriver BurnDrvCpsCybots = {
 	"cybots", NULL, NULL, NULL, "1995",
-	"Cyberbots: Fullmetal Madness (950424 Euro)\0", NULL, "Capcom", "CPS2",
+	"Cyberbots - fullmetal madness (950424 Euro)\0", NULL, "Capcom", "CPS2",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_HISCORE_SUPPORTED, 2, HARDWARE_CAPCOM_CPS2, GBF_VSFIGHT, 0,
 	NULL, CybotsRomInfo, CybotsRomName, NULL, NULL, NULL, NULL, CybotsInputInfo, NULL,
@@ -9770,7 +9735,7 @@ struct BurnDriver BurnDrvCpsCybots = {
 
 struct BurnDriver BurnDrvCpsCybotsj = {
 	"cybotsj", "cybots", NULL, NULL, "1995",
-	"Cyberbots: Fullmetal Madness (950420 Japan)\0", NULL, "Capcom", "CPS2",
+	"Cyberbots - fullmetal madness (950420 Japan)\0", NULL, "Capcom", "CPS2",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_CAPCOM_CPS2, GBF_VSFIGHT, 0,
 	NULL, CybotsjRomInfo, CybotsjRomName, NULL, NULL, NULL, NULL, CybotsInputInfo, NULL,
@@ -9780,7 +9745,7 @@ struct BurnDriver BurnDrvCpsCybotsj = {
 
 struct BurnDriver BurnDrvCpsCybotsu = {
 	"cybotsu", "cybots", NULL, NULL, "1995",
-	"Cyberbots: Fullmetal Madness (950424 USA)\0", NULL, "Capcom", "CPS2",
+	"Cyberbots - fullmetal madness (950424 USA)\0", NULL, "Capcom", "CPS2",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_CAPCOM_CPS2, GBF_VSFIGHT, 0,
 	NULL, CybotsuRomInfo, CybotsuRomName, NULL, NULL, NULL, NULL, CybotsInputInfo, NULL,
@@ -9790,7 +9755,7 @@ struct BurnDriver BurnDrvCpsCybotsu = {
 
 struct BurnDriver BurnDrvCpsCybotsam = {
 	"cybotsam", "cybots", NULL, NULL, "2022",
-	"Cyberbots: Fullmetal Madness (Access Mod, Hack)\0", NULL, "hack", "CPS2",
+	"Cyberbots - fullmetal madness Unlock Hack\0", NULL, "hack", "CPS2",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HACK | BDF_HISCORE_SUPPORTED, 2, HARDWARE_CAPCOM_CPS2, GBF_VSFIGHT, 0,
 	NULL, CybotsamRomInfo, CybotsamRomName, NULL, NULL, NULL, NULL, CybotsInputInfo, NULL,
@@ -9800,10 +9765,10 @@ struct BurnDriver BurnDrvCpsCybotsam = {
 
 struct BurnDriver BurnDrvCpsCybotsbh = {
 	"cybotsbh", "cybots", NULL, NULL, "2023",
-	"Cyberbots: Fullmetal Madness (Boss Hack)\0", NULL, "hack", "CPS2",
+	"Cyberbots - fullmetal madness (Boss Hack)\0", NULL, "hack", "CPS2",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HACK | BDF_HISCORE_SUPPORTED, 2, HARDWARE_CAPCOM_CPS2, GBF_VSFIGHT, 0,
-	NULL, CybotsbhRomInfo, CybotsbhRomName, NULL, NULL, NULL, NULL, CybotsInputInfo, NULL,
+	NULL, CybotsbhRomInfo, CybotsbhRomName, NULL, NULL, NULL, NULL, Cps2FightingInputInfo, NULL,
 	Cps2Init, DrvExit, Cps2Frame, CpsRedraw, CpsAreaScan,
 	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
 };
@@ -10664,16 +10629,6 @@ struct BurnDriver BurnDrvCpsMshvsfu1 = {
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HISCORE_SUPPORTED, 2, HARDWARE_CAPCOM_CPS2, GBF_VSFIGHT, FBF_SF,
 	NULL, Mshvsfu1RomInfo, Mshvsfu1RomName, NULL, NULL, NULL, NULL, Cps2FightingInputInfo, NULL,
-	Cps2Init, DrvExit, Cps2Frame, CpsRedraw, CpsAreaScan,
-	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
-};
-
-struct BurnDriver BurnDrvCpsMshvsfcph = {
-	"mshvsfcph", "mshvsf", NULL, NULL, "2024",
-	"Marvel Super Heroes Vs. Street Fighter (Coop, Hack)\0", NULL, "hack (bankbank)", "CPS2",
-	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_HACK | BDF_HISCORE_SUPPORTED, 2, HARDWARE_CAPCOM_CPS2, GBF_VSFIGHT, FBF_SF,
-	NULL, MshvsfcphRomInfo, MshvsfcphRomName, NULL, NULL, NULL, NULL, Cps2FightingInputInfo, NULL,
 	Cps2Init, DrvExit, Cps2Frame, CpsRedraw, CpsAreaScan,
 	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
 };
@@ -13116,39 +13071,6 @@ static struct BurnRomInfo RingdstdRomDesc[] = {
 STD_ROM_PICK(Ringdstd)
 STD_ROM_FN(Ringdstd)
 
-// Street Fighter II': Prime (Ver 0.56, Hack)
-// Modified by Zero800
-// https://sf2prime.github.io/
-
-static struct BurnRomInfo Sf2primeRomDesc[] = {
-	{ "sf2pr.03",		0x080000, 0x4178d05d, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "sf2pr.04",		0x080000, 0x09e9f78b, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "sf2pr.05",		0x080000, 0xb020c201, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "sf2pr.06",		0x080000, 0x0b960430, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-#if 0
-	// All filled with 0xFF.
-	{ "sf2pr.07",		0x080000, 0x504bf849, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "sf2pr.08",		0x080000, 0x504bf849, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "sf2pr.09",		0x080000, 0x504bf849, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "sf2pr.10",		0x080000, 0x504bf849, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-#endif
-
-	{ "sf2pr.13m",		0x800000, 0xfb796487, CPS2_GFX | BRF_GRA },
-	{ "sf2pr.15m",		0x800000, 0xf5419f30, CPS2_GFX | BRF_GRA },
-	{ "sf2pr.17m",		0x800000, 0x8266131f, CPS2_GFX | BRF_GRA },
-	{ "sf2pr.19m",		0x800000, 0xd6cc4ba6, CPS2_GFX | BRF_GRA },
-
-	{ "sf2pr.01",		0x020000, 0x6ce233a7, CPS2_PRG_Z80 | BRF_ESS | BRF_PRG },
-	{ "sf2pr.02",		0x020000, 0x2d8794aa, CPS2_PRG_Z80 | BRF_ESS | BRF_PRG },
-
-	{ "sf2pr.11m",		0x800000, 0xcd8b2d9f, CPS2_QSND | BRF_SND },
-
-	{ "phoenix.key",	0x000014, 0x2cf772b0, CPS2_ENCRYPTION_KEY },
-};
-
-STD_ROM_PICK(Sf2prime)
-STD_ROM_FN(Sf2prime)
-
 static struct BurnRomInfo SfadRomDesc[] = {
 	{ "sfzed.03d",     0x080000, 0xa1a54827, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
 	{ "sfz.04b",       0x080000, 0x8b73b0e5, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
@@ -13717,14 +13639,14 @@ STD_ROM_PICK(Vsavd)
 STD_ROM_FN(Vsavd)
 
 static struct BurnRomInfo VsavaeRomDesc[] = {
-	{ "vm3ae.03d",       0x080000, 0x0c0a7bcc, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "vm3ae.04d",       0x080000, 0x77092ed5, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "vm3ae.03d",       0x080000, 0xa5ae2f72, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "vm3e.04d",        0x080000, 0x21b40ea2, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
 	{ "vm3.05a",         0x080000, 0x4118e00f, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
 	{ "vm3.06a",         0x080000, 0x2f4fd3a9, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
 	{ "vm3.07b",         0x080000, 0xcbda91b8, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
 	{ "vm3.08a",         0x080000, 0x6ca47259, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
 	{ "vm3.09b",         0x080000, 0xf4a339e3, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
-	{ "vm3ae.10b",       0x080000, 0x1a3c517c, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
+	{ "vm3ae.10b",       0x080000, 0xadb43778, CPS2_PRG_68K | BRF_ESS | BRF_PRG },
 
 	{ "vm3.13m",         0x400000, 0xfd8a11eb, CPS2_GFX | BRF_GRA },
 	{ "vm3.15m",         0x400000, 0xdd1e7d4e, CPS2_GFX | BRF_GRA },
@@ -14044,7 +13966,7 @@ struct BurnDriver BurnDrvCpsCsclub1d = {
 
 struct BurnDriver BurnDrvCpsCybotsud = {
 	"cybotsud", "cybots", NULL, NULL, "1995",
-	"Cyberbots: Fullmetal Madness (950424 USA Phoenix Edition)\0", NULL, "bootleg", "CPS2",
+	"Cyberbots - fullmetal madness (950424 USA Phoenix Edition)\0", NULL, "bootleg", "CPS2",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG | BDF_HISCORE_SUPPORTED, 2, HARDWARE_CAPCOM_CPS2, GBF_VSFIGHT, 0,
 	NULL, CybotsudRomInfo, CybotsudRomName, NULL, NULL, NULL, NULL, CybotsInputInfo, NULL,
@@ -14054,7 +13976,7 @@ struct BurnDriver BurnDrvCpsCybotsud = {
 
 struct BurnDriver BurnDrvCpsCybotsjd = {
 	"cybotsjd", "cybots", NULL, NULL, "1995",
-	"Cyberbots: Fullmetal Madness (Japan 950424) (decrypted bootleg)\0", NULL, "bootleg", "CPS2",
+	"Cyberbots - fullmetal madness (Japan 950424) (decrypted bootleg)\0", NULL, "bootleg", "CPS2",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_BOOTLEG | BDF_HISCORE_SUPPORTED, 2, HARDWARE_CAPCOM_CPS2, GBF_VSFIGHT, 0,
 	NULL, CybotsjdRomInfo, CybotsjdRomName, NULL, NULL, NULL, NULL, CybotsInputInfo, NULL,
@@ -14282,16 +14204,6 @@ struct BurnDriver BurnDrvCpsRingdstd = {
 	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
 };
 
-struct BurnDriver BurnDrvCpsSf2prime = {
-	"sf2prime", "hsf2", NULL, NULL, "2025",
-	"Street Fighter II': Prime (Ver 0.56, Hack)\0", NULL, "hack (Zero800)", "CPS2",
-	NULL, NULL, NULL, NULL,
-	BDF_GAME_WORKING | BDF_CLONE | BDF_HACK | BDF_HISCORE_SUPPORTED, 2, HARDWARE_CAPCOM_CPS2, GBF_VSFIGHT, FBF_SF,
-	NULL, Sf2primeRomInfo, Sf2primeRomName, NULL, NULL, NULL, NULL, Cps2FightingInputInfo, NULL,
-	Ssf2tPhoenixInit, DrvExit, Cps2Frame, CpsRedraw, CpsAreaScan,
-	&CpsRecalcPal, 0x1000, 384, 224, 4, 3
-};
-
 struct BurnDriver BurnDrvCpsSfad = {
 	"sfad", "sfa", NULL, NULL, "1995",
 	"Street Fighter Alpha - warriors' dreams (950727 Euro Phoenix Edition)\0", NULL, "bootleg", "CPS2",
@@ -14404,7 +14316,7 @@ struct BurnDriver BurnDrvCpsSfz3jr2d = {
 
 struct BurnDriver BurnDrvCpsSfz3mix13 = {
 	"sfz3mix13", "sfa3", NULL, NULL, "2022",
-	"Street Fighter Zero 3 Mix (v0.13, Hack)\0", NULL, "hack (Zero800)", "CPS2",
+	"Street Fighter Zero 3 Mix (v0.13)\0", NULL, "hack", "CPS2",
 	NULL, NULL, NULL, NULL,
 	BDF_GAME_WORKING | BDF_CLONE | BDF_HACK, 2, HARDWARE_CAPCOM_CPS2, GBF_VSFIGHT, FBF_SF,
 	NULL, Sfz3mix13RomInfo, Sfz3mix13RomName, NULL, NULL, NULL, NULL, Cps2FightingInputInfo, NULL,
