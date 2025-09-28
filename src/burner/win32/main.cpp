@@ -1153,7 +1153,7 @@ int ProcessCommandLine(LPSTR lpCmdLine)
       bQuietLoading = false;
 
       if (i == nBurnDrvCount) {
-        FBAPopupAddText(PUF_TEXT_DEFAULT, MAKEINTRESOURCE(IDS_ERR_UI_NOSUPPORT), romName.data(), _T(APP_TITLE));
+        FBAPopupAddText(PUF_TEXT_DEFAULT, MAKEINTRESOURCE(IDS_ERR_UI_NOSUPPORT), ANSIToTCHAR(romName.data(), NULL, NULL), _T(APP_TITLE));
         FBAPopupDisplay(PUF_TYPE_ERROR);
         return 1;
       }

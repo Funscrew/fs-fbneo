@@ -359,8 +359,8 @@ GGPOErrorCode Peer2PeerBackend::SyncInput(void* values, int isize, int playerCou
   return GGPO_OK;
 }
 
-GGPOErrorCode
-Peer2PeerBackend::IncrementFrame(void)
+// ----------------------------------------------------------------------------------------------------------
+GGPOErrorCode Peer2PeerBackend::IncrementFrame(void)
 {
   Log("End of frame (%d)...\n", _sync.GetFrameCount());
   _sync.IncrementFrame();
@@ -371,6 +371,7 @@ Peer2PeerBackend::IncrementFrame(void)
 }
 
 
+// ----------------------------------------------------------------------------------------------------------
 void
 Peer2PeerBackend::PollSyncEvents(void)
 {
@@ -560,22 +561,11 @@ bool Peer2PeerBackend::GetNetworkStats(GGPONetworkStats* stats, PlayerID playerI
 }
 
 // --------------------------------------------------------------------------------------------------------------
-// REFACTOR: This can just be a true/false type function.....
-uint32 Peer2PeerBackend::SetFrameDelay(int delay) {
+void Peer2PeerBackend::SetFrameDelay(int delay) {
   _sync.SetFrameDelay(_playerIndex, delay);
-
-  return GGPO_OK;
-  //int playerIndex;
-  //GGPOErrorCode result;
-
-  //result = PlayerHandleToQueue(player, &playerIndex);
-  //if (!GGPO_SUCCEEDED(result)) {
-  //	return result;
-  //}
-  //_sync.SetFrameDelay(playerIndex, delay);
-  //return GGPO_OK;
 }
 
+// --------------------------------------------------------------------------------------------------------------
 GGPOErrorCode
 Peer2PeerBackend::SetDisconnectTimeout(int timeout)
 {

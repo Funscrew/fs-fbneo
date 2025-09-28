@@ -164,7 +164,6 @@ Sync::AdjustSimulation(int seek_to)
     */
    ResetPrediction(_curFrame);
    for (int i = 0; i < count; i++) {
-     // NOTE 2: This is where the _framecount would probably be updated to the correct version.
       _callbacks.rollback_frame(0);
    }
 

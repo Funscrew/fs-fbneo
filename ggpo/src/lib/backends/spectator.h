@@ -31,7 +31,7 @@ public:
    virtual GGPOErrorCode IncrementFrame(void);
    virtual GGPOErrorCode DisconnectPlayer(PlayerID handle) { return GGPO_ERRORCODE_UNSUPPORTED; }
    virtual bool GetNetworkStats(GGPONetworkStats *stats, PlayerID handle) { return false ; }
-   virtual GGPOErrorCode SetFrameDelay(PlayerID player, int delay) { return GGPO_ERRORCODE_UNSUPPORTED; }
+   virtual void SetFrameDelay(int delay) { throw std::exception("NOT SUPPORTED"); }
    virtual GGPOErrorCode SetDisconnectTimeout(int timeout) { return GGPO_ERRORCODE_UNSUPPORTED; }
    virtual GGPOErrorCode SetDisconnectNotifyStart(int timeout) { return GGPO_ERRORCODE_UNSUPPORTED; }
 
