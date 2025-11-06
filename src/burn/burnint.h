@@ -62,9 +62,17 @@ struct BurnDriver {
 	INT32 (*GetSampleName)(char** pszName, UINT32 i, INT32 nAka);	// Function to get the possible names for each sample
 	INT32 (*GetInputInfo)(struct BurnInputInfo* pii, UINT32 i);	// Function to get the input info for the game
 	INT32 (*GetDIPInfo)(struct BurnDIPInfo* pdi, UINT32 i);		// Function to get the input info for the game
-	INT32 (*Init)(); INT32 (*Exit)(); INT32 (*Frame)(); INT32 (*Redraw)(); INT32 (*AreaScan)(INT32 nAction, INT32* pnMin);
-	UINT8* pRecalcPal; UINT32 nPaletteEntries;										// Set to 1 if the palette needs to be fully re-calculated
-	INT32 nWidth, nHeight; INT32 nXAspect, nYAspect;					// Screen width, height, x/y aspect
+	INT32 (*Init)(); 
+  INT32 (*Exit)(); 
+  INT32 (*Frame)(); 
+  INT32 (*Redraw)(); 
+  INT32 (*AreaScan)(INT32 nAction, INT32* pnMin);
+	UINT8* pRecalcPal; 
+  UINT32 nPaletteEntries;										// Set to 1 if the palette needs to be fully re-calculated
+	INT32 nWidth;
+  INT32 nHeight; 
+  INT32 nXAspect;
+  INT32 nYAspect;					// Screen width, height, x/y aspect
 };
 
 #define BurnDriverD BurnDriver		// Debug status
