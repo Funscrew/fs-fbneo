@@ -79,11 +79,8 @@ ggpo_start_synctest(GGPOSession** ggpo,
   //return GGPO_OK;
 }
 
-uint32 ggpo_set_frame_delay(GGPOSession* ggpo, int frame_delay) {
-  if (!ggpo) {
-    return GGPO_ERRORCODE_INVALID_SESSION;
-  }
-  return ggpo->SetFrameDelay(frame_delay);
+void ggpo_set_frame_delay(GGPOSession* ggpo, int frame_delay) {
+  ggpo->SetFrameDelay(frame_delay);
 }
 
 GGPOErrorCode

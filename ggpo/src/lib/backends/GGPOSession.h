@@ -25,7 +25,7 @@ struct GGPOSession {
    virtual bool GetNetworkStats(GGPONetworkStats *stats, PlayerID playerIndex) { return GGPO_OK; }
    virtual GGPOErrorCode Logv(const char *fmt, va_list list) { ::Logv(fmt, list); return GGPO_OK; }
 
-   virtual uint32 SetFrameDelay(int delay) { return GGPO_ERRORCODE_UNSUPPORTED; }
+   virtual void SetFrameDelay(int delay) { throw std::exception("not supported!"); }
    virtual GGPOErrorCode SetDisconnectTimeout(int timeout) { return GGPO_ERRORCODE_UNSUPPORTED; }
    virtual GGPOErrorCode SetDisconnectNotifyStart(int timeout) { return GGPO_ERRORCODE_UNSUPPORTED; }
 

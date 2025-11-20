@@ -8,6 +8,7 @@
 #include "types.h"
 #include "input_queue.h"
 
+// TODO: Replace this with an inline function!
 #define PREVIOUS_FRAME(offset)   (((offset) == 0) ? (INPUT_QUEUE_LENGTH - 1) : ((offset) - 1))
 
 InputQueue::InputQueue(int input_size)
@@ -243,7 +244,7 @@ InputQueue::AddDelayedInputToQueue(GameInput &input, int frame_number)
        * remember the first input which was incorrect so we can report it
        * in GetFirstIncorrectFrame()
        */
-      if (_first_incorrect_frame == GameInput::NullFrame && !_prediction.equal(input, true)) {
+      if (_first_incorrect_frame == GameInput::NullFrame && !_prediction.equal(input)) {
          Log("frame %d does not match prediction.  marking error.\n", frame_number);
          _first_incorrect_frame = frame_number;
       }
@@ -302,9 +303,8 @@ InputQueue::AdvanceQueueHead(int frame)
    return frame;
 }
 
-
-void
-InputQueue::Log(const char *fmt, ...)
+// OBSOLETE:  All logging code will be consolidated!
+void InputQueue::Log(const char *fmt, ...)
 {
    char buf[1024];
    size_t offset;

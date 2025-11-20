@@ -30,8 +30,8 @@ Sync::~Sync()
    _input_queues = NULL;
 }
 
-void
-Sync::Init(Sync::Config &config)
+// REFACTOR: Combine this into the constructor.
+void Sync::Init(Sync::Config &config)
 {
    _config = config;
    _callbacks = config.callbacks;
@@ -43,8 +43,8 @@ Sync::Init(Sync::Config &config)
    CreateQueues(config);
 }
 
-void
-Sync::SetLastConfirmedFrame(int frame) 
+// ------------------------------------------------------------------------------------------------------------------------
+void Sync::SetLastConfirmedFrame(int frame) 
 {   
    _last_confirmed_frame = frame;
    if (_last_confirmed_frame > 0) {
@@ -102,6 +102,7 @@ int Sync::GetConfirmedInputs(void *values, int size, int frame)
    return disconnect_flags;
 }
 
+// ------------------------------------------------------------------------------------------------------------------------
 int Sync::SynchronizeInputs(void *values, int totalSize)
 {
    int disconnect_flags = 0;
@@ -125,6 +126,7 @@ int Sync::SynchronizeInputs(void *values, int totalSize)
    return disconnect_flags;
 }
 
+// ------------------------------------------------------------------------------------------------------------------------
 void
 Sync::CheckSimulation(int timeout)
 {
@@ -134,6 +136,7 @@ Sync::CheckSimulation(int timeout)
    }
 }
 
+// ------------------------------------------------------------------------------------------------------------------------
 void
 Sync::IncrementFrame(void)
 {
@@ -164,7 +167,6 @@ Sync::AdjustSimulation(int seek_to)
     */
    ResetPrediction(_curFrame);
    for (int i = 0; i < count; i++) {
-     // NOTE 2: This is where the _framecount would probably be updated to the correct version.
       _callbacks.rollback_frame(0);
    }
 
@@ -220,6 +222,7 @@ Sync::SaveCurrentFrame()
    _savedstate.head = (_savedstate.head + 1) % ARRAY_SIZE(_savedstate.frames);
 }
 
+// TODO: Use a pointer or ref argument vs. return value!
 Sync::SavedFrame&
 Sync::GetLastSavedFrame()
 {

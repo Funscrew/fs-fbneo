@@ -38,7 +38,7 @@ public:
    virtual GGPOErrorCode IncrementFrame(void);
    virtual GGPOErrorCode DisconnectPlayer(PlayerID playerIndex);
    virtual bool GetNetworkStats(GGPONetworkStats *stats, PlayerID playerIndex);
-   virtual uint32 SetFrameDelay(int delay);
+   virtual void SetFrameDelay(int delay);
    virtual GGPOErrorCode SetDisconnectTimeout(int timeout);
    virtual GGPOErrorCode SetDisconnectNotifyStart(int timeout);
 
@@ -49,16 +49,18 @@ public:
 
 protected:
    void DisconnectPlayer(PlayerID playerIndex, int syncto);
-   void PollSyncEvents(void);
    void PollUdpProtocolEvents(void);
    void CheckInitialSync(void);
    int Poll2Players(int current_frame);
    int PollNPlayers(int current_frame);
    void AddRemotePlayer(char *remoteip, uint16 reportport, int queue);
    
-   virtual void OnSyncEvent(Sync::Event &e) { }
    virtual void OnUdpProtocolEvent(UdpProtocol::Event &e, PlayerID playerIndex);
    virtual void OnUdpProtocolPeerEvent(UdpProtocol::Event &e, PlayerID playerIndex);
+
+   // OBSOLETE:  These functions don't actually do anything....
+   void PollSyncEvents(void);
+   virtual void OnSyncEvent(Sync::Event& e) {}
 
 protected:
    GGPOSessionCallbacks  _callbacks;

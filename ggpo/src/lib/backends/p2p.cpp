@@ -119,9 +119,11 @@ GGPOErrorCode Peer2PeerBackend::AddLocalInput(PlayerID playerIndex, void* values
 
   GameInput input;
 
+  // REDUNDANT CHECK
   if (_sync.InRollback()) {
     return GGPO_ERRORCODE_IN_ROLLBACK;
   }
+  // REDUNDANT CHECK
   if (_synchronizing) {
     return GGPO_ERRORCODE_NOT_SYNCHRONIZED;
   }
@@ -130,6 +132,7 @@ GGPOErrorCode Peer2PeerBackend::AddLocalInput(PlayerID playerIndex, void* values
 
   // Feed the input for the current frame into the synchronzation layer.
   if (!_sync.AddLocalInput(playerIndex, input)) {
+    // TODO: Log this!
     return GGPO_ERRORCODE_PREDICTION_THRESHOLD;
   }
 
@@ -138,10 +141,16 @@ GGPOErrorCode Peer2PeerBackend::AddLocalInput(PlayerID playerIndex, void* values
     // confirmed local frame for this player.  this must come first so it
     // gets incorporated into the next packet we send.
 
+    // NOTE: All endpoints send out the _local_connect_status data with each message.
+    // An ideal implemetation would have a single 'client' that we set this data on,
+    // and then all endpoints would also be contained internally.
     Log("setting local connect status for local player %d to %d", playerIndex, input.frame);
     _local_connect_status[playerIndex].last_frame = input.frame;
 
     // Send the input to all the remote players.
+    // NOTE: This queues input, and it gets pumped out later....
+    // NOTE: In a two player game, only one of these endpoints has the 'udp' member set, and so
+    // only one of them will actully do anything.....
     for (int i = 0; i < _num_players; i++) {
       if (_endpoints[i].IsInitialized()) {
         _endpoints[i].SendInput(input);
@@ -359,8 +368,8 @@ GGPOErrorCode Peer2PeerBackend::SyncInput(void* values, int isize, int playerCou
   return GGPO_OK;
 }
 
-GGPOErrorCode
-Peer2PeerBackend::IncrementFrame(void)
+// ----------------------------------------------------------------------------------------------------------
+GGPOErrorCode Peer2PeerBackend::IncrementFrame(void)
 {
   Log("End of frame (%d)...\n", _sync.GetFrameCount());
   _sync.IncrementFrame();
@@ -371,8 +380,8 @@ Peer2PeerBackend::IncrementFrame(void)
 }
 
 
-void
-Peer2PeerBackend::PollSyncEvents(void)
+// ----------------------------------------------------------------------------------------------------------
+void Peer2PeerBackend::PollSyncEvents(void)
 {
   Sync::Event e;
   while (_sync.GetEvent(e)) {
@@ -441,7 +450,7 @@ void Peer2PeerBackend::OnUdpProtocolEvent(UdpProtocol::Event& evt, PlayerID play
     info.u.synchronizing.total = evt.u.synchronizing.total;
     _callbacks.on_event(&info);
     break;
-  case UdpProtocol::Event::Synchronzied:
+  case UdpProtocol::Event::Synchronized:
     info.code = GGPO_EVENTCODE_SYNCHRONIZED_WITH_PEER;
     info.u.synchronized.player_index = playerIndex;
     _callbacks.on_event(&info);
@@ -488,8 +497,7 @@ void Peer2PeerBackend::OnUdpProtocolEvent(UdpProtocol::Event& evt, PlayerID play
  * decisions to disconnect are a result of us parsing the peer_connect_settings
  * blob in every endpoint periodically.
  */
-GGPOErrorCode
-Peer2PeerBackend::DisconnectPlayer(PlayerID player)
+GGPOErrorCode Peer2PeerBackend::DisconnectPlayer(PlayerID player)
 {
   uint16 queue = player;
   //	GGPOErrorCode result;
@@ -560,22 +568,11 @@ bool Peer2PeerBackend::GetNetworkStats(GGPONetworkStats* stats, PlayerID playerI
 }
 
 // --------------------------------------------------------------------------------------------------------------
-// REFACTOR: This can just be a true/false type function.....
-uint32 Peer2PeerBackend::SetFrameDelay(int delay) {
+void Peer2PeerBackend::SetFrameDelay(int delay) {
   _sync.SetFrameDelay(_playerIndex, delay);
-
-  return GGPO_OK;
-  //int playerIndex;
-  //GGPOErrorCode result;
-
-  //result = PlayerHandleToQueue(player, &playerIndex);
-  //if (!GGPO_SUCCEEDED(result)) {
-  //	return result;
-  //}
-  //_sync.SetFrameDelay(playerIndex, delay);
-  //return GGPO_OK;
 }
 
+// --------------------------------------------------------------------------------------------------------------
 GGPOErrorCode
 Peer2PeerBackend::SetDisconnectTimeout(int timeout)
 {

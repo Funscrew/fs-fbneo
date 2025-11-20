@@ -145,9 +145,9 @@ int NetworkGetInput()
 		}
 	}
 
-	// Decode Player 1 input block
-	// NOTE: Will this actually be any different from when we sent the inputs?
-	// --> I think so because of sync / rollback....
+	// Decode Player 1 input block.
+  // This takes the synced inputs and decodes them back into the system input
+  // memory.
 	for (i = 0, j = 0; i < nPlayerInputs[0]; i++, j++) {
 		BurnDrvGetInputInfo(&bii, i + nPlayerOffset[0]);
 		if (bii.nType == BIT_DIGITAL) {
