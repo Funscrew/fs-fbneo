@@ -15,22 +15,28 @@
 #include "ring_buffer.h"
 #include "network/udp_msg.h"
 
+// REFACTOR: Make this a const + move to consts container
 #define MAX_PREDICTION_FRAMES    8
 
 class SyncTestBackend;
 
 class Sync {
 public:
+  // REFACTOR: SyncOptions
   struct Config {
     GGPOSessionCallbacks    callbacks;
     int                     num_prediction_frames;
     int                     num_players;
     int                     input_size;
   };
+
+  // REFACTOR: SyncEvent
   struct Event {
+    // I think that this can also be simplifed.  Seems like everything is just 'confirmed input'
     enum {
       ConfirmedInput,
     } type;
+    // NOTE: This union is not necessary.
     union {
       struct {
         GameInput   input;
@@ -48,6 +54,8 @@ public:
   void SetFrameDelay(int queue, int delay);
   bool AddLocalInput(PlayerID playerIndex, GameInput& input);
   void AddRemoteInput(PlayerID playerIndex, GameInput& input);
+
+  // NOTE: This function appears to be unused!
   int GetConfirmedInputs(void* values, int size, int frame);
   int SynchronizeInputs(void* values, int totalSize);
 
@@ -72,7 +80,7 @@ protected:
   };
   struct SavedState {
     SavedFrame frames[MAX_PREDICTION_FRAMES + 2];
-    int head;
+    int head;     // Index of the saved frame data.
   };
 
   void LoadFrame(int frame);
@@ -87,7 +95,7 @@ protected:
 protected:
   GGPOSessionCallbacks _callbacks;
   SavedState     _savedstate;
-  Config         _config;
+  Config         _config;             // REFACTOR: rename to 'Options'
 
   bool           _rollingback;
   int            _last_confirmed_frame;

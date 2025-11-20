@@ -43,7 +43,7 @@ extern "C" {
 #define GGPO_SPECTATOR_INPUT_INTERVAL     4
 
  // TODO: Share with main program / put this with defs elsewhere....
-  const static size_t MAX_GGPOCHAT_SIZE = 16;	 // 128 characters is enough?
+  const static size_t MAX_GGPOCHAT_SIZE = 128;	 // 128 characters is enough?
   const static size_t MAX_NAME_SIZE = 16;
 
 
@@ -269,6 +269,7 @@ extern "C" {
     bool(__cdecl* on_event)(GGPOEvent* info);
 
 
+    // OBOSOLETE:  This will be removed!
     /* Get the name of the player for the given index */
     char*(__cdecl* get_player_name)(PlayerID index);
 

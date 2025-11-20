@@ -17,6 +17,7 @@
 
 static const int MAX_UDP_PACKET_SIZE = 4096;
 
+// This wraps the basic mechanics of sending and receiving data via UDP
 class Udp : public IPollSink
 {
 public:

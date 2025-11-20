@@ -123,7 +123,7 @@ SpectatorBackend::OnUdpProtocolEvent(UdpProtocol::Event &evt)
       info.u.synchronizing.total = evt.u.synchronizing.total;
       _callbacks.on_event(&info);
       break;
-   case UdpProtocol::Event::Synchronzied:
+   case UdpProtocol::Event::Synchronized:
       if (_synchronizing) {
          info.code = GGPO_EVENTCODE_SYNCHRONIZED_WITH_PEER;
          info.u.synchronized.player_index = 0;

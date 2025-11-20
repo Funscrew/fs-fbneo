@@ -8,7 +8,7 @@
 #ifndef _UDP_MSG_H
 #define _UDP_MSG_H
 
-#define MAX_COMPRESSED_BITS       4096
+#define MAX_COMPRESSED_BITS       4096    // Why is this so huge?
 #define UDP_MSG_MAX_PLAYERS          4
 
 #include "ggponet.h"
@@ -29,6 +29,9 @@ struct UdpMsg
     ChatCommand = 8
   };
 
+  // This struct saves us one byte of space.
+  // Makes ports to other languages a bit annoying to deal with, so
+  // do we really need to save one byte on the packets?
   struct connect_status {
     unsigned int   disconnected : 1;
     int            last_frame : 31;
@@ -66,6 +69,7 @@ struct UdpMsg
 
       uint32            start_frame;
 
+      // _flags
       int               disconnect_requested : 1;
       int               ack_frame : 31;
 
@@ -91,6 +95,7 @@ public:
 
   int PayloadSize() {
     int size;
+    int size2;
 
     switch (header.type) {
     case SyncRequest:   return sizeof(u.sync_request);
@@ -106,8 +111,19 @@ public:
     case KeepAlive:     return 0;
 
     case Input:
+      // NOTE: This is a really WACKY way to compute
+      // the size of the input packet!
+      // Line 1 looks at a relative offset, and then line2
+      // decides how many bytes from 'bits' will actually be included!
       size = (int)((char*)&u.input.bits - (char*)&u.input);
       size += (u.input.num_bits + 7) / 8;
+
+      // A more intelligible way....
+      // If this doesn't blow up we are good to go!
+      size2 = sizeof(u.input) - (sizeof(uint8) * MAX_COMPRESSED_BITS);
+      size2 += (u.input.num_bits + 7) / 8;
+      ASSERT(size == size2);
+
       return size;
 
     case ChatCommand:

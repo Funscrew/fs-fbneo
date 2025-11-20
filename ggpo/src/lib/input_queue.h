@@ -10,6 +10,7 @@
 
 #include "game_input.h"
 
+// REFACTOR: Make these static const
 #define INPUT_QUEUE_LENGTH    128
 #define DEFAULT_INPUT_SIZE      4
 

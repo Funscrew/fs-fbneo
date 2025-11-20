@@ -7,7 +7,6 @@
 
 #ifndef _GAMEINPUT_H
 #define _GAMEINPUT_H
-
 #include <stdio.h>
 #include <memory.h>
 
@@ -18,23 +17,26 @@ static const uint16 GAMEINPUT_MAX_BYTES = 7;
 static const uint16 GAMEINPUT_MAX_PLAYERS = 4;		// NOTE: This probably need to be 2?
 
 struct GameInput {
-	enum Constants {
-		NullFrame = -1
-	};
-	int      frame;
-	int      size; /* size in bytes of the entire input for all players */
-	char     bits[GAMEINPUT_MAX_BYTES * GAMEINPUT_MAX_PLAYERS];
+  enum Constants {
+    NullFrame = -1
+  };
+  int      frame;
+  int      size; /* size in bytes of the entire input for all players */
+  char     bits[GAMEINPUT_MAX_BYTES * GAMEINPUT_MAX_PLAYERS];
 
-	bool is_null() { return frame == NullFrame; }
-	void init(int frame, char* bits, int size, int offset);
-	void init(int frame, char* bits, int size);
-	bool value(int i) const { return (bits[i / 8] & (1 << (i % 8))) != 0; }
-	void set(int i) { bits[i / 8] |= (1 << (i % 8)); }
-	void clear(int i) { bits[i / 8] &= ~(1 << (i % 8)); }
-	void erase() { memset(bits, 0, sizeof(bits)); }
-	void desc(char* buf, size_t buf_size, bool show_frame = true) const;
-	void log(char* prefix, bool show_frame = true) const;
-	bool equal(GameInput& input, bool bitsonly = false);
+  bool is_null() { return frame == NullFrame; }
+  void init(int frame, char* bits, int size, int offset);
+  void init(int frame, char* bits, int size);
+  bool value(int i) const { return (bits[i / 8] & (1 << (i % 8))) != 0; }
+  void set(int i) { bits[i / 8] |= (1 << (i % 8)); }
+  void clear(int i) { bits[i / 8] &= ~(1 << (i % 8)); }
+  void erase() { memset(bits, 0, sizeof(bits)); }
+
+  // This is only used for logging purposes.
+  // It is going to be replaced when I get around to improving the logging for GGPO in general.
+  void desc(char* buf, size_t buf_size, bool show_frame = true) const;
+  void log(char* prefix, bool show_frame = true) const;
+  bool equal(GameInput& input);
 };
 
 #endif

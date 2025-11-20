@@ -73,7 +73,7 @@ TimeSync::recommend_frame_wait_duration(bool require_idle_input)
    // Street Fighter), which could cause the player to miss moves.
    if (require_idle_input) {
       for (i = 1; i < ARRAY_SIZE(_last_inputs); i++) {
-         if (!_last_inputs[i].equal(_last_inputs[0], true)) {
+         if (!_last_inputs[i].equal(_last_inputs[0])) {
             Log("iteration %d:  rejecting due to input stuff at position %d...!!!\n", count, i);
             return 0;
          }

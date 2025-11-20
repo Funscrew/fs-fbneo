@@ -38,9 +38,16 @@ BitVector_WriteNibblet(uint8 *vector, int nibble, int *offset)
 int
 BitVector_ReadBit(uint8 *vector, int *offset)
 {
-   int retval = !!(vector[(*offset) / 8] & (1 << ((*offset) % 8)));
+   int res = !!(vector[(*offset) / 8] & (1 << ((*offset) % 8)));
    *offset += 1;
-   return retval;
+   return res;
+
+   // Better / more readable version?
+   //int byteIndex = *offset >> 3;
+   //int bitIndex = *offset & 7;
+   //int res  = ((vector[byteIndex] & (1 << bitIndex)) != 0) ? 1 : 0;
+   //offset += 1;
+   //return res;
 }
 
 int

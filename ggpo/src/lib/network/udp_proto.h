@@ -32,7 +32,7 @@ public:
       Unknown = -1,
       Connected,
       Synchronizing,
-      Synchronzied,
+      Synchronized,
       Input,
       Disconnected,
       NetworkInterrupted,
@@ -100,12 +100,14 @@ public:
 
   void SetPlayerName(char* playerName_);
 protected:
+
   enum State {
     Syncing,
-    Synchronzied,
+    Synchronized,
     Running,
     Disconnected
   };
+
   struct QueueEntry {
     int         queue_time;
     sockaddr_in dest_addr;
@@ -149,6 +151,9 @@ protected:
   bool           _connected;
   int            _send_latency;
   int            _oop_percent;
+
+  // NOTE: This is basically the same thing as 'QueueEntry' but with 'send_time' instead of 'queue_time'
+  // I think that we should just use queue time and change the prop name as needed...
   struct {
     int         send_time;
     sockaddr_in dest_addr;
@@ -157,7 +162,7 @@ protected:
   RingBuffer<QueueEntry, 64> _send_queue;
 
   /*
-   * Stats
+   * Network Stats
    */
   int            _round_trip_time;
   int            _packets_sent;
@@ -171,6 +176,8 @@ protected:
   UdpMsg::connect_status* _local_connect_status;
   UdpMsg::connect_status _peer_connect_status[UDP_MSG_MAX_PLAYERS];
 
+  // TODO: This doesn't need to be a union.  We don't need to save 8 bytes of space
+  // for this level of extra work.
   State          _current_state;
   union {
     struct {
@@ -200,7 +207,7 @@ protected:
   unsigned int               _last_send_time;
   unsigned int               _last_recv_time;
   unsigned int               _shutdown_timeout;
-  unsigned int               _disconnect_event_sent;
+  bool                       _disconnect_event_sent;
   unsigned int               _disconnect_timeout;
   unsigned int               _disconnect_notify_start;
   bool                       _disconnect_notify_sent;
@@ -218,7 +225,7 @@ protected:
    */
   RingBuffer<UdpProtocol::Event, 64>  _event_queue;
 
-  // You name.  This will be exchanged with other peers on sync.
+  // Your name.  This will be exchanged with other peers on sync.
   char _playerName[MAX_NAME_SIZE];
 
 };

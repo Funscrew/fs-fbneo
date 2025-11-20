@@ -18,8 +18,7 @@ PollManager::PollManager(void) :
 	_handles[_handle_count++] = CreateEvent(NULL, true, false, NULL);
 }
 
-void
-PollManager::RegisterHandle(IPollSink* sink, HANDLE h, void* cookie)
+void PollManager::RegisterHandle(IPollSink* sink, HANDLE h, void* cookie)
 {
 	ASSERT(_handle_count < MAX_POLLABLE_HANDLES - 1);
 
@@ -60,10 +59,14 @@ void PollManager::Run()
 }
 
 // ------------------------------------------------------------------------------------------------------------------
+// REFACTOR: Return value is never checked.
+// REFACTOR: WaitForMultipleObjects can be removed.
+// REFACTOR: Periodic and message sinks can be removed.
 bool PollManager::Pump(int timeout)
 {
 	bool finished = false;
 
+  // REFACTOR: Wait time code can be dropped as there are no periodic sinks!
 	if (_start_time == 0) {
 		_start_time = Platform::GetCurrentTimeMS();
 	}
@@ -75,12 +78,14 @@ bool PollManager::Pump(int timeout)
 
 	// NOTE: I am 99% sure that all of the handle based code and waiting for them is
 	// not used...  In fact it always appears to just timeout.....
-	int i;
+	int i = 0;
 	int res = WaitForMultipleObjects(_handle_count, _handles, false, timeout);
 
 	// NOTE: I added this just to demonstrate what is going on.....
-	// bool isTimeout = res == WAIT_TIMEOUT;
-
+	bool isTimeout = res == WAIT_TIMEOUT;
+  if (!isTimeout)  {
+    i = i;
+  }
 	if (res >= WAIT_OBJECT_0 && res < WAIT_OBJECT_0 + _handle_count) {
 		i = res - WAIT_OBJECT_0;
 		finished = !_handle_sinks[i].sink->OnHandlePoll(_handle_sinks[i].cookie) || finished;
@@ -98,7 +103,7 @@ bool PollManager::Pump(int timeout)
 
 	// NOTE: It appears that message sinks, and loop sinks are basically the same thing.
 	// I guess that they are broken up like this to keep the concepts distinct.
-	// Like a message sink happens for certain messages, and the loop sink happens each 'frame'?
+	// Like a message sink happens for certain messages, and the loop sink happens each 'frame'.
 	for (i = 0; i < _msg_sinks.size(); i++) {
 		PollSinkCallback& cb = _msg_sinks[i];
 		finished = !cb.sink->OnMsgPoll(cb.cookie) || finished;

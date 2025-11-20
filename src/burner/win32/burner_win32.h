@@ -467,7 +467,7 @@ void QuarkInit(TCHAR* connect);
 void QuarkEnd();
 void QuarkTogglePerfMon();
 void QuarkRunIdle(int ms);
-bool QuarkGetInput(void* values, int size, int playerCount);
+bool QuarkGetInput(void* values, int isize, int playerCount);
 bool QuarkIncrementFrame();
 void QuarkSendChatText(char* text);
 void QuarkSendChatCmd(char* text, char cmd);
