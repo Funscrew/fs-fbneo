@@ -55,8 +55,8 @@ protected:
    int PollNPlayers(int current_frame);
    void AddRemotePlayer(char *remoteip, uint16 reportport, int queue);
    
-   virtual void OnUdpProtocolEvent(UdpProtocol::Event &e, PlayerID playerIndex);
-   virtual void OnUdpProtocolPeerEvent(UdpProtocol::Event &e, PlayerID playerIndex);
+   virtual void OnUdpProtocolEvent(UdpProtocol::UdpEvent &e, PlayerID playerIndex);
+   virtual void OnUdpProtocolPeerEvent(UdpProtocol::UdpEvent &e, PlayerID playerIndex);
 
    // OBSOLETE:  These functions don't actually do anything....
    void PollSyncEvents(void);

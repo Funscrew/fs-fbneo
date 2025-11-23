@@ -42,7 +42,7 @@ protected:
    void PollUdpProtocolEvents(void);
    void CheckInitialSync(void);
 
-   void OnUdpProtocolEvent(UdpProtocol::Event &e);
+   void OnUdpProtocolEvent(UdpProtocol::UdpEvent &e);
 
 protected:
    GGPOSessionCallbacks  _callbacks;

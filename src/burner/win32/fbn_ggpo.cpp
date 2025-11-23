@@ -6,6 +6,9 @@ extern "C" {
 #include "ggponet.h"
 }
 
+#include "../../ggpo/src/lib/log.h"
+
+
 const size_t MAX_HOST = 128;
 
 GGPOSession* ggpo = nullptr;
@@ -559,8 +562,11 @@ void ParseAddress(const char* addr, char* host, UINT16* port)
 }
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------
-int InitDirectConnection(DirectConnectionOptions& ops)
+int InitDirectConnection(DirectConnectionOptions& ops, GGPOLogOptions& logOps)
 {
+
+//  GGPOUtils::InitLogger(logOps);
+
   const UINT16 DEFAULT_LOCAL_PORT = 7000;
   const UINT16 DEFAULT_REMOTE_PORT = 7000;
 

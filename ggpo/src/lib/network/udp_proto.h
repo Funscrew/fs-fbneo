@@ -27,7 +27,8 @@ public:
     Udp::Stats          udp;
   };
 
-  struct Event {
+  // TODO: This struct will be un-nested.
+  struct UdpEvent {
     enum Type {
       Unknown = -1,
       Connected,
@@ -65,7 +66,7 @@ public:
 
     } u;			// REFACTOR: Rename this to 'data'
 
-    UdpProtocol::Event(Type t = Unknown) : type(t) {}
+    UdpProtocol::UdpEvent(Type t = Unknown) : type(t) {}
   };
 
 public:
@@ -90,7 +91,7 @@ public:
   void Disconnect();
 
   void GetNetworkStats(struct GGPONetworkStats* stats);
-  bool GetEvent(UdpProtocol::Event& e);
+  bool GetEvent(UdpProtocol::UdpEvent& e);
   void GGPONetworkStats(Stats* stats);
   void SetLocalFrameNumber(int num);
   int RecommendFrameDelay();
@@ -119,11 +120,11 @@ protected:
 
   bool CreateSocket(int retries);
   void UpdateNetworkStats(void);
-  void QueueEvent(const UdpProtocol::Event& evt);
+  void QueueEvent(const UdpProtocol::UdpEvent& evt);
   void ClearSendQueue(void);
   void Log(const char* fmt, ...);
   void LogMsg(const char* prefix, UdpMsg* msg);
-  void LogEvent(const char* prefix, const UdpProtocol::Event& evt);
+  void LogEvent(const char* prefix, const UdpProtocol::UdpEvent& evt);
   void SendSyncRequest();
   void SendMsg(UdpMsg* msg);
   void PumpSendQueue();
@@ -223,7 +224,7 @@ protected:
   /*
    * Event queue
    */
-  RingBuffer<UdpProtocol::Event, 64>  _event_queue;
+  RingBuffer<UdpProtocol::UdpEvent, 64>  _event_queue;
 
   // Your name.  This will be exchanged with other peers on sync.
   char _playerName[MAX_NAME_SIZE];

@@ -211,7 +211,7 @@ void UdpProtocol::SendInputAck()
 }
 
 // ----------------------------------------------------------------------------------------------------------
-bool UdpProtocol::GetEvent(UdpProtocol::Event& e)
+bool UdpProtocol::GetEvent(UdpProtocol::UdpEvent& e)
 {
   if (_event_queue.size() == 0) {
     return false;
@@ -274,7 +274,7 @@ bool UdpProtocol::OnLoopPoll(void* cookie)
     if (_disconnect_timeout && _disconnect_notify_start &&
       !_disconnect_notify_sent && (_last_recv_time + _disconnect_notify_start < now)) {
       Log("Endpoint has stopped receiving packets for %d ms.  Sending notification.\n", _disconnect_notify_start);
-      Event e(Event::NetworkInterrupted);
+      UdpEvent e(UdpEvent::NetworkInterrupted);
       e.u.network_interrupted.disconnect_timeout = _disconnect_timeout - _disconnect_notify_start;
       QueueEvent(e);
       _disconnect_notify_sent = true;
@@ -283,7 +283,7 @@ bool UdpProtocol::OnLoopPoll(void* cookie)
     if (_disconnect_timeout && (_last_recv_time + _disconnect_timeout < now)) {
       if (!_disconnect_event_sent) {
         Log("Endpoint has stopped receiving packets for %d ms.  Disconnecting.\n", _disconnect_timeout);
-        QueueEvent(Event(Event::Disconnected));
+        QueueEvent(UdpEvent(UdpEvent::Disconnected));
         _disconnect_event_sent = true;
       }
     }
@@ -394,7 +394,7 @@ void UdpProtocol::OnMsg(UdpMsg* msg, int len)
   if (handled) {
     _last_recv_time = Platform::GetCurrentTimeMS();
     if (_disconnect_notify_sent && _current_state == Running) {
-      QueueEvent(Event(Event::NetworkResumed));
+      QueueEvent(UdpEvent(UdpEvent::NetworkResumed));
       _disconnect_notify_sent = false;
     }
   }
@@ -427,7 +427,7 @@ void UdpProtocol::UpdateNetworkStats(void)
 }
 
 // ----------------------------------------------------------------------------------------------------------
-void UdpProtocol::QueueEvent(const UdpProtocol::Event& evt)
+void UdpProtocol::QueueEvent(const UdpProtocol::UdpEvent& evt)
 {
   LogEvent("Queuing event", evt);
   _event_queue.push(evt);
@@ -508,10 +508,10 @@ UdpProtocol::LogMsg(const char* prefix, UdpMsg* msg)
 }
 
 void
-UdpProtocol::LogEvent(const char* prefix, const UdpProtocol::Event& evt)
+UdpProtocol::LogEvent(const char* prefix, const UdpProtocol::UdpEvent& evt)
 {
   switch (evt.type) {
-  case UdpProtocol::Event::Synchronized:
+  case UdpProtocol::UdpEvent::Synchronized:
     Log("%s (event: Synchronized).\n", prefix);
     break;
   }
@@ -556,7 +556,7 @@ bool UdpProtocol::OnSyncReply(UdpMsg* msg, int len)
   }
 
   if (!_connected) {
-    auto evt = Event(Event::Connected);
+    auto evt = UdpEvent(UdpEvent::Connected);
     strcpy_s(evt.u.connected.playerName, msg->u.sync_reply.playerName);
     QueueEvent(evt);
 
@@ -566,13 +566,13 @@ bool UdpProtocol::OnSyncReply(UdpMsg* msg, int len)
   Log("Checking sync state (%d round trips remaining).\n", _state.sync.roundtrips_remaining);
   if (--_state.sync.roundtrips_remaining == 0) {
     Log("Synchronized!\n");
-    QueueEvent(UdpProtocol::Event(UdpProtocol::Event::Synchronized));
+    QueueEvent(UdpProtocol::UdpEvent(UdpProtocol::UdpEvent::Synchronized));
     _current_state = Running;
     _last_received_input.frame = -1;
     _remote_magic_number = msg->header.magic;
   }
   else {
-    UdpProtocol::Event evt(UdpProtocol::Event::Synchronizing);
+    UdpProtocol::UdpEvent evt(UdpProtocol::UdpEvent::Synchronizing);
     evt.u.synchronizing.total = SYNC_PACKETS_COUNT;
     evt.u.synchronizing.count = SYNC_PACKETS_COUNT - _state.sync.roundtrips_remaining;
     QueueEvent(evt);
@@ -585,7 +585,7 @@ bool UdpProtocol::OnSyncReply(UdpMsg* msg, int len)
 bool UdpProtocol::OnChat(UdpMsg* msg, int msgLen)
 {
 
-  UdpProtocol::Event evt(UdpProtocol::Event::ChatCommand);
+  UdpProtocol::UdpEvent evt(UdpProtocol::UdpEvent::ChatCommand);
   // evt.u.input.input = _last_received_input;
   //_last_received_input.desc(desc, ARRAY_SIZE(desc));
 
@@ -611,7 +611,7 @@ bool UdpProtocol::OnInput(UdpMsg* msg, int len)
   if (disconnect_requested) {
     if (_current_state != Disconnected && !_disconnect_event_sent) {
       Log("Disconnecting endpoint on remote request.\n");
-      QueueEvent(Event(Event::Disconnected));
+      QueueEvent(UdpEvent(UdpEvent::Disconnected));
       _disconnect_event_sent = true;
     }
   }
@@ -687,7 +687,7 @@ bool UdpProtocol::OnInput(UdpMsg* msg, int len)
         /*
          * Send the event to the emualtor
          */
-        UdpProtocol::Event evt(UdpProtocol::Event::Input);
+        UdpProtocol::UdpEvent evt(UdpProtocol::UdpEvent::Input);
         evt.u.input.input = _last_received_input;
 
         const int DESC_SIZE = 1024;

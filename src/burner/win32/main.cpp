@@ -29,7 +29,7 @@ bool bDisableDebugConsole = true;
 
 #include "version.h"
 #include "CLI11.hpp"
-
+#include "../../ggpo/src/lib/log.h"
 
 HINSTANCE hAppInst = NULL;			// Application Instance
 HANDLE hMainThread;
@@ -960,11 +960,11 @@ int HandleListInfoCommand(EListOption listOption) {
 }
 
 // ----------------------------------------------------------------------------------------------------------
-int HandleDirectConnection(DirectConnectionOptions& ops) {
+int HandleDirectConnection(DirectConnectionOptions& ops, GGPOLogOptions& logOps) {
 
   // TODO: Validate the options.
 
-  int res = InitDirectConnection(ops);
+  int res = InitDirectConnection(ops, logOps);
   return res;
 }
 
@@ -1007,6 +1007,14 @@ int ProcessCommandLine(LPSTR lpCmdLine)
   app.add_flag("-a", resFlag, "Use game resolution for fullscreen modes.");
   app.add_flag("-w", screenFlag, "Disable auto switch to fullscreen on loading driver.");
 
+
+  // Logging options for GGPO.  NOTE: This could be combined with the other logging facilities at some point.
+  // TODO: Some kind of command line option to load all options from a single file.  This makes it easier
+  // to setup + save run profiles for the application.
+  std::string logPath = "";
+  bool logToConsole = false;
+  app.add_option("--logf", logPath, "File where GGPO data will be logged.");
+  app.add_flag("--logc", logToConsole, "If set, GGPO logs will be written to the console");
 
   // @@AAR:
   // There was some legacy code in there that was used to output lists of information.
@@ -1102,8 +1110,17 @@ int ProcessCommandLine(LPSTR lpCmdLine)
   }
   else if (directConnect->parsed())
   {
+    // GGPO logging, if set.
+    GGPOLogOptions logOps;
+    logOps.LogToConsole = logToConsole;
+    if (logPath.size() > 0)
+    {
+      logOps.LogToFile = true;
+      logOps.FilePath = logPath;
+    }
+
     directOps.romName = romName;
-    int res = HandleDirectConnection(directOps);
+    int res = HandleDirectConnection(directOps, logOps);
     if (res != 0) {
       return res;
     }

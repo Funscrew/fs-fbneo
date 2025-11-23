@@ -86,6 +86,7 @@ INT32 DDCore_Init();
 // #define POST_INITIALISE_MESSAGE { debugPrintf(_T("*** (re-) initialising - %s %i\n"), _T(__FILE__), __LINE__); PostMessage(NULL, WM_APP + 0, 0, 0); }
 #define POST_INITIALISE_MESSAGE PostMessage(NULL, WM_APP + 0, 0, 0)
 
+struct GGPOLogOptions;
 
 // Command line stuff.  Not a huge fan of this header file being a huge dumping ground.....
 struct DirectConnectionOptions {
@@ -96,7 +97,6 @@ struct DirectConnectionOptions {
   std::string playerName = "";
   UINT16 frameDelay = 1;
 };
-
 
 // ---------------------------------------------------------------------------
 
@@ -460,7 +460,7 @@ int NetworkGetInputSize();
 int NetworkGetInput();
 
 // fbn_ggpo.cpp
-int InitDirectConnection(DirectConnectionOptions& ops);
+int InitDirectConnection(DirectConnectionOptions& ops, GGPOLogOptions& logOps);
 
 // [OBSOLETE]
 void QuarkInit(TCHAR* connect);
