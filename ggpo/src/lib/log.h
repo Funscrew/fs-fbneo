@@ -24,7 +24,6 @@ static const char* CATEGORY_GENERAL = "NA";
 // =======================================================================================
 struct GGPOLogOptions {
   bool LogToFile = false;
-  bool LogToConsole = false;
   std::string FilePath;
 };
 

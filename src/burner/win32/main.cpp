@@ -1012,9 +1012,7 @@ int ProcessCommandLine(LPSTR lpCmdLine)
   // TODO: Some kind of command line option to load all options from a single file.  This makes it easier
   // to setup + save run profiles for the application.
   std::string logPath = "";
-  bool logToConsole = false;
   app.add_option("--logf", logPath, "File where GGPO data will be logged.");
-  app.add_flag("--logc", logToConsole, "If set, GGPO logs will be written to the console");
 
   // @@AAR:
   // There was some legacy code in there that was used to output lists of information.
@@ -1112,7 +1110,6 @@ int ProcessCommandLine(LPSTR lpCmdLine)
   {
     // GGPO logging, if set.
     GGPOLogOptions logOps;
-    logOps.LogToConsole = logToConsole;
     if (logPath.size() > 0)
     {
       logOps.LogToFile = true;

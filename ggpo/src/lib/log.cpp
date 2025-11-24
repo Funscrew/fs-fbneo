@@ -65,7 +65,7 @@ void Logv(FILE* fp, const char* fmt, va_list args)
 // ----------------------------------------------------------------------------------------------------------------
 void Utils::InitLogger(GGPOLogOptions& options_) {
   _logOps = options_;
-  _logActive = _logOps.LogToConsole || _logOps.LogToFile;
+  _logActive = _logOps.LogToFile;
 
   // Fire up the log file, if needed....
   if (_logOps.LogToFile) {
