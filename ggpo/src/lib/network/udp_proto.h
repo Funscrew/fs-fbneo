@@ -16,6 +16,51 @@
 #include "ggponet.h"
 #include "ring_buffer.h"
 
+
+ // TODO: This struct will be un-nested.
+struct UdpEvent {
+  enum Type {
+    Unknown = -1,
+    Connected,
+    Synchronizing,
+    Synchronized,
+    Input,
+    Disconnected,
+    NetworkInterrupted,
+    NetworkResumed,
+    ChatCommand
+  };
+
+  Type      type;
+  union {
+    struct {
+      GameInput   input;
+    } input;
+
+    struct {
+      int         total;
+      int         count;
+    } synchronizing;
+
+    struct {
+      char playerName[MAX_NAME_SIZE];
+    } connected;
+
+    struct {
+      int         disconnect_timeout;
+    } network_interrupted;
+
+    struct {
+      char		text[MAX_GGPOCHAT_SIZE + 1];
+    } chat;
+
+  } u;			// REFACTOR: Rename this to 'data'
+
+  UdpEvent(Type t = Unknown) : type(t) {}
+};
+
+
+
 class UdpProtocol : public IPollSink
 {
 public:
@@ -27,47 +72,6 @@ public:
     Udp::Stats          udp;
   };
 
-  // TODO: This struct will be un-nested.
-  struct UdpEvent {
-    enum Type {
-      Unknown = -1,
-      Connected,
-      Synchronizing,
-      Synchronized,
-      Input,
-      Disconnected,
-      NetworkInterrupted,
-      NetworkResumed,
-      ChatCommand
-    };
-
-    Type      type;
-    union {
-      struct {
-        GameInput   input;
-      } input;
-
-      struct {
-        int         total;
-        int         count;
-      } synchronizing;
-
-      struct { 
-        char playerName[MAX_NAME_SIZE];
-      } connected;
-
-      struct {
-        int         disconnect_timeout;
-      } network_interrupted;
-
-      struct {
-        char		text[MAX_GGPOCHAT_SIZE + 1];
-      } chat;
-
-    } u;			// REFACTOR: Rename this to 'data'
-
-    UdpProtocol::UdpEvent(Type t = Unknown) : type(t) {}
-  };
 
 public:
   virtual bool OnLoopPoll(void* cookie);
@@ -91,7 +95,7 @@ public:
   void Disconnect();
 
   void GetNetworkStats(struct GGPONetworkStats* stats);
-  bool GetEvent(UdpProtocol::UdpEvent& e);
+  bool GetEvent(UdpEvent& e);
   void GGPONetworkStats(Stats* stats);
   void SetLocalFrameNumber(int num);
   int RecommendFrameDelay();
@@ -120,11 +124,11 @@ protected:
 
   bool CreateSocket(int retries);
   void UpdateNetworkStats(void);
-  void QueueEvent(const UdpProtocol::UdpEvent& evt);
+  void QueueEvent(const UdpEvent& evt);
   void ClearSendQueue(void);
   void Log(const char* fmt, ...);
   void LogMsg(const char* prefix, UdpMsg* msg);
-  void LogEvent(const char* prefix, const UdpProtocol::UdpEvent& evt);
+  void LogEvent(const char* prefix, const UdpEvent& evt);
   void SendSyncRequest();
   void SendMsg(UdpMsg* msg);
   void PumpSendQueue();
@@ -224,7 +228,7 @@ protected:
   /*
    * Event queue
    */
-  RingBuffer<UdpProtocol::UdpEvent, 64>  _event_queue;
+  RingBuffer<UdpEvent, 64>  _event_queue;
 
   // Your name.  This will be exchanged with other peers on sync.
   char _playerName[MAX_NAME_SIZE];

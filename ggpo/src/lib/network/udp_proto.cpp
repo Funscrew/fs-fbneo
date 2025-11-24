@@ -211,7 +211,7 @@ void UdpProtocol::SendInputAck()
 }
 
 // ----------------------------------------------------------------------------------------------------------
-bool UdpProtocol::GetEvent(UdpProtocol::UdpEvent& e)
+bool UdpProtocol::GetEvent(UdpEvent& e)
 {
   if (_event_queue.size() == 0) {
     return false;
@@ -427,7 +427,7 @@ void UdpProtocol::UpdateNetworkStats(void)
 }
 
 // ----------------------------------------------------------------------------------------------------------
-void UdpProtocol::QueueEvent(const UdpProtocol::UdpEvent& evt)
+void UdpProtocol::QueueEvent(const UdpEvent& evt)
 {
   LogEvent("Queuing event", evt);
   _event_queue.push(evt);
@@ -508,10 +508,10 @@ UdpProtocol::LogMsg(const char* prefix, UdpMsg* msg)
 }
 
 void
-UdpProtocol::LogEvent(const char* prefix, const UdpProtocol::UdpEvent& evt)
+UdpProtocol::LogEvent(const char* prefix, const UdpEvent& evt)
 {
   switch (evt.type) {
-  case UdpProtocol::UdpEvent::Synchronized:
+  case UdpEvent::Synchronized:
     Log("%s (event: Synchronized).\n", prefix);
     break;
   }
@@ -566,13 +566,13 @@ bool UdpProtocol::OnSyncReply(UdpMsg* msg, int len)
   Log("Checking sync state (%d round trips remaining).\n", _state.sync.roundtrips_remaining);
   if (--_state.sync.roundtrips_remaining == 0) {
     Log("Synchronized!\n");
-    QueueEvent(UdpProtocol::UdpEvent(UdpProtocol::UdpEvent::Synchronized));
+    QueueEvent(UdpEvent(UdpEvent::Synchronized));
     _current_state = Running;
     _last_received_input.frame = -1;
     _remote_magic_number = msg->header.magic;
   }
   else {
-    UdpProtocol::UdpEvent evt(UdpProtocol::UdpEvent::Synchronizing);
+    UdpEvent evt(UdpEvent::Synchronizing);
     evt.u.synchronizing.total = SYNC_PACKETS_COUNT;
     evt.u.synchronizing.count = SYNC_PACKETS_COUNT - _state.sync.roundtrips_remaining;
     QueueEvent(evt);
@@ -585,7 +585,7 @@ bool UdpProtocol::OnSyncReply(UdpMsg* msg, int len)
 bool UdpProtocol::OnChat(UdpMsg* msg, int msgLen)
 {
 
-  UdpProtocol::UdpEvent evt(UdpProtocol::UdpEvent::ChatCommand);
+  UdpEvent evt(UdpEvent::ChatCommand);
   // evt.u.input.input = _last_received_input;
   //_last_received_input.desc(desc, ARRAY_SIZE(desc));
 
@@ -687,7 +687,7 @@ bool UdpProtocol::OnInput(UdpMsg* msg, int len)
         /*
          * Send the event to the emualtor
          */
-        UdpProtocol::UdpEvent evt(UdpProtocol::UdpEvent::Input);
+        UdpEvent evt(UdpEvent::Input);
         evt.u.input.input = _last_received_input;
 
         const int DESC_SIZE = 1024;

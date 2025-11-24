@@ -393,7 +393,7 @@ void Peer2PeerBackend::PollSyncEvents(void)
 // ----------------------------------------------------------------------------------------------------------
 void Peer2PeerBackend::PollUdpProtocolEvents(void)
 {
-  UdpProtocol::UdpEvent evt;
+  UdpEvent evt;
   for (uint16 i = 0; i < _num_players; i++) {
     while (_endpoints[i].GetEvent(evt)) {
       OnUdpProtocolPeerEvent(evt, i);
@@ -402,11 +402,11 @@ void Peer2PeerBackend::PollUdpProtocolEvents(void)
 }
 
 // ----------------------------------------------------------------------------------------------------------
-void Peer2PeerBackend::OnUdpProtocolPeerEvent(UdpProtocol::UdpEvent& evt, PlayerID playerIndex)
+void Peer2PeerBackend::OnUdpProtocolPeerEvent(UdpEvent& evt, PlayerID playerIndex)
 {
   OnUdpProtocolEvent(evt, playerIndex);
   switch (evt.type) {
-  case UdpProtocol::UdpEvent::Input:
+  case UdpEvent::Input:
     if (!_local_connect_status[playerIndex].disconnected) {
 
       int current_remote_frame = _local_connect_status[playerIndex].last_frame;
@@ -420,7 +420,7 @@ void Peer2PeerBackend::OnUdpProtocolPeerEvent(UdpProtocol::UdpEvent& evt, Player
     }
     break;
 
-  case UdpProtocol::UdpEvent::Disconnected:
+  case UdpEvent::Disconnected:
     DisconnectPlayer(playerIndex);
     break;
 
@@ -428,12 +428,12 @@ void Peer2PeerBackend::OnUdpProtocolPeerEvent(UdpProtocol::UdpEvent& evt, Player
 }
 
 // ----------------------------------------------------------------------------------------------------------
-void Peer2PeerBackend::OnUdpProtocolEvent(UdpProtocol::UdpEvent& evt, PlayerID playerIndex)
+void Peer2PeerBackend::OnUdpProtocolEvent(UdpEvent& evt, PlayerID playerIndex)
 {
   GGPOEvent info;
 
   switch (evt.type) {
-  case UdpProtocol::UdpEvent::Connected:
+  case UdpEvent::Connected:
     info.code = GGPO_EVENTCODE_CONNECTED_TO_PEER;
     info.u.connected.player_index = playerIndex;
 
@@ -443,14 +443,14 @@ void Peer2PeerBackend::OnUdpProtocolEvent(UdpProtocol::UdpEvent& evt, PlayerID p
 
     _callbacks.on_event(&info);
     break;
-  case UdpProtocol::UdpEvent::Synchronizing:
+  case UdpEvent::Synchronizing:
     info.code = GGPO_EVENTCODE_SYNCHRONIZING_WITH_PEER;
     info.u.synchronizing.player_index = playerIndex;
     info.u.synchronizing.count = evt.u.synchronizing.count;
     info.u.synchronizing.total = evt.u.synchronizing.total;
     _callbacks.on_event(&info);
     break;
-  case UdpProtocol::UdpEvent::Synchronized:
+  case UdpEvent::Synchronized:
     info.code = GGPO_EVENTCODE_SYNCHRONIZED_WITH_PEER;
     info.u.synchronized.player_index = playerIndex;
     _callbacks.on_event(&info);
@@ -458,20 +458,20 @@ void Peer2PeerBackend::OnUdpProtocolEvent(UdpProtocol::UdpEvent& evt, PlayerID p
     CheckInitialSync();
     break;
 
-  case UdpProtocol::UdpEvent::NetworkInterrupted:
+  case UdpEvent::NetworkInterrupted:
     info.code = GGPO_EVENTCODE_CONNECTION_INTERRUPTED;
     info.u.connection_interrupted.player_index = playerIndex;
     info.u.connection_interrupted.disconnect_timeout = evt.u.network_interrupted.disconnect_timeout;
     _callbacks.on_event(&info);
     break;
 
-  case UdpProtocol::UdpEvent::NetworkResumed:
+  case UdpEvent::NetworkResumed:
     info.code = GGPO_EVENTCODE_CONNECTION_RESUMED;
     info.u.connection_resumed.player_index = playerIndex;
     _callbacks.on_event(&info);
     break;
 
-  case UdpProtocol::UdpEvent::ChatCommand:
+  case UdpEvent::ChatCommand:
 
     char text[MAX_GGPOCHAT_SIZE + 1];
     auto userName = _PlayerNames[playerIndex];

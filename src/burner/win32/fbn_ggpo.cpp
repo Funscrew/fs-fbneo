@@ -561,11 +561,15 @@ void ParseAddress(const char* addr, char* host, UINT16* port)
   }
 }
 
+namespace Utils {
+  extern void InitLogger(GGPOLogOptions& options_);
+}
+
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 int InitDirectConnection(DirectConnectionOptions& ops, GGPOLogOptions& logOps)
 {
 
-//  GGPOUtils::InitLogger(logOps);
+  Utils::InitLogger(logOps);
 
   const UINT16 DEFAULT_LOCAL_PORT = 7000;
   const UINT16 DEFAULT_REMOTE_PORT = 7000;
@@ -871,8 +875,8 @@ void QuarkSendChatCmd(char* text, char cmd)
 
   // Print the chat line on our local:
   if (cmd == 'T' && _playerIndex != PLAYER_NOT_SET && ggpo && !isChatMuted) {
-    auto playerName = ggpo_get_playerName(ggpo , _playerIndex);
-    wchar_t nameBuffer[16*2];
+    auto playerName = ggpo_get_playerName(ggpo, _playerIndex);
+    wchar_t nameBuffer[16 * 2];
     wcscpy(nameBuffer, ANSIToTCHAR(playerName, NULL, NULL));
 
     VidOverlayAddChatLine(nameBuffer, ANSIToTCHAR(msgBuffer + 1, NULL, NULL));
