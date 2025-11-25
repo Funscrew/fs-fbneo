@@ -58,8 +58,7 @@ void GameInput::desc(char* buf, size_t buf_size, bool show_frame) const
   strncat_s(buf, remaining, ")", 1);
 }
 
-void
-GameInput::log(char* prefix, bool show_frame) const
+void GameInput::log(char* prefix, bool show_frame) const
 {
   char buf[1024];
   size_t c = strlen(prefix);

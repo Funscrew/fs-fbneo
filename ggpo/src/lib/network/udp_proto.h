@@ -126,9 +126,9 @@ protected:
   void UpdateNetworkStats(void);
   void QueueEvent(const UdpEvent& evt);
   void ClearSendQueue(void);
-  void Log(const char* fmt, ...);
-  void LogMsg(const char* prefix, UdpMsg* msg);
-  void LogEvent(const char* prefix, const UdpEvent& evt);
+  // void Log(const char* fmt, ...);
+  //void LogMsg(const char* prefix, UdpMsg* msg);
+  // void LogEvent(const char* prefix, const UdpEvent& evt);
   void SendSyncRequest();
   void SendMsg(UdpMsg* msg);
   void PumpSendQueue();

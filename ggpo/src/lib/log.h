@@ -19,13 +19,17 @@ struct UdpMsg;
 #define _LOG_H
 
 static const char* CATEGORY_GENERAL = "NA";
-
+static const char* CATEGORY_MESSAGE = "MSG";
+static const char* CATEGORY_ENDPOINT = "EP";
+static const char* CATEGORY_EVENT = "EVT";
 
 // =======================================================================================
 struct GGPOLogOptions {
   bool LogToFile = false;
   std::string FilePath;
 };
+
+
 
 namespace Utils {
 
@@ -35,10 +39,15 @@ namespace Utils {
   // void FlushLog();
 
 //  extern void Log(const std::string msg);
-  extern void LogIt(const char* category, const char* fmt, va_list args);
-  extern void LogIt(const char* fmt, ...);
-//  extern void LogIt(const std::string fmt, va_list args);
-  extern void Log(const std::string msg, UdpEvent& event);
+  void LogIt(const char* category, const char* fmt, ...);
+  void LogIt_v(const char* category, const char* fmt, va_list args);
+  void LogIt(const char* fmt, ...);
+  //  extern void LogIt(const std::string fmt, va_list args);
+  // void Log(const std::string msg, UdpEvent& event);
+
+  void LogMsg(const char* direction, UdpMsg* msg);
+  void LogEvent(const char* msg, const UdpEvent& evt);
+
 }
 
 

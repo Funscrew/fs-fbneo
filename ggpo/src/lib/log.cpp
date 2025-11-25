@@ -77,6 +77,18 @@ void Utils::InitLogger(GGPOLogOptions& options_) {
 
 }
 
+
+// ----------------------------------------------------------------------------------------------------------------
+void Utils::LogIt(const char* category, const char* fmt, ...) {
+  va_list args;
+  va_start(args, fmt);
+
+  LogIt_v(category, fmt, args);
+
+  va_end(args);
+}
+
+
 // ----------------------------------------------------------------------------------------------------------------
 void Utils::LogIt(const char* fmt, ...) {
 
@@ -90,7 +102,76 @@ void Utils::LogIt(const char* fmt, ...) {
 }
 
 // ----------------------------------------------------------------------------------------------------------------
-void Utils::LogIt(const char* category, const char* fmt, va_list args) {
+void Utils::LogEvent(const char* msg, const UdpEvent& evt)
+{
+  const int MSG_SIZE = 1024;
+  char buf[MSG_SIZE];
+  memset(buf, 0, MSG_SIZE);
+
+  // TODO: Add some more information....
+
+  sprintf_s(buf, MSG_SIZE, "%s:", msg);
+
+  LogIt(CATEGORY_EVENT, buf);
+
+  // Original:
+    //switch (evt.type) {
+    //case UdpEvent::Synchronized:
+    //  Log("%s (event: Synchronized).\n", prefix);
+    //  break;
+    //}
+
+}
+
+// ----------------------------------------------------------------------------------------------------------------
+void Utils::LogMsg(const char* direction, UdpMsg* msg)
+{
+  const int MSG_SIZE = 1024;
+  char buf[MSG_SIZE];
+  memset(buf, 0, MSG_SIZE);
+
+  // TODO: Add the other data...
+  sprintf_s(buf, MSG_SIZE, "%s:", direction);
+
+  LogIt(CATEGORY_MESSAGE, buf);
+
+  // Original....
+  //switch (msg->header.type) {
+  //case UdpMsg::SyncRequest:
+  //  Log("%s sync-request (%d).\n", prefix,
+  //    msg->u.sync_request.random_request);
+  //  break;
+  //case UdpMsg::SyncReply:
+  //  Log("%s sync-reply (%d).\n", prefix,
+  //    msg->u.sync_reply.random_reply);
+  //  break;
+  //case UdpMsg::QualityReport:
+  //  Log("%s quality report.\n", prefix);
+  //  break;
+  //case UdpMsg::QualityReply:
+  //  Log("%s quality reply.\n", prefix);
+  //  break;
+  //case UdpMsg::KeepAlive:
+  //  Log("%s keep alive.\n", prefix);
+  //  break;
+  //case UdpMsg::Input:
+  //  Log("%s game-compressed-input %d (+ %d bits).\n", prefix, msg->u.input.start_frame, msg->u.input.num_bits);
+  //  break;
+  //case UdpMsg::InputAck:
+  //  Log("%s input ack.\n", prefix);
+  //  break;
+
+  //case UdpMsg::ChatCommand:
+  //  Log("%s chat.\n", prefix);
+  //  break;
+
+  //default:
+  //  ASSERT(FALSE && "Unknown UdpMsg type.");
+  //}
+}
+
+// ----------------------------------------------------------------------------------------------------------------
+void Utils::LogIt_v(const char* category, const char* fmt, va_list args) {
 
   if (!_logActive) { return; }
 
@@ -101,17 +182,10 @@ void Utils::LogIt(const char* category, const char* fmt, va_list args) {
 
   // Now we can write the buffer to console / disk....
   // TODO: Do it in hex for less chars?
-  fprintf(logHandle, "%d:%s:", Platform::GetCurrentTimeMS(), category);
-  fprintf(logHandle, buf);
-}
+  fprintf(logHandle, "%d:%s:%s\n", Platform::GetCurrentTimeMS(), category, buf);
+  // fprintf(logHandle, buf);
 
-//
-//// ----------------------------------------------------------------------------------------------------------------
-//void Log(const std::string msg)
-//{
-//  if (!_logActive) { return; }
-//  // _ggpoLogger.Log(msg);
-//}
+}
 
 // ----------------------------------------------------------------------------------------------------------------
 void Log(const std::string msg, UdpEvent& event)
@@ -119,7 +193,3 @@ void Log(const std::string msg, UdpEvent& event)
   if (!_logActive) { return; }
   // _ggpoLogger.Log(msg);
 }
-
-// ----------------------------------------------------------------------------------------------------------------
-// ----------------------------------------------------------------------------------------------------------------
-

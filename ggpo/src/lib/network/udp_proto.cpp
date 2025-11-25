@@ -321,7 +321,7 @@ void UdpProtocol::SendSyncRequest()
 // ------------------------------------------------------------------------------------------------
 void UdpProtocol::SendMsg(UdpMsg* msg)
 {
-  LogMsg("send", msg);
+  Utils::LogMsg("send", msg);
 
   _packets_sent++;
   _last_send_time = Platform::GetCurrentTimeMS();
@@ -370,7 +370,7 @@ void UdpProtocol::OnMsg(UdpMsg* msg, int len)
   uint16 seq = msg->header.sequence_number;
   if (msg->header.type != UdpMsg::SyncRequest && msg->header.type != UdpMsg::SyncReply) {
     if (msg->header.magic != _remote_magic_number) {
-      LogMsg("recv rejecting", msg);
+      Utils::LogIt(CATEGORY_MESSAGE, "magic-mismatch");
       return;
     }
 
@@ -378,13 +378,13 @@ void UdpProtocol::OnMsg(UdpMsg* msg, int len)
     uint16 skipped = (uint16)((int)seq - (int)_next_recv_seq);
     // Log("checking sequence number -> next - seq : %d - %d = %d\n", seq, _next_recv_seq, skipped);
     if (skipped > MAX_SEQ_DISTANCE) {
-      Log("dropping out of order packet (seq: %d, last seq:%d)\n", seq, _next_recv_seq);
-      return;
+      Utils::LogIt(CATEGORY_ENDPOINT, "dropping out of order packet (seq: %d, last seq:%d)", seq, _next_recv_seq);
+       return;
     }
   }
 
   _next_recv_seq = seq;
-  LogMsg("recv", msg);
+  Utils::LogMsg("recv", msg);
   if (msg->header.type >= ARRAY_SIZE(msgHandlers)) {
     OnInvalid(msg, len);
   }
@@ -429,7 +429,7 @@ void UdpProtocol::UpdateNetworkStats(void)
 // ----------------------------------------------------------------------------------------------------------
 void UdpProtocol::QueueEvent(const UdpEvent& evt)
 {
-  LogEvent("Queuing event", evt);
+  Utils::LogEvent("Queuing event", evt);
   _event_queue.push(evt);
 }
 
@@ -450,72 +450,41 @@ UdpProtocol::GetPeerConnectStatus(int id, int* frame)
   return !_peer_connect_status[id].disconnected;
 }
 
-// REFACTOR:
-// We should not be wasting time with logging calls if the logging isn't actually
-// enabled.  For all of the work that is done to save a byte here and there in the
-// transport, its kind of funny, that we will write and blackhole many 100's of
-// bytes per frame.....
-void UdpProtocol::Log(const char* fmt, ...)
-{
-  char buf[1024];
-  size_t offset;
-  va_list args;
+//// REFACTOR:
+//// We should not be wasting time with logging calls if the logging isn't actually
+//// enabled.  For all of the work that is done to save a byte here and there in the
+//// transport, its kind of funny, that we will write and blackhole many 100's of
+//// bytes per frame.....
+//void UdpProtocol::Log(const char* fmt, ...)
+//{
+//  char buf[1024];
+//  size_t offset;
+//  va_list args;
+//
+//  sprintf_s(buf, ARRAY_SIZE(buf), "udpproto%d | ", _queue);
+//  offset = strlen(buf);
+//  va_start(args, fmt);
+//  vsnprintf(buf + offset, ARRAY_SIZE(buf) - offset - 1, fmt, args);
+//  buf[ARRAY_SIZE(buf) - 1] = '\0';
+//  ::Log(buf);
+//  va_end(args);
+//}
 
-  sprintf_s(buf, ARRAY_SIZE(buf), "udpproto%d | ", _queue);
-  offset = strlen(buf);
-  va_start(args, fmt);
-  vsnprintf(buf + offset, ARRAY_SIZE(buf) - offset - 1, fmt, args);
-  buf[ARRAY_SIZE(buf) - 1] = '\0';
-  ::Log(buf);
-  va_end(args);
-}
-
-void
-UdpProtocol::LogMsg(const char* prefix, UdpMsg* msg)
-{
-  switch (msg->header.type) {
-  case UdpMsg::SyncRequest:
-    Log("%s sync-request (%d).\n", prefix,
-      msg->u.sync_request.random_request);
-    break;
-  case UdpMsg::SyncReply:
-    Log("%s sync-reply (%d).\n", prefix,
-      msg->u.sync_reply.random_reply);
-    break;
-  case UdpMsg::QualityReport:
-    Log("%s quality report.\n", prefix);
-    break;
-  case UdpMsg::QualityReply:
-    Log("%s quality reply.\n", prefix);
-    break;
-  case UdpMsg::KeepAlive:
-    Log("%s keep alive.\n", prefix);
-    break;
-  case UdpMsg::Input:
-    Log("%s game-compressed-input %d (+ %d bits).\n", prefix, msg->u.input.start_frame, msg->u.input.num_bits);
-    break;
-  case UdpMsg::InputAck:
-    Log("%s input ack.\n", prefix);
-    break;
-
-  case UdpMsg::ChatCommand:
-    Log("%s chat.\n", prefix);
-    break;
-
-  default:
-    ASSERT(FALSE && "Unknown UdpMsg type.");
-  }
-}
-
-void
-UdpProtocol::LogEvent(const char* prefix, const UdpEvent& evt)
-{
-  switch (evt.type) {
-  case UdpEvent::Synchronized:
-    Log("%s (event: Synchronized).\n", prefix);
-    break;
-  }
-}
+//// ----------------------------------------------------------------------------------------------------------
+//void UdpProtocol::LogMsg(const char* prefix, UdpMsg* msg)
+//{
+//  Utils::LogMsg(prefix, msg);
+//}
+//
+//// ----------------------------------------------------------------------------------------
+//void UdpProtocol::LogEvent(const char* prefix, const UdpEvent& evt)
+//{
+//  switch (evt.type) {
+//  case UdpEvent::Synchronized:
+//    Log("%s (event: Synchronized).\n", prefix);
+//    break;
+//  }
+//}
 
 // ----------------------------------------------------------------------------------------
 bool UdpProtocol::OnInvalid(UdpMsg* msg, int len)
