@@ -890,6 +890,8 @@ void QuarkUpdateStats(double fps)
   GGPONetworkStats stats;
   ggpo_get_stats(ggpo, &stats, _otherPlayerIndex);
   VidSSetStats(fps, stats.network.ping, iDelay);
+
+  // NOTE: This is where the rollback, etc. data is sent.  Pretty sure that 'VidSSetStats' doesn't get used anymore, or is for other overlay systems that we will never see again.....
   VidOverlaySetStats(fps, stats.network.ping, iDelay);
 }
 

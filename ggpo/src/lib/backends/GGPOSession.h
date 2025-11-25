@@ -23,7 +23,7 @@ struct GGPOSession {
    virtual bool ChatCommand(char *text) { return true; }
    virtual GGPOErrorCode DisconnectPlayer(PlayerID handle) { return GGPO_OK; }
    virtual bool GetNetworkStats(GGPONetworkStats *stats, PlayerID playerIndex) { return GGPO_OK; }
-   virtual GGPOErrorCode Logv(const char *fmt, va_list list) { ::Logv(fmt, list); return GGPO_OK; }
+   virtual GGPOErrorCode Logv(const char *fmt, va_list list) { Utils::LogIt_v(fmt, list); return GGPO_OK; }
 
    virtual void SetFrameDelay(int delay) { throw std::exception("not supported!"); }
    virtual GGPOErrorCode SetDisconnectTimeout(int timeout) { return GGPO_ERRORCODE_UNSUPPORTED; }

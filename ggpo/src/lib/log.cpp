@@ -7,63 +7,59 @@
 
 #include "types.h"
 
-using namespace Utils;
-
-static FILE* logfile = nullptr;
 static FILE* logHandle = nullptr;
-//
-//void LogFlush()
-//{
-//  if (logfile) {
-//    fflush(logfile);
-//  }
-//}
+static bool logInitialized = false;
+static UINT32 lastWrite = 0;
 
-static char logbuf[4 * 1024 * 1024];
 
+// OBSOLETE:  This is just here to keep the build in order while the logging gets updated!
 void Log(const char* fmt, ...)
 {
   va_list args;
   va_start(args, fmt);
-  Logv(fmt, args);
+  // Logv(fmt, args);
+  Utils::LogIt_v(fmt, args);
   va_end(args);
 }
-
-void Logv(const char* fmt, va_list args)
-{
-  //if (!Platform::GetConfigBool(L"ggpo.log") || Platform::GetConfigBool(L"ggpo.log.ignore")) {
-  //  return;
-  //}
-  if (!logfile) {
-    sprintf_s(logbuf, ARRAY_SIZE(logbuf), "log-%d.log", Platform::GetProcessID());
-    fopen_s(&logfile, logbuf, "w");
-  }
-  Logv(logfile, fmt, args);
-}
-
-void Logv(FILE* fp, const char* fmt, va_list args)
-{
-  if (Platform::GetConfigBool(L"ggpo.log.timestamps")) {
-    static int start = 0;
-    int t = 0;
-    if (!start) {
-      start = Platform::GetCurrentTimeMS();
-    }
-    else {
-      t = Platform::GetCurrentTimeMS() - start;
-    }
-    fprintf(fp, "%d.%03d : ", t / 1000, t % 1000);
-  }
-
-  vfprintf(fp, fmt, args);
-  fflush(fp);
-
-  vsprintf_s(logbuf, ARRAY_SIZE(logbuf), fmt, args);
-}
+//
+//void Logv(const char* fmt, va_list args)
+//{
+//  //if (!Platform::GetConfigBool(L"ggpo.log") || Platform::GetConfigBool(L"ggpo.log.ignore")) {
+//  //  return;
+//  //}
+//  if (!logfile) {
+//    sprintf_s(logbuf, ARRAY_SIZE(logbuf), "log-%d.log", Platform::GetProcessID());
+//    fopen_s(&logfile, logbuf, "w");
+//  }
+//  Logv(logfile, fmt, args);
+//}
+//
+//void Logv(FILE* fp, const char* fmt, va_list args)
+//{
+//  if (Platform::GetConfigBool(L"ggpo.log.timestamps")) {
+//    static int start = 0;
+//    int t = 0;
+//    if (!start) {
+//      start = Platform::GetCurrentTimeMS();
+//    }
+//    else {
+//      t = Platform::GetCurrentTimeMS() - start;
+//    }
+//    fprintf(fp, "%d.%03d : ", t / 1000, t % 1000);
+//  }
+//
+//  vfprintf(fp, fmt, args);
+//  fflush(fp);
+//
+//  vsprintf_s(logbuf, ARRAY_SIZE(logbuf), fmt, args);
+//}
 
 
 // ----------------------------------------------------------------------------------------------------------------
 void Utils::InitLogger(GGPOLogOptions& options_) {
+  if (logInitialized) { throw new std::exception("The log has already been initialized!"); }
+  logInitialized = true;
+
   _logOps = options_;
   _logActive = _logOps.LogToFile;
 
@@ -73,13 +69,34 @@ void Utils::InitLogger(GGPOLogOptions& options_) {
   }
 
   // Write the init message...
+  // TODO: Maybe we could add some more information about the current GGPO settings?  delay, etc.?
   Utils::LogIt("INITIALIZED");
 
 }
 
+// ----------------------------------------------------------------------------------------------------------------
+void Utils::FlushLog() 
+{
+  if (!_logActive || !logHandle) { return; }
+  fflush(logHandle);
+  lastWrite = Platform::GetCurrentTimeMS();
+}
 
 // ----------------------------------------------------------------------------------------------------------------
-void Utils::LogIt(const char* category, const char* fmt, ...) {
+void Utils::CloseLog() 
+{
+  if (logHandle) {
+    FlushLog();
+    fclose(logHandle);
+    logHandle = nullptr;
+  }
+}
+
+// ----------------------------------------------------------------------------------------------------------------
+void Utils::LogIt(const char* category, const char* fmt, ...)
+{
+  if (!_logActive) { return; }
+
   va_list args;
   va_start(args, fmt);
 
@@ -88,22 +105,28 @@ void Utils::LogIt(const char* category, const char* fmt, ...) {
   va_end(args);
 }
 
-
 // ----------------------------------------------------------------------------------------------------------------
-void Utils::LogIt(const char* fmt, ...) {
+void Utils::LogIt(const char* fmt, ...)
+{
+  if (!_logActive) { return; }
 
   va_list args;
   va_start(args, fmt);
-
-  LogIt(CATEGORY_GENERAL, fmt, args);
-
+  LogIt_v(fmt, args);
   va_end(args);
+}
 
+// ----------------------------------------------------------------------------------------------------------------
+void Utils::LogIt_v(const char* fmt, va_list args)
+{
+  LogIt(CATEGORY_GENERAL, fmt, args);
 }
 
 // ----------------------------------------------------------------------------------------------------------------
 void Utils::LogEvent(const char* msg, const UdpEvent& evt)
 {
+  if (!_logActive) { return; }
+
   const int MSG_SIZE = 1024;
   char buf[MSG_SIZE];
   memset(buf, 0, MSG_SIZE);
@@ -120,6 +143,36 @@ void Utils::LogEvent(const char* msg, const UdpEvent& evt)
     //  Log("%s (event: Synchronized).\n", prefix);
     //  break;
     //}
+
+}
+
+// ----------------------------------------------------------------------------------------------------------------
+void Utils::LogNetworkStats(int totalBytesSent, int totalPacketsSent, int ping)
+{
+  if (!_logActive) { return; }
+
+  //int total_bytes_sent = bytesSent + (UDP_HEADER_SIZE * packetsSent);
+  // float seconds = (float)((now - _stats_start_time) / 1000.0);
+  // float bytes_sec = totalBytesSent / elapsed;
+
+  //float nonOverheadBytes = totalBytesSent - (UDP_HEADER_SIZE * totalPacketsSent);
+  //float udp_overhead = 1.0f - (nonOverheadBytes / totalBytesSent);
+
+  // float udp_overhead = (float)(100.0 * (UDP_HEADER_SIZE * packetsSent) / totalPacketsSent);
+
+  // NOTE: A quality report can be computed from all of the data that we log.
+  LogIt(CATEGORY_NETWORK, "%d-%d-%d", totalBytesSent, totalPacketsSent, ping);
+
+
+  //// NOTE: This might be a good place to write some stats..?
+  //Log("Network Stats -- Bandwidth: %.2f KBps   Packets Sent: %5d (%.2f pps)   "
+  //  "KB Sent: %.2f    UDP Overhead: %.2f pct.\n",
+  //  _kbps_sent,
+  //  _packets_sent,
+  //  (float)_packets_sent * 1000 / (now - _stats_start_time),
+  //  total_bytes_sent / 1024.0,
+  //  udp_overhead);
+
 
 }
 
@@ -171,7 +224,8 @@ void Utils::LogMsg(const char* direction, UdpMsg* msg)
 }
 
 // ----------------------------------------------------------------------------------------------------------------
-void Utils::LogIt_v(const char* category, const char* fmt, va_list args) {
+void Utils::LogIt_v(const char* category, const char* fmt, va_list args) 
+{
 
   if (!_logActive) { return; }
 
@@ -185,11 +239,12 @@ void Utils::LogIt_v(const char* category, const char* fmt, va_list args) {
   fprintf(logHandle, "%d:%s:%s\n", Platform::GetCurrentTimeMS(), category, buf);
   // fprintf(logHandle, buf);
 
+  // This could be optional, but we don't want to flush with every single message....
+  UINT32 now = Platform::GetCurrentTimeMS();
+  UINT32 next = now - lastWrite;
+  if (next > 100) { 
+    FlushLog();
+  }
+
 }
 
-// ----------------------------------------------------------------------------------------------------------------
-void Log(const std::string msg, UdpEvent& event)
-{
-  if (!_logActive) { return; }
-  // _ggpoLogger.Log(msg);
-}

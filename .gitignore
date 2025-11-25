@@ -18,3 +18,4 @@ gitlog.txt
 *.cpp.bak
 ggpo_legacy/
 console-log.txt
+dev-notes.*

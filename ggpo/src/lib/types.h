@@ -58,10 +58,7 @@ typedef int int32;
       if (!(condition)) {                                   \
          char assert_buf[1024];                             \
          snprintf(assert_buf, sizeof(assert_buf) - 1, "Assertion: %s @ %s:%d (pid:%d)", #condition, __FILE__, __LINE__, Platform::GetProcessID()); \
-         Log("%s\n", assert_buf);                           \
-         Log("\n");                                         \
-         Log("\n");                                         \
-         Log("\n");                                         \
+         Utils::LogIt(CATEGORY_ERROR, assert_buf);          \
          Platform::AssertFailed(assert_buf);                \
          exit(0);                                           \
       }                                                     \
@@ -82,6 +79,10 @@ typedef int int32;
 #ifndef MIN
 #  define MIN(x, y)        (((x) < (y)) ? (x) : (y))
 #endif
+
+
+// Useful consts:
+static const int UDP_HEADER_SIZE = 28;     /* Size of IP + UDP headers */
 
 
 #endif // _TYPES_H

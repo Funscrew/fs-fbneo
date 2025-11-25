@@ -32,10 +32,6 @@ public:
       virtual void OnMsg(sockaddr_in &from, UdpMsg *msg, int len) = 0;
    };
 
-
-protected:
-   void Log(const char *fmt, ...);
-
 public:
    Udp();
 

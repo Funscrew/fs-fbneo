@@ -182,6 +182,8 @@ static void DisplayFPS()
     fps *= nFastSpeed + 1;
   }
 
+  // NOTE: This whole thing could be wrapped into 'QuarkUpdateStats' or whatever.
+  // --> I mean the check for kNetGame, etc.
   if (kNetGame) {
     QuarkUpdateStats(fps);
   }
