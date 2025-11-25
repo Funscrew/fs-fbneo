@@ -239,12 +239,13 @@ void Utils::LogIt_v(const char* category, const char* fmt, va_list args)
   fprintf(logHandle, "%d:%s:%s\n", Platform::GetCurrentTimeMS(), category, buf);
   // fprintf(logHandle, buf);
 
-  // This could be optional, but we don't want to flush with every single message....
-  UINT32 now = Platform::GetCurrentTimeMS();
-  UINT32 next = now - lastWrite;
-  if (next > 100) { 
-    FlushLog();
-  }
+  fflush(logHandle);
+  //// This could be optional, but we don't want to flush with every single message....
+  //UINT32 now = Platform::GetCurrentTimeMS();
+  //UINT32 next = now - lastWrite;
+  //if (next > 100) { 
+  //  FlushLog();
+  //}
 
 }
 
