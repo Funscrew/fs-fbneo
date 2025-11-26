@@ -17,6 +17,10 @@ bool bSkipPerfmonUpdates = false;
 void QuarkInitPerfMon();
 void QuarkPerfMonUpdate(GGPONetworkStats* stats);
 
+namespace Utils {
+  extern void InitLogger(GGPOLogOptions& options_);
+}
+
 extern int nAcbVersion;
 extern int nAcbLoadState;
 extern int bMediaExit;
@@ -559,10 +563,6 @@ void ParseAddress(const char* addr, char* host, UINT16* port)
     }
 
   }
-}
-
-namespace Utils {
-  extern void InitLogger(GGPOLogOptions& options_);
 }
 
 // ----------------------------------------------------------------------------------------------------------------------------------------------

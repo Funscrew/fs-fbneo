@@ -36,14 +36,17 @@ static const char* CATEGORY_UDP = "UDP";
 struct GGPOLogOptions {
   bool LogToFile = false;
   std::string FilePath;
+
+  // Comma delimited list of categories that will be logged.  All others will be ignored.
+  // If empty, all categories will be logged.
+  std::string AllowedCategories;
 };
 
 
 
 namespace Utils {
 
-  static GGPOLogOptions _logOps;
-  static bool _logActive = false;
+
   void InitLogger(GGPOLogOptions& options_);
 
   void LogIt(const char* category, const char* fmt, ...);

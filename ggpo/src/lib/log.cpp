@@ -7,10 +7,11 @@
 
 #include "types.h"
 
+static GGPOLogOptions _logOps;
+static bool _logActive = false;
+
 static FILE* logHandle = nullptr;
 static bool logInitialized = false;
-static UINT32 lastWrite = 0;
-
 
 // OBSOLETE:  This is just here to keep the build in order while the logging gets updated!
 void Log(const char* fmt, ...)
@@ -21,38 +22,19 @@ void Log(const char* fmt, ...)
   Utils::LogIt_v(fmt, args);
   va_end(args);
 }
-//
-//void Logv(const char* fmt, va_list args)
-//{
-//  //if (!Platform::GetConfigBool(L"ggpo.log") || Platform::GetConfigBool(L"ggpo.log.ignore")) {
-//  //  return;
-//  //}
-//  if (!logfile) {
-//    sprintf_s(logbuf, ARRAY_SIZE(logbuf), "log-%d.log", Platform::GetProcessID());
-//    fopen_s(&logfile, logbuf, "w");
-//  }
-//  Logv(logfile, fmt, args);
-//}
-//
-//void Logv(FILE* fp, const char* fmt, va_list args)
-//{
-//  if (Platform::GetConfigBool(L"ggpo.log.timestamps")) {
-//    static int start = 0;
-//    int t = 0;
-//    if (!start) {
-//      start = Platform::GetCurrentTimeMS();
-//    }
-//    else {
-//      t = Platform::GetCurrentTimeMS() - start;
-//    }
-//    fprintf(fp, "%d.%03d : ", t / 1000, t % 1000);
-//  }
-//
-//  vfprintf(fp, fmt, args);
-//  fflush(fp);
-//
-//  vsprintf_s(logbuf, ARRAY_SIZE(logbuf), fmt, args);
-//}
+
+// ----------------------------------------------------------------------------------------------------------------
+// Simple check to see if the given category is active.
+// Might get weird if you don't use categories defined in log.h
+bool CategoryActive(const char* category) {
+
+  // Log everything.
+  if (_logOps.AllowedCategories.length() == 0) { return true; }
+  
+  // Log some things.
+  int match = _logOps.AllowedCategories.find(category);
+  return match != std::string::npos;
+}
 
 
 // ----------------------------------------------------------------------------------------------------------------
@@ -79,7 +61,6 @@ void Utils::FlushLog()
 {
   if (!_logActive || !logHandle) { return; }
   fflush(logHandle);
-  lastWrite = Platform::GetCurrentTimeMS();
 }
 
 // ----------------------------------------------------------------------------------------------------------------
@@ -96,6 +77,7 @@ void Utils::CloseLog()
 void Utils::LogIt(const char* category, const char* fmt, ...)
 {
   if (!_logActive) { return; }
+  if (!CategoryActive(category)) { return; }
 
   va_list args;
   va_start(args, fmt);
@@ -229,6 +211,7 @@ void Utils::LogIt_v(const char* category, const char* fmt, va_list args)
 
   if (!_logActive) { return; }
 
+
   const size_t BUFFER_SIZE = 1024;
   char buf[BUFFER_SIZE];
 
@@ -237,15 +220,8 @@ void Utils::LogIt_v(const char* category, const char* fmt, va_list args)
   // Now we can write the buffer to console / disk....
   // TODO: Do it in hex for less chars?
   fprintf(logHandle, "%d:%s:%s\n", Platform::GetCurrentTimeMS(), category, buf);
-  // fprintf(logHandle, buf);
 
   fflush(logHandle);
-  //// This could be optional, but we don't want to flush with every single message....
-  //UINT32 now = Platform::GetCurrentTimeMS();
-  //UINT32 next = now - lastWrite;
-  //if (next > 100) { 
-  //  FlushLog();
-  //}
 
 }
 

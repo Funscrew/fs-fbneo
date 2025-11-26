@@ -1012,7 +1012,9 @@ int ProcessCommandLine(LPSTR lpCmdLine)
   // TODO: Some kind of command line option to load all options from a single file.  This makes it easier
   // to setup + save run profiles for the application.
   std::string logPath = "";
+  std::string logCategories = "";
   app.add_option("--logf", logPath, "File where GGPO data will be logged.");
+  app.add_option("--log-categories", logCategories, "Comman delimited list of permitted log categories.  All others will be ignored.");
 
   // @@AAR:
   // There was some legacy code in there that was used to output lists of information.
@@ -1114,6 +1116,8 @@ int ProcessCommandLine(LPSTR lpCmdLine)
     {
       logOps.LogToFile = true;
       logOps.FilePath = logPath;
+
+      logOps.AllowedCategories = logCategories;
     }
 
     directOps.romName = romName;
