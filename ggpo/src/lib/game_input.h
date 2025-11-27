@@ -34,8 +34,8 @@ struct GameInput {
 
   // This is only used for logging purposes.
   // It is going to be replaced when I get around to improving the logging for GGPO in general.
-  void desc(char* buf, size_t buf_size, bool show_frame = true) const;
-  void log(char* prefix, bool show_frame = true) const;
+  //void desc(char* buf, size_t buf_size, bool show_frame = true) const;
+  //void log(char* prefix, bool show_frame = true) const;
   bool equal(GameInput& input);
 };
 

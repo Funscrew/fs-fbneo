@@ -379,9 +379,8 @@ void UdpProtocol::OnMsg(UdpMsg* msg, int len)
 
     // filter out out-of-order packets
     uint16 skipped = (uint16)((int)seq - (int)_next_recv_seq);
-    // Log("checking sequence number -> next - seq : %d - %d = %d\n", seq, _next_recv_seq, skipped);
     if (skipped > MAX_SEQ_DISTANCE) {
-      Utils::LogIt(CATEGORY_ENDPOINT, "dropping out of order packet (seq: %d, last seq:%d)", seq, _next_recv_seq);
+      Utils::LogIt(CATEGORY_ENDPOINT, "OOP dropped: (seq: %d, last seq:%d)", seq, _next_recv_seq);
       return;
     }
   }
@@ -446,28 +445,6 @@ UdpProtocol::GetPeerConnectStatus(int id, int* frame)
   *frame = _peer_connect_status[id].last_frame;
   return !_peer_connect_status[id].disconnected;
 }
-
-//// ----------------------------------------------------------------------------------------------------------
-//// NOTE: This logging function is here as a convenience.  I want to be able to use it
-//// so that we can more easily pass in frame numbers, etc. to some of the messages.
-//void UdpProtocol::Log(const char* fmt, ...)
-//{
-//  va_list args;
-//  va_start(args, fmt);
-//  Utils::LogIt_v(fmt, args);
-//  va_end(args);
-//
-//  //char buf[1024];
-//  //size_t offset;
-//
-//  //sprintf_s(buf, ARRAY_SIZE(buf), "udpproto%d | ", _queue);
-//  //offset = strlen(buf);
-//  //va_start(args, fmt);
-//  //vsnprintf(buf + offset, ARRAY_SIZE(buf) - offset - 1, fmt, args);
-//  //buf[ARRAY_SIZE(buf) - 1] = '\0';
-//  //::Log(buf);
-//  //va_end(args);
-//}
 
 // ----------------------------------------------------------------------------------------
 bool UdpProtocol::OnInvalid(UdpMsg* msg, int len)
@@ -536,19 +513,12 @@ bool UdpProtocol::OnChat(UdpMsg* msg, int msgLen)
 {
 
   UdpEvent evt(UdpEvent::ChatCommand);
-  // evt.u.input.input = _last_received_input;
-  //_last_received_input.desc(desc, ARRAY_SIZE(desc));
-
-  //_state.running.last_input_packet_recv_time = Platform::GetCurrentTimeMS();
   int textlen = msgLen - sizeof(UdpMsg::header);
   strcpy_s(evt.u.chat.text, textlen + 1, msg->u.chat.text);
 
-  //Log("Sending frame %d to emu queue %d (%s).\n", _last_received_input.frame, _queue, desc);
   QueueEvent(evt);
 
-
   return true;
-  // int x = 10;
 }
 
 // ----------------------------------------------------------------------------------------------------------
@@ -630,9 +600,9 @@ bool UdpProtocol::OnInput(UdpMsg* msg, int len)
         UdpEvent evt(UdpEvent::Input);
         evt.u.input.input = _last_received_input;
 
-        const int DESC_SIZE = 1024;
-        char desc[DESC_SIZE];
-        _last_received_input.desc(desc, DESC_SIZE);
+        //const int DESC_SIZE = 1024;
+        //char desc[DESC_SIZE];
+        // _last_received_input.desc(desc, DESC_SIZE);
 
         _state.running.last_input_packet_recv_time = Platform::GetCurrentTimeMS();
 
@@ -641,7 +611,7 @@ bool UdpProtocol::OnInput(UdpMsg* msg, int len)
 
       }
       else {
-        Utils::LogIt(CATEGORY_INPUT, "Skipping frame:(%d) current is: %d.", currentFrame, _last_received_input.frame);
+        Utils::LogIt(CATEGORY_INPUT, "Skip:%d (%d)", currentFrame, _last_received_input.frame);
       }
 
       /*
@@ -658,7 +628,7 @@ bool UdpProtocol::OnInput(UdpMsg* msg, int len)
    */
   while (_pending_output.size() &&
     _pending_output.front().frame < msg->u.input.ack_frame) {
-    Utils::LogIt(CATEGORY_INPUT, "Throwing away pending output frame %d", _pending_output.front().frame);
+    Utils::LogIt(CATEGORY_INPUT, "Nixed output:%d", _pending_output.front().frame);
     _last_acked_input = _pending_output.front();
     _pending_output.pop();
   }

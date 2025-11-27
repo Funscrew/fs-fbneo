@@ -115,7 +115,7 @@ void Utils::LogEvent(const char* msg, const UdpEvent& evt)
 
   // TODO: Add some more information....
 
-  sprintf_s(buf, MSG_SIZE, "%s:", msg);
+  sprintf_s(buf, MSG_SIZE, "%s|", msg);
 
   LogIt(CATEGORY_EVENT, buf);
 
@@ -219,7 +219,7 @@ void Utils::LogIt_v(const char* category, const char* fmt, va_list args)
 
   // Now we can write the buffer to console / disk....
   // TODO: Do it in hex for less chars?
-  fprintf(logHandle, "%d:%s:%s\n", Platform::GetCurrentTimeMS(), category, buf);
+  fprintf(logHandle, "%d|%s|%s\n", Platform::GetCurrentTimeMS(), category, buf);
 
   fflush(logHandle);
 
