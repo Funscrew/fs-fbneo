@@ -106,7 +106,7 @@ SyncTestBackend::IncrementFrame(void)
   _sync.IncrementFrame();
   _current_input.erase();
 
-  Log("End of frame(%d)...\n", _sync.GetFrameCount());
+  //Log("End of frame(%d)...\n", _sync.GetFrameCount());
   EndLog();
 
   if (_rollingback) {

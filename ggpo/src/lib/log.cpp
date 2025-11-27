@@ -13,16 +13,6 @@ static bool _logActive = false;
 static FILE* logHandle = nullptr;
 static bool logInitialized = false;
 
-// OBSOLETE:  This is just here to keep the build in order while the logging gets updated!
-void Log(const char* fmt, ...)
-{
-  va_list args;
-  va_start(args, fmt);
-  // Logv(fmt, args);
-  Utils::LogIt_v(fmt, args);
-  va_end(args);
-}
-
 // ----------------------------------------------------------------------------------------------------------------
 // Simple check to see if the given category is active.
 // Might get weird if you don't use categories defined in log.h
@@ -118,14 +108,6 @@ void Utils::LogEvent(const char* msg, const UdpEvent& evt)
   sprintf_s(buf, MSG_SIZE, "%s|", msg);
 
   LogIt(CATEGORY_EVENT, buf);
-
-  // Original:
-    //switch (evt.type) {
-    //case UdpEvent::Synchronized:
-    //  Log("%s (event: Synchronized).\n", prefix);
-    //  break;
-    //}
-
 }
 
 // ----------------------------------------------------------------------------------------------------------------
@@ -133,28 +115,7 @@ void Utils::LogNetworkStats(int totalBytesSent, int totalPacketsSent, int ping)
 {
   if (!_logActive) { return; }
 
-  //int total_bytes_sent = bytesSent + (UDP_HEADER_SIZE * packetsSent);
-  // float seconds = (float)((now - _stats_start_time) / 1000.0);
-  // float bytes_sec = totalBytesSent / elapsed;
-
-  //float nonOverheadBytes = totalBytesSent - (UDP_HEADER_SIZE * totalPacketsSent);
-  //float udp_overhead = 1.0f - (nonOverheadBytes / totalBytesSent);
-
-  // float udp_overhead = (float)(100.0 * (UDP_HEADER_SIZE * packetsSent) / totalPacketsSent);
-
-  // NOTE: A quality report can be computed from all of the data that we log.
   LogIt(CATEGORY_NETWORK, "%d-%d-%d", totalBytesSent, totalPacketsSent, ping);
-
-
-  //// NOTE: This might be a good place to write some stats..?
-  //Log("Network Stats -- Bandwidth: %.2f KBps   Packets Sent: %5d (%.2f pps)   "
-  //  "KB Sent: %.2f    UDP Overhead: %.2f pct.\n",
-  //  _kbps_sent,
-  //  _packets_sent,
-  //  (float)_packets_sent * 1000 / (now - _stats_start_time),
-  //  total_bytes_sent / 1024.0,
-  //  udp_overhead);
-
 
 }
 

@@ -13,6 +13,9 @@
 #include "sync.h"
 #include "ring_buffer.h"
 
+
+// TODO: I am going to remove this from the codebase at some point.
+// As refactorings come in, I don't really want to maintain this stuff.
 class SyncTestBackend : public GGPOSession {
 public:
    SyncTestBackend(GGPOSessionCallbacks *cb, char *gamename, int frames, int num_players);

@@ -30,7 +30,8 @@ static const char* CATEGORY_NETWORK = "NET";
 static const char* CATEGORY_INPUT = "INP";
 static const char* CATEGORY_TEST = "TEST";
 static const char* CATEGORY_UDP = "UDP";
-
+static const char* CATEGORY_INPUT_QUEUE = "INPQ";
+static const char* CATEGORY_TIMESYNC = "TIME";
 
 // =======================================================================================
 struct GGPOLogOptions {
@@ -64,12 +65,5 @@ namespace Utils {
 
 }
 
-
-// LEGACY: OBSOLETE:
-extern void Log(const char* fmt, ...);
-//extern void Logv(const char* fmt, va_list list);
-//extern void Logv(FILE* fp, const char* fmt, va_list args);
-//extern void LogFlush();
-//extern void LogFlushOnLog(bool flush);
 
 #endif

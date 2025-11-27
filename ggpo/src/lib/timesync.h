@@ -19,7 +19,6 @@
 class TimeSync {
 public:
    TimeSync();
-   virtual ~TimeSync ();
 
    void rollback_frame(GameInput &input, int localAdvantage, int remoteAdvantage);
    int recommend_frame_wait_duration(bool require_idle_input);
