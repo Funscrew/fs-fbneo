@@ -1131,7 +1131,7 @@ int ProcessCommandLine(LPSTR lpCmdLine)
       logOps.LogToFile = true;
       logOps.FilePath = usePath;
 
-      logOps.AllowedCategories = includeCats;
+      logOps.ActiveCategories = includeCats;
     }
 
     directOps.romName = romName;

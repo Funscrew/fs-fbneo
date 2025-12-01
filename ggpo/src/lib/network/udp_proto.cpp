@@ -324,8 +324,6 @@ void UdpProtocol::SendSyncRequest()
 // ------------------------------------------------------------------------------------------------
 void UdpProtocol::SendMsg(UdpMsg* msg)
 {
-  Utils::LogMsg("send", msg);
-
   _packets_sent++;
   _last_send_time = Platform::GetCurrentTimeMS();
   _bytes_sent += msg->PacketSize();
@@ -334,6 +332,8 @@ void UdpProtocol::SendMsg(UdpMsg* msg)
   msg->header.sequence_number = _next_send_seq++;
 
   _send_queue.push(QueueEntry(Platform::GetCurrentTimeMS(), _peer_addr, msg));
+
+  Utils::LogMsg(EMsgDirection::Send, msg);
   PumpSendQueue();
 }
 
@@ -386,7 +386,7 @@ void UdpProtocol::OnMsg(UdpMsg* msg, int len)
   }
 
   _next_recv_seq = seq;
-  Utils::LogMsg("recv", msg);
+  Utils::LogMsg(EMsgDirection::Receive, msg);
   if (msg->header.type >= ARRAY_SIZE(msgHandlers)) {
     OnInvalid(msg, len);
   }

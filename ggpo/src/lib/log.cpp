@@ -19,10 +19,10 @@ static bool logInitialized = false;
 bool IsCategoryActive(const char* category) {
 
   // Log everything.
-  if (_logOps.AllowedCategories.length() == 0) { return true; }
+  if (_logOps.ActiveCategories.length() == 0) { return true; }
 
   // Log some things.
-  int match = _logOps.AllowedCategories.find(category);
+  int match = _logOps.ActiveCategories.find(category);
   return match != std::string::npos;
 }
 
@@ -39,11 +39,17 @@ void Utils::InitLogger(GGPOLogOptions& options_) {
   if (_logOps.LogToFile) {
     fopen_s(&logHandle, _logOps.FilePath.data(), "w");
   }
+  if (logHandle == nullptr) { 
+    throw std::exception("could not open log file!");
+  }
 
   // Write the init message...
   // TODO: Maybe we could add some more information about the current GGPO settings?  delay, etc.?
-  Utils::LogIt("INITIALIZED");
-
+  fprintf(logHandle, "# FS-FBNEO LOG\n");
+  fprintf(logHandle, "# VERSION:% d\n", LOG_VERSION);
+  
+  size_t len = _logOps.ActiveCategories.length();
+  fprintf(logHandle, "# ACTIVE: %s\n", len == 0 ? "[ALL]" : _logOps.ActiveCategories.data());
 }
 
 // ----------------------------------------------------------------------------------------------------------------
@@ -66,8 +72,7 @@ void Utils::CloseLog()
 // ----------------------------------------------------------------------------------------------------------------
 void Utils::LogIt(const char* category, const char* fmt, ...)
 {
-  if (!_logActive) { return; }
-  if (!IsCategoryActive(category)) { return; }
+  if (!_logActive || !IsCategoryActive(category)) { return; }
 
   va_list args;
   va_start(args, fmt);
@@ -97,7 +102,7 @@ void Utils::LogIt_v(const char* fmt, va_list args)
 // ----------------------------------------------------------------------------------------------------------------
 void Utils::LogEvent(const UdpEvent& evt)
 {
-  if (!_logActive) { return; }
+  if (!_logActive || !IsCategoryActive(CATEGORY_EVENT)) { return; }
 
   const int MSG_SIZE = 1024;
   char buf[MSG_SIZE];
@@ -109,39 +114,42 @@ void Utils::LogEvent(const UdpEvent& evt)
 // ----------------------------------------------------------------------------------------------------------------
 void Utils::LogNetworkStats(int totalBytesSent, int totalPacketsSent, int ping)
 {
-  if (!_logActive) { return; }
+  if (!_logActive || !IsCategoryActive(CATEGORY_NETWORK)) { return; }
 
-  LogIt(CATEGORY_NETWORK, "%d-%d-%d", totalBytesSent, totalPacketsSent, ping);
+  LogIt(CATEGORY_NETWORK, "%d:%d:%d", totalBytesSent, totalPacketsSent, ping);
 }
 
 // ----------------------------------------------------------------------------------------------------------------
-void Utils::LogMsg(const char* direction, UdpMsg* msg)
+void Utils::LogMsg(EMsgDirection dir, UdpMsg* msg)
 {
-  const int MSG_SIZE = 1024;
-  char buf[MSG_SIZE];
-  memset(buf, 0, MSG_SIZE);
+  if (!_logActive || !IsCategoryActive(CATEGORY_MESSAGE)) { return; }
 
-  // TODO: Add the other data...
-  sprintf_s(buf, MSG_SIZE, "%s: %d", direction, msg->header.type);
+  const int MSG_BUF_SIZE = 1024;
+  char msgBuf[MSG_BUF_SIZE];
 
-  LogIt(CATEGORY_MESSAGE, buf);
+  // TODO: Is there a way be can log the sequenced?
+  int pos = sprintf_s(msgBuf, MSG_BUF_SIZE, "%d:%d:%d", dir, msg->header.type, msg->header.sequence_number);
+
 
   // Original....
   switch (msg->header.type) {
   case UdpMsg::SyncRequest:
-    LogIt(CATEGORY_MESSAGE,"%d", msg->u.sync_request.random_request);
+    pos += sprintf_s(msgBuf + pos, MSG_BUF_SIZE - pos - 1, ":%d", msg->u.sync_request.random_request);
     break;
+
   case UdpMsg::SyncReply:
-    LogIt(CATEGORY_MESSAGE,"%d", msg->u.sync_reply.random_reply);
+    pos += sprintf_s(msgBuf + pos, MSG_BUF_SIZE - pos - 1, ":%d", msg->u.sync_reply.random_reply);
     break;
+
+  case UdpMsg::Input:
+    pos += sprintf_s(msgBuf + pos, MSG_BUF_SIZE - pos - 1, ":%d:%d", msg->u.input.start_frame, msg->u.input.num_bits);
+    break;
+
   case UdpMsg::QualityReport:
     break;
   case UdpMsg::QualityReply:
     break;
   case UdpMsg::KeepAlive:
-    break;
-  case UdpMsg::Input:
-    LogIt(CATEGORY_MESSAGE,"%d:%d", msg->u.input.start_frame, msg->u.input.num_bits);
     break;
   case UdpMsg::InputAck:
     break;
@@ -151,6 +159,9 @@ void Utils::LogMsg(const char* direction, UdpMsg* msg)
   default:
     ASSERT(false && "Unknown UdpMsg type.");
   }
+
+
+  LogIt(CATEGORY_MESSAGE, "%s", msgBuf);
 }
 
 // ----------------------------------------------------------------------------------------------------------------
