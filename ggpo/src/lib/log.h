@@ -56,7 +56,7 @@ namespace Utils {
   void LogIt_v(const char* fmt, va_list args);
 
   void LogMsg(const char* direction, UdpMsg* msg);
-  void LogEvent(const char* msg, const UdpEvent& evt);
+  void LogEvent(const UdpEvent& evt);
 
   void LogNetworkStats(int totalBytesSent, int totalPacketsSent, int ping);
 

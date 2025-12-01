@@ -425,7 +425,7 @@ void UdpProtocol::UpdateNetworkStats(void)
 // ----------------------------------------------------------------------------------------------------------
 void UdpProtocol::QueueEvent(const UdpEvent& evt)
 {
-  Utils::LogEvent("Queuing event", evt);
+  Utils::LogEvent(evt);
   _event_queue.push(evt);
 }
 
