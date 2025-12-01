@@ -153,7 +153,7 @@ void Sync::AdjustSimulation(int seek_to)
   int prevFrame = _curFrame;
   int count = _curFrame - seek_to;   // This is assumed to be positive b/c we are rolling back to an earlier frame.  Therefore, _framecount is always > seek_to.
 
-  Utils::LogIt(CATEGORY_SYNC, "Catching up");
+  Utils::LogIt(CATEGORY_SYNC, "RB:%d,%d", _curFrame, count);
   _rollingback = true;
 
   /*
@@ -164,10 +164,8 @@ void Sync::AdjustSimulation(int seek_to)
 
   // Now that we have updated _framecount to seek_to, it will be == to (oldFrameCount - count).
 
-  /*
-   * Advance frame by frame (stuffing notifications back to
-   * the master).
-   */
+
+   // Advance frame by frame (stuffing notifications back to the master).
   ResetPrediction(_curFrame);
   for (int i = 0; i < count; i++) {
     _callbacks.rollback_frame(0);
