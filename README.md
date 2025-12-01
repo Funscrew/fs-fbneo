@@ -30,3 +30,44 @@ You need to put NASM.EXE somewhere in your PATH. You can put it in your Windows 
 <strike>
 **12)** If you want to test a new detector, put it in '*build\detector*'.
 </strike>
+
+
+## How To Run
+
+### GGPO Logging
+GGPO logging can be activated with the following CLI option:
+```
+--logf "<pathtolog>;[active,categories]"
+```
+Provide the path to where you want the log to be written, and optionally a comma delimited list of all of the categories that you want to include.  If omitted, all categories will be included  For example:
+```
+--logf "ggpo.log"
+```
+Will write all categories to the file: 'ggpo.log'
+
+```
+--logf "ggpo.log;UDP,MSG,NET"
+```
+Will only include the **UDP**, **MSG**, and **NET** categories.
+
+Logging is intended to help with development, tracking of statistics, and to help run down certain bugs.  The logs themselves may not be 100% human readable in an effort to minimize their size, and system resources required while a game is running.
+
+
+All available categories are defined in log.h, as seen below:
+
+```
+static const char* CATEGORY_GENERAL = "NA";
+static const char* CATEGORY_MESSAGE = "MSG";
+static const char* CATEGORY_ENDPOINT = "EP";
+static const char* CATEGORY_EVENT = "EVT";
+static const char* CATEGORY_SYNC = "SYNC";
+static const char* CATEGORY_RUNNING = "RUN";
+static const char* CATEGORY_CONNECTION = "CONN";
+static const char* CATEGORY_ERROR = "ERR";
+static const char* CATEGORY_NETWORK = "NET";
+static const char* CATEGORY_INPUT = "INP";
+static const char* CATEGORY_TEST = "TEST";
+static const char* CATEGORY_UDP = "UDP";
+static const char* CATEGORY_INPUT_QUEUE = "INPQ";
+static const char* CATEGORY_TIMESYNC = "TIME";
+```
