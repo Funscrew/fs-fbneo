@@ -8,7 +8,7 @@
 #include "network/udp_proto.h"
 
 static GGPOLogOptions _logOps;
-static bool _logActive = false;
+static bool _isLogActive = false;
 
 static FILE* logHandle = nullptr;
 static bool logInitialized = false;
@@ -33,7 +33,7 @@ void Utils::InitLogger(GGPOLogOptions& options_) {
   logInitialized = true;
 
   _logOps = options_;
-  _logActive = _logOps.LogToFile;
+  _isLogActive = _logOps.LogToFile;
 
   // Fire up the log file, if needed....
   if (_logOps.LogToFile) {
@@ -42,10 +42,12 @@ void Utils::InitLogger(GGPOLogOptions& options_) {
     // Write the init message...
     // TODO: Maybe we could add some more information about the current GGPO settings?  delay, etc.?
     fprintf(logHandle, "# GGPO-LOG\n");
-    fprintf(logHandle, "# VERSION:% d\n", LOG_VERSION);
+    fprintf(logHandle, "# VERSION:%d\n", LOG_VERSION);
 
     size_t len = _logOps.ActiveCategories.length();
     fprintf(logHandle, "# ACTIVE: %s\n", len == 0 ? "[ALL]" : _logOps.ActiveCategories.data());
+    fprintf(logHandle, "# START:%d\n", Platform::GetCurrentTimeMS());
+
   }
   if (logHandle == nullptr) { 
     throw std::exception("could not open log file!");
@@ -57,7 +59,7 @@ void Utils::InitLogger(GGPOLogOptions& options_) {
 // ----------------------------------------------------------------------------------------------------------------
 void Utils::FlushLog()
 {
-  if (!_logActive || !logHandle) { return; }
+  if (!_isLogActive || !logHandle) { return; }
   fflush(logHandle);
 }
 
@@ -74,7 +76,7 @@ void Utils::CloseLog()
 // ----------------------------------------------------------------------------------------------------------------
 void Utils::LogIt(const char* category, const char* fmt, ...)
 {
-  if (!_logActive || !IsCategoryActive(category)) { return; }
+  if (!_isLogActive || !IsCategoryActive(category)) { return; }
 
   va_list args;
   va_start(args, fmt);
@@ -87,7 +89,7 @@ void Utils::LogIt(const char* category, const char* fmt, ...)
 // ----------------------------------------------------------------------------------------------------------------
 void Utils::LogIt(const char* fmt, ...)
 {
-  if (!_logActive) { return; }
+  if (!_isLogActive) { return; }
 
   va_list args;
   va_start(args, fmt);
@@ -104,7 +106,7 @@ void Utils::LogIt_v(const char* fmt, va_list args)
 // ----------------------------------------------------------------------------------------------------------------
 void Utils::LogEvent(const UdpEvent& evt)
 {
-  if (!_logActive || !IsCategoryActive(CATEGORY_EVENT)) { return; }
+  if (!_isLogActive || !IsCategoryActive(CATEGORY_EVENT)) { return; }
 
   const int MSG_SIZE = 1024;
   char buf[MSG_SIZE];
@@ -116,7 +118,7 @@ void Utils::LogEvent(const UdpEvent& evt)
 // ----------------------------------------------------------------------------------------------------------------
 void Utils::LogNetworkStats(int totalBytesSent, int totalPacketsSent, int ping)
 {
-  if (!_logActive || !IsCategoryActive(CATEGORY_NETWORK)) { return; }
+  if (!_isLogActive || !IsCategoryActive(CATEGORY_NETWORK)) { return; }
 
   LogIt(CATEGORY_NETWORK, "%d:%d:%d", totalBytesSent, totalPacketsSent, ping);
 }
@@ -124,7 +126,7 @@ void Utils::LogNetworkStats(int totalBytesSent, int totalPacketsSent, int ping)
 // ----------------------------------------------------------------------------------------------------------------
 void Utils::LogMsg(EMsgDirection dir, UdpMsg* msg)
 {
-  if (!_logActive || !IsCategoryActive(CATEGORY_MESSAGE)) { return; }
+  if (!_isLogActive || !IsCategoryActive(CATEGORY_MESSAGE)) { return; }
 
   const int MSG_BUF_SIZE = 1024;
   char msgBuf[MSG_BUF_SIZE];
@@ -160,6 +162,7 @@ void Utils::LogMsg(EMsgDirection dir, UdpMsg* msg)
 
   default:
     ASSERT(false && "Unknown UdpMsg type.");
+    break;
   }
 
 
@@ -170,7 +173,7 @@ void Utils::LogMsg(EMsgDirection dir, UdpMsg* msg)
 void Utils::LogIt_v(const char* category, const char* fmt, va_list args)
 {
 
-  if (!_logActive) { return; }
+  if (!_isLogActive) { return; }
 
 
   const size_t BUFFER_SIZE = 1024;

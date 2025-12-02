@@ -143,6 +143,8 @@ void Sync::CheckSimulation(int timeout)
 // ------------------------------------------------------------------------------------------------------------------------
 void Sync::IncrementFrame(void)
 {
+  Utils::LogIt(CATEGORY_SYNC, "EOF: %d", _curFrame);
+
   _curFrame++;
   SaveCurrentFrame();
 }

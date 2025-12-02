@@ -132,7 +132,6 @@ GGPOErrorCode Peer2PeerBackend::AddLocalInput(PlayerID playerIndex, void* values
 
   // Feed the input for the current frame into the synchronzation layer.
   if (!_sync.AddLocalInput(playerIndex, input)) {
-    // TODO: Log this!
     return GGPO_ERRORCODE_PREDICTION_THRESHOLD;
   }
 
@@ -371,7 +370,6 @@ GGPOErrorCode Peer2PeerBackend::SyncInput(void* values, int isize, int playerCou
 // ----------------------------------------------------------------------------------------------------------
 GGPOErrorCode Peer2PeerBackend::IncrementFrame(void)
 {
-  Utils::LogIt(CATEGORY_RUNNING, "EOF: %d", _sync.GetFrameCount());
   _sync.IncrementFrame();
   DoPoll(0);
   PollSyncEvents();

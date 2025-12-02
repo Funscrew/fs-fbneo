@@ -81,7 +81,7 @@ bool GameInput::equal(GameInput& other)
   //  Log("bits don't match\n");
   //}
 
-  ASSERT(size && other.size);
+  ASSERT(size != 0 && other.size != 0);
 
   return (frame == other.frame) &&
     size == other.size &&

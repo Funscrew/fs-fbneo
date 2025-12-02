@@ -273,8 +273,7 @@ bool UdpProtocol::OnLoopPoll(void* cookie)
       SendMsg(new UdpMsg(UdpMsg::KeepAlive));
     }
 
-    if (_disconnect_timeout && _disconnect_notify_start &&
-      !_disconnect_notify_sent && (_last_recv_time + _disconnect_notify_start < now)) {
+    if (_disconnect_timeout && _disconnect_notify_start && !_disconnect_notify_sent && (_last_recv_time + _disconnect_notify_start < now)) {
       Utils::LogIt(CATEGORY_CONNECTION, "Endpoint has stopped receiving packets for %d ms.  Sending notification.", _disconnect_notify_start);
 
       UdpEvent e(UdpEvent::NetworkInterrupted);
@@ -414,7 +413,7 @@ void UdpProtocol::UpdateNetworkStats(void)
   int total_bytes_sent = _bytes_sent + (UDP_HEADER_SIZE * _packets_sent);
   float seconds = (float)((now - _stats_start_time) / 1000.0);
   float bytes_sec = total_bytes_sent / seconds;
-//  float udp_overhead = (float)(100.0 * (UDP_HEADER_SIZE * _packets_sent) / _bytes_sent);
+  //  float udp_overhead = (float)(100.0 * (UDP_HEADER_SIZE * _packets_sent) / _bytes_sent);
 
   _kbps_sent = (int)(bytes_sec / 1024);
 
@@ -478,8 +477,7 @@ bool UdpProtocol::OnSyncReply(UdpMsg* msg, int len)
   }
 
   if (msg->u.sync_reply.random_reply != _state.sync.random) {
-    Utils::LogIt(CATEGORY_SYNC, "mismatched reply: %d != %d",
-      msg->u.sync_reply.random_reply, _state.sync.random);
+    Utils::LogIt(CATEGORY_SYNC, "mismatched reply: %d != %d", msg->u.sync_reply.random_reply, _state.sync.random);
     return false;
   }
 
@@ -626,8 +624,7 @@ bool UdpProtocol::OnInput(UdpMsg* msg, int len)
   /*
    * Get rid of our buffered input
    */
-  while (_pending_output.size() &&
-    _pending_output.front().frame < msg->u.input.ack_frame) {
+  while (_pending_output.size() && _pending_output.front().frame < msg->u.input.ack_frame) {
     Utils::LogIt(CATEGORY_INPUT, "Nixed output:%d", _pending_output.front().frame);
     _last_acked_input = _pending_output.front();
     _pending_output.pop();
