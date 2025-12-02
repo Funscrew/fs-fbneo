@@ -38,18 +38,20 @@ void Utils::InitLogger(GGPOLogOptions& options_) {
   // Fire up the log file, if needed....
   if (_logOps.LogToFile) {
     fopen_s(&logHandle, _logOps.FilePath.data(), "w");
+
+    // Write the init message...
+    // TODO: Maybe we could add some more information about the current GGPO settings?  delay, etc.?
+    fprintf(logHandle, "# FS-FBNEO LOG\n");
+    fprintf(logHandle, "# VERSION:% d\n", LOG_VERSION);
+
+    size_t len = _logOps.ActiveCategories.length();
+    fprintf(logHandle, "# ACTIVE: %s\n", len == 0 ? "[ALL]" : _logOps.ActiveCategories.data());
   }
   if (logHandle == nullptr) { 
     throw std::exception("could not open log file!");
   }
 
-  // Write the init message...
-  // TODO: Maybe we could add some more information about the current GGPO settings?  delay, etc.?
-  fprintf(logHandle, "# FS-FBNEO LOG\n");
-  fprintf(logHandle, "# VERSION:% d\n", LOG_VERSION);
   
-  size_t len = _logOps.ActiveCategories.length();
-  fprintf(logHandle, "# ACTIVE: %s\n", len == 0 ? "[ALL]" : _logOps.ActiveCategories.data());
 }
 
 // ----------------------------------------------------------------------------------------------------------------
