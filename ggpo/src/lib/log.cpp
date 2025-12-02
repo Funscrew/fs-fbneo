@@ -41,7 +41,7 @@ void Utils::InitLogger(GGPOLogOptions& options_) {
 
     // Write the init message...
     // TODO: Maybe we could add some more information about the current GGPO settings?  delay, etc.?
-    fprintf(logHandle, "# FS-FBNEO LOG\n");
+    fprintf(logHandle, "# GGPO-LOG\n");
     fprintf(logHandle, "# VERSION:% d\n", LOG_VERSION);
 
     size_t len = _logOps.ActiveCategories.length();
