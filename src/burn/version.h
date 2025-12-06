@@ -3,7 +3,7 @@
 
 #define VER_MAJOR  0
 #define VER_MINOR  4
-#define VER_REVISION 1
+#define VER_REVISION 12345
 
 #define VER_BETA  00
 #define VER_ALPHA 0

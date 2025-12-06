@@ -1270,7 +1270,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nShowCmd
   UINT16 minor = FS_VER >> 16 & 0xFF;
   UINT16 revision = FS_VER & 0xFFFF;
 
-  _stprintf(szAppBurnVer, _T("%x.%x.%x-%d"), major, minor, revision, VER_GGPO);
+  _stprintf(szAppBurnVer, _T("%d.%d.%d-%d"), major, minor, revision, VER_GGPO);
 
   nAppShowCmd = nShowCmd;
 
