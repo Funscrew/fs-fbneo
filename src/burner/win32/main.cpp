@@ -1266,15 +1266,11 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nShowCmd
 
   hAppInst = hInstance;
 
-  // Make version string (@FC version at the end)
-  if (nBurnVer & 0xFF) {
-    // private version (alpha)
-    _stprintf(szAppBurnVer, _T("%x.%x.%x.%02x-%d"), nBurnVer >> 20, (nBurnVer >> 16) & 0x0F, (nBurnVer >> 8) & 0xFF, nBurnVer & 0xFF, FS_VERSION);
-  }
-  else {
-    // public version
-    _stprintf(szAppBurnVer, _T("%x.%x.%x-%d"), nBurnVer >> 20, (nBurnVer >> 16) & 0x0F, (nBurnVer >> 8) & 0xFF, FS_VERSION);
-  }
+  UINT16 major = FS_VER >> 24 & 0xFF;
+  UINT16 minor = FS_VER >> 16 & 0xFF;
+  UINT16 revision = FS_VER & 0xFFFF;
+
+  _stprintf(szAppBurnVer, _T("%x.%x.%x-%d"), major, minor, revision, VER_GGPO);
 
   nAppShowCmd = nShowCmd;
 

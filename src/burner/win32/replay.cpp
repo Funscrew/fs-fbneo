@@ -952,11 +952,6 @@ void DisplayReplayProperties(HWND hDlg, bool bClear)
 
 		nFileMin = t2;										// Replays require a full state
 
-//		if (nBurnVer < nFileMin) {							// Error - emulator is too old to load this state
-//			fclose(fd);
-//			return;
-//		}
-
 		fseek(fd, nChunkDataPosition + nChunkSize, SEEK_SET);
 	}
 

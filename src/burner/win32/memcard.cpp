@@ -58,12 +58,6 @@ static int MemCardRead(TCHAR* szFilename, unsigned char* pData, int nSize)
 			return 1;
 		}
 		fread(&nVersion, 1, 4, fp);
-#if 0
-		if (nVersion < nBurnVer) {
-			fclose(fp);
-			return 1;
-		}
-#endif
 
 		fseek(fp, 0x0C, SEEK_CUR);					// Move file pointer to the start of the data block
 
