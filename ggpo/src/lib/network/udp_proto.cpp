@@ -522,9 +522,7 @@ bool UdpProtocol::OnChat(UdpMsg* msg, int msgLen)
 // ----------------------------------------------------------------------------------------------------------
 bool UdpProtocol::OnInput(UdpMsg* msg, int len)
 {
-  /*
-   * If a disconnect is requested, go ahead and disconnect now.
-   */
+  // If a disconnect is requested, go ahead and disconnect now.
   bool disconnect_requested = msg->u.input.disconnect_requested;
   if (disconnect_requested) {
     if (_current_state != Disconnected && !_disconnect_event_sent) {
@@ -533,10 +531,8 @@ bool UdpProtocol::OnInput(UdpMsg* msg, int len)
     }
   }
   else {
-    /*
-     * Update the peer connection status if this peer is still considered to be part
-     * of the network.
-     */
+    // Update the peer connection status if this peer is still considered to be part
+    // of the network.
     UdpMsg::connect_status* remote_status = msg->u.input.peer_connect_status;
     for (int i = 0; i < ARRAY_SIZE(_peer_connect_status); i++) {
       ASSERT(remote_status[i].last_frame >= _peer_connect_status[i].last_frame);
@@ -545,9 +541,8 @@ bool UdpProtocol::OnInput(UdpMsg* msg, int len)
     }
   }
 
-  /*
-   * Decompress the input.
-   */
+  // TODO: Application should be responsible for compress / decompress.
+  // Decompress the input.
   int last_received_frame_number = _last_received_input.frame;
   if (msg->u.input.num_bits) {
     int offset = 0;
@@ -592,9 +587,7 @@ bool UdpProtocol::OnInput(UdpMsg* msg, int len)
         ASSERT(currentFrame == _last_received_input.frame + 1);
         _last_received_input.frame = currentFrame;
 
-        /*
-         * Send the event to the emualtor
-         */
+        // Send the accepted input event.
         UdpEvent evt(UdpEvent::Input);
         evt.u.input.input = _last_received_input;
 

@@ -124,8 +124,12 @@ int Sync::SynchronizeInputs(void* values, int totalSize)
       input.erase();
     }
     else {
+      // Copy the input bytes to 'input';
       _input_queues[i].GetInput(_curFrame, &input);
     }
+
+    // Write the input bytes to their location in the output bytes.  This data is then used by
+    // the game to set inputs for all players + advance gameplay.
     memcpy(output + (i * _config.input_size), input.bits, _config.input_size);
   }
   return disconnect_flags;
@@ -150,6 +154,7 @@ void Sync::IncrementFrame(void)
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
+// This is the rollback!
 void Sync::AdjustSimulation(int seek_to)
 {
   int prevFrame = _curFrame;
@@ -266,6 +271,7 @@ bool Sync::CreateQueues(Config& config)
 // ------------------------------------------------------------------------------------------------------------------------
 bool Sync::CheckSimulationConsistency(int* seekTo)
 {
+  // Gets the first incorrect frame for ANY of the players.
   int first_incorrect = GameInput::NullFrame;
   for (int i = 0; i < _config.num_players; i++) {
     int incorrect = _input_queues[i].GetFirstIncorrectFrame();

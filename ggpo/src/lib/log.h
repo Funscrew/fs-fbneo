@@ -33,6 +33,10 @@ static const char* CATEGORY_UDP = "UDP";
 static const char* CATEGORY_INPUT_QUEUE = "INPQ";
 static const char* CATEGORY_TIMESYNC = "TIME";
 
+// This happens when we attempt to retrieve an input from 'SynchronizeInputs' but frame data
+// from the remote is not available.  It isn't a real input, and may get rolled back!
+static const char* CATEGORY_PREDICTED_INPUT = "PI";
+
 static const int LOG_VERSION = 1;
 
 // =======================================================================================

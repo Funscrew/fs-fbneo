@@ -117,8 +117,8 @@ InputQueue::GetConfirmedInput(int requested_frame, GameInput* input)
   return true;
 }
 
-bool
-InputQueue::GetInput(int requested_frame, GameInput* input)
+// ---------------------------------------------------------------------------------------------------
+bool InputQueue::GetInput(int requested_frame, GameInput* input)
 {
   Utils::LogIt(CATEGORY_INPUT_QUEUE, "requesting input frame %d.", requested_frame);
 
@@ -158,15 +158,15 @@ InputQueue::GetInput(int requested_frame, GameInput* input)
      * same thing they did last time.
      */
     if (requested_frame == 0) {
-      Utils::LogIt(CATEGORY_INPUT_QUEUE, "basing new prediction frame from nothing, you're client wants frame 0.");
+      Utils::LogIt(CATEGORY_PREDICTED_INPUT, "basing new prediction frame from nothing, you're client wants frame 0.");
       _prediction.erase();
     }
     else if (_last_added_frame == GameInput::NullFrame) {
-      Utils::LogIt(CATEGORY_INPUT_QUEUE, "basing new prediction frame from nothing, since we have no frames yet.");
+      Utils::LogIt(CATEGORY_PREDICTED_INPUT, "basing new prediction frame from nothing, since we have no frames yet.");
       _prediction.erase();
     }
     else {
-      Utils::LogIt(CATEGORY_INPUT_QUEUE, "basing new prediction frame from previously added frame (queue entry:%d, frame:%d).",
+      Utils::LogIt(CATEGORY_PREDICTED_INPUT, "basing new prediction frame from previously added frame (queue entry:%d, frame:%d).",
         PREVIOUS_FRAME(_head), _inputs[PREVIOUS_FRAME(_head)].frame);
       _prediction = _inputs[PREVIOUS_FRAME(_head)];
     }
@@ -182,7 +182,7 @@ InputQueue::GetInput(int requested_frame, GameInput* input)
    */
   *input = _prediction;
   input->frame = requested_frame;
-  Utils::LogIt(CATEGORY_INPUT_QUEUE, "returning prediction frame number %d (%d).", input->frame, _prediction.frame);
+  Utils::LogIt(CATEGORY_PREDICTED_INPUT, "returning prediction frame number %d (%d).", input->frame, _prediction.frame);
 
   return false;
 }

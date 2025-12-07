@@ -183,6 +183,7 @@ GGPOErrorCode Peer2PeerBackend::DoPoll(int timeout)
     PollUdpProtocolEvents();
 
     if (!_synchronizing) {
+      // Compare all inputs for all players + trigger any rollbacks as needed.
       _sync.CheckSimulation(timeout);
 
       // notify all of our endpoints of their local frame number for their
@@ -205,6 +206,14 @@ GGPOErrorCode Peer2PeerBackend::DoPoll(int timeout)
         ASSERT(total_min_confirmed != INT_MAX);
 
         Utils::LogIt(CATEGORY_ENDPOINT, "set confirmed: %d", total_min_confirmed);
+
+        // This is where we would send off the confirmed inputs for a listening spectator....
+        // We just need to get them out of the system.....
+        // I think what I want to do is to do the merge of the inputs here, and then send that
+        // off to the prospective spectator... or maybe the spectator does the merge...
+        // either way, that spectator can then handle dealing with ACK and resending frames or
+        // whatever.....
+
         _sync.SetLastConfirmedFrame(total_min_confirmed);
       }
 
@@ -405,13 +414,15 @@ void Peer2PeerBackend::OnUdpProtocolPeerEvent(UdpEvent& evt, PlayerID playerInde
   OnUdpProtocolEvent(evt, playerIndex);
   switch (evt.type) {
   case UdpEvent::Input:
-    if (!_local_connect_status[playerIndex].disconnected) {
+    if (!_local_connect_status[playerIndex].disconnected)
+    {
 
       int current_remote_frame = _local_connect_status[playerIndex].last_frame;
       int new_remote_frame = evt.u.input.input.frame;
       ASSERT(current_remote_frame == -1 || new_remote_frame == (current_remote_frame + 1));
 
       _sync.AddRemoteInput(playerIndex, evt.u.input.input);
+
       // Notify the other endpoints which frame we received from a peer
       Utils::LogIt(CATEGORY_INPUT, "remote frame for: %d - %d", playerIndex, evt.u.input.input.frame);
       _local_connect_status[playerIndex].last_frame = evt.u.input.input.frame;
