@@ -48,9 +48,9 @@ void Utils::InitLogger(GGPOLogOptions& options_) {
     fprintf(logHandle, "# ACTIVE: %s\n", len == 0 ? "[ALL]" : _logOps.ActiveCategories.data());
     fprintf(logHandle, "# START:%d\n", Platform::GetCurrentTimeMS());
 
-  }
-  if (logHandle == nullptr) { 
-    throw std::exception("could not open log file!");
+    if (logHandle == nullptr) {
+      throw std::exception("could not open log file!");
+    }
   }
 
   
