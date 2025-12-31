@@ -14,6 +14,7 @@ static unsigned int nDoFPS = 0;
 static bool bMute = false;
 static int nOldAudVolume;
 
+// TODO: At this point we can assume that the net version is going to be 14, and never change.
 int kNetVersion = NET_VERSION;			// Network version
 int kNetGame = 0;						// Non-zero if network is being used
 int kNetSpectator = 0;					// Non-zero if network replay is active

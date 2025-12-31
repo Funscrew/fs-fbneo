@@ -26,7 +26,7 @@ static const uint16 INPUT_SIZE = 5;
 // ==========================================================================================================
 class Peer2PeerBackend : public GGPOSession, IPollSink, Udp::Callbacks {
 public:
-   Peer2PeerBackend(GGPOSessionCallbacks *cb, const char *gamename, uint16 localport, char* remoteIp, uint16 remotePort, PlayerID playerIndex, std::string playerName);
+   Peer2PeerBackend(GGPOSessionCallbacks *cb, const char *gamename, uint16 localport, char* remoteIp, uint16 remotePort, PlayerID playerIndex, std::string playerName, uint32_t client_version);
    virtual ~Peer2PeerBackend();
 
 
@@ -78,6 +78,7 @@ protected:
 
    int                   _disconnect_timeout;
    int                   _disconnect_notify_start;
+   uint32_t              _client_version;
 
    UdpMsg::connect_status _local_connect_status[UDP_MSG_MAX_PLAYERS];
 

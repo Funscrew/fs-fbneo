@@ -1,4 +1,5 @@
-﻿#include "burner.h"
+﻿#include "version.h"
+#include "burner.h"
 #include "ggpoclient.h"
 #include "ggpo_perfmon.h"
 
@@ -198,13 +199,8 @@ bool __cdecl ggpo_on_event_callback(GGPOEvent* info)
   case GGPO_EVENTCODE_RUNNING: {
     VidOverlaySetSystemMessage(_T(""));
     VidSSetSystemMessage(_T(""));
-    // send ReceiveVersion message
-    //char temp[16];
-    //sprintf(temp, "%d", NET_VERSION);
-    //QuarkSendChatCmd(temp, 'V');
 
-    uint8_t data = NET_VERSION;
-    QuarkSendData('V', &data, sizeof(uint8_t));
+    // NOTE: Version exchange happens during sync now.
     break;
   }
 
@@ -634,7 +630,7 @@ int InitDirectConnection(DirectConnectionOptions& ops, GGPOLogOptions& logOps)
   iDelay = ops.frameDelay;
   iSeed = 0;
 
-  ggpo = ggpo_start_session(&cb, ops.romName.data(), localPort, remoteHost, remotePort, _playerIndex, ops.playerName.data());
+  ggpo = ggpo_start_session(&cb, ops.romName.data(), localPort, remoteHost, remotePort, _playerIndex, ops.playerName.data(), FS_VERSION);
 
   ggpo_set_frame_delay(ggpo, ops.frameDelay);
   VidOverlaySetSystemMessage(_T("Connecting..."));

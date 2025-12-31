@@ -52,6 +52,7 @@ struct UdpMsg
 
     struct {
       uint32      random_reply;           /* OK, here's your random data back */
+      uint32      client_version;       // Version of this client, in 8 byte chunks: MAJOR - MINOR - REVISION - GGPO (protocol version)
       char playerName[MAX_NAME_SIZE];   /* The name of the player we synced to: */
     } sync_reply;
 

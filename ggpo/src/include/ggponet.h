@@ -358,8 +358,8 @@ extern "C" {
     char* remoteIp,
     uint16  remotePort,
     PlayerID playerIndex,
-    char* playerName);
-
+    char* playerName,
+    uint32_t clientVersion);
 
   /*
    * ggpo_add_player --

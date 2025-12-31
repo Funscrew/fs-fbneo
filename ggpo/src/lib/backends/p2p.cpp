@@ -23,13 +23,15 @@ Peer2PeerBackend::Peer2PeerBackend(GGPOSessionCallbacks* cb,
   char* remoteIp,
   uint16 remotePort,
   PlayerID playerIndex,
-  std::string playerName)
+  std::string playerName,
+  uint32_t clientVersion)
   :
   _num_players(PLAYER_COUNT),
   _input_size(INPUT_SIZE),
   _sync(_local_connect_status),
   _disconnect_timeout(DEFAULT_DISCONNECT_TIMEOUT),
-  _disconnect_notify_start(DEFAULT_DISCONNECT_NOTIFY_START)
+  _disconnect_notify_start(DEFAULT_DISCONNECT_NOTIFY_START),
+  _client_version(clientVersion)
 {
   _callbacks = *cb;
   _synchronizing = true;
@@ -165,7 +167,7 @@ void Peer2PeerBackend::AddRemotePlayer(char* ip, uint16 port, int queue)
    */
   _synchronizing = true;
 
-  _endpoints[queue].Init(&_udp, _pollMgr, queue, ip, port, _local_connect_status);
+  _endpoints[queue].Init(&_udp, _pollMgr, queue, ip, port, _local_connect_status, _client_version);
   _endpoints[queue].SetDisconnectTimeout(_disconnect_timeout);
   _endpoints[queue].SetDisconnectNotifyStart(_disconnect_notify_start);
   _endpoints[queue].Synchronize();

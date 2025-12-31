@@ -9,7 +9,7 @@ static const int VER_GGPO = 3;
 #define VER_BETA  00
 #define VER_ALPHA 0
 
-constexpr unsigned int FS_VER = VER_MAJOR << 24 | VER_MINOR << 16 | VER_REVISION;
+constexpr unsigned int FS_VERSION = VER_MAJOR << 24 | VER_MINOR << 16 | VER_REVISION << 8 | VER_GGPO;
 
 // OBSOLETE:  This will be phased out at some point.
 // The issue is that some of the program uses BURN_VERSION to version data files as well.  Data format versions + program versions are not the same thing, so I want to disambiguate them at some point.

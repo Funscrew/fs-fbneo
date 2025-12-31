@@ -1266,11 +1266,12 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE, LPSTR lpCmdLine, int nShowCmd
 
   hAppInst = hInstance;
 
-  UINT16 major = FS_VER >> 24 & 0xFF;
-  UINT16 minor = FS_VER >> 16 & 0xFF;
-  UINT16 revision = FS_VER & 0xFFFF;
-
-  _stprintf(szAppBurnVer, _T("%d.%d.%d-%d"), major, minor, revision, VER_GGPO);
+  UINT8 major = FS_VERSION >> 24 & 0xFF;
+  UINT8 minor = FS_VERSION >> 16 & 0xFF;
+  UINT8 revision = FS_VERSION >> 8 & 0xFF;
+  UINT8 gppo = FS_VERSION & 0xFF;
+  
+  _stprintf(szAppBurnVer, _T("%d.%d.%d-%d"), major, minor, revision, gppo);
 
   nAppShowCmd = nShowCmd;
 

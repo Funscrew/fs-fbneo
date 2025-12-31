@@ -52,6 +52,7 @@ UdpProtocol::UdpProtocol() :
   memset(&_peer_addr, 0, sizeof _peer_addr);
   _oo_packet.msg = NULL;
 
+  // TODO: These should come from command line + other options that are fed into the proto, probably in 'init!'
   _send_latency = Platform::GetConfigInt(L"ggpo.network.delay");
   _oop_percent = Platform::GetConfigInt(L"ggpo.oop.percent");
 
@@ -75,11 +76,13 @@ void UdpProtocol::Init(Udp* udp,
   int queue,
   char* ip,
   u_short port,
-  UdpMsg::connect_status* status)
+  UdpMsg::connect_status* status,
+  uint32_t clientVersion)
 {
   _udp = udp;
   _queue = queue;
   _local_connect_status = status;
+  _client_version = clientVersion;
 
   _peer_addr.sin_family = AF_INET;
   _peer_addr.sin_port = htons(port);
@@ -468,6 +471,7 @@ bool UdpProtocol::OnSyncRequest(UdpMsg* msg, int len)
   }
   UdpMsg* reply = new UdpMsg(UdpMsg::SyncReply);
   reply->u.sync_reply.random_reply = msg->u.sync_request.random_request;
+  reply->u.sync_reply.client_version = _client_version;
 
   strcpy_s(reply->u.sync_reply.playerName, _playerName);
 
