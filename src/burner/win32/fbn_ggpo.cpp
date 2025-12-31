@@ -219,7 +219,7 @@ bool __cdecl ggpo_on_event_callback(GGPOEvent* info)
 
   case GGPO_EVENTCODE_DATA_EXCHANGE:
 
-    switch (info->u.chat.code)
+    switch (info->u.datagram.code)
     {
     default:
       break;

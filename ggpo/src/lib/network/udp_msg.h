@@ -26,7 +26,7 @@ struct UdpMsg
     QualityReply = 5,
     KeepAlive = 6,
     InputAck = 7,
-    DataExchange = 8
+    Datagram = 8      // REFACTOR: -> 'Datagram' -> update related nomeclature too!
   };
 
   // This struct saves us one byte of space.
@@ -87,7 +87,7 @@ struct UdpMsg
       uint8_t code;
       uint8_t dataSize;
       char data[MAX_GGPO_DATA_SIZE];
-    } chat;
+    } datagram;
 
   } u;
 
@@ -129,9 +129,9 @@ public:
 
       return size;
 
-    case DataExchange:
+    case Datagram:
       size = sizeof(uint8_t) * 2;     // code + dataSize
-      size += u.chat.dataSize;
+      size += u.datagram.dataSize;
 
       // size = strnlen_s(u.chat.data, MAX_GGPO_DATA_SIZE) + 1;
       return size;

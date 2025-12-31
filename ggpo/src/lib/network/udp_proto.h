@@ -28,7 +28,7 @@ struct UdpEvent {
     Disconnected,
     NetworkInterrupted,
     NetworkResumed,
-    DataExchange
+    Datagram
   };
 
   Type      type;

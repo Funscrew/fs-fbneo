@@ -98,12 +98,12 @@ void UdpProtocol::Init(Udp* udp,
 void UdpProtocol::SendData(uint8_t code, void* data, uint8_t dataSize) {
   if (_udp && _current_state == Running) {
 
-    UdpMsg* msg = new UdpMsg(UdpMsg::DataExchange);
+    UdpMsg* msg = new UdpMsg(UdpMsg::Datagram);
 
-    msg->u.chat.code = code;
-    msg->u.chat.dataSize = dataSize;
+    msg->u.datagram.code = code;
+    msg->u.datagram.dataSize = dataSize;
     if (data != nullptr) {
-      memcpy_s(msg->u.chat.data, MAX_GGPO_DATA_SIZE, data, dataSize);
+      memcpy_s(msg->u.datagram.data, MAX_GGPO_DATA_SIZE, data, dataSize);
     }
 
     SendMsg(msg);
@@ -520,12 +520,12 @@ bool UdpProtocol::OnSyncReply(UdpMsg* msg, int len)
 // ----------------------------------------------------------------------------------------------------------
 bool UdpProtocol::OnData(UdpMsg* msg, int dataSize)
 {
-  UdpEvent evt(UdpEvent::DataExchange);
+  UdpEvent evt(UdpEvent::Datagram);
   auto dataLen = (uint8_t)(dataSize - sizeof(UdpMsg::header));
 
-  evt.u.chat.code = msg->u.chat.code;
-  evt.u.chat.dataSize = msg->u.chat.dataSize;
-  memcpy_s(evt.u.chat.data, MAX_GGPO_DATA_SIZE, msg->u.chat.data, dataLen);
+  evt.u.chat.code = msg->u.datagram.code;
+  evt.u.chat.dataSize = msg->u.datagram.dataSize;
+  memcpy_s(evt.u.chat.data, MAX_GGPO_DATA_SIZE, msg->u.datagram.data, dataLen);
 
   QueueEvent(evt);
 

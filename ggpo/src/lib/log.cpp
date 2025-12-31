@@ -157,7 +157,7 @@ void Utils::LogMsg(EMsgDirection dir, UdpMsg* msg)
     break;
   case UdpMsg::InputAck:
     break;
-  case UdpMsg::DataExchange:
+  case UdpMsg::Datagram:
     break;
 
   default:

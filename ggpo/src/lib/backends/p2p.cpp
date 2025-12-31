@@ -495,23 +495,11 @@ void Peer2PeerBackend::OnUdpProtocolEvent(UdpEvent& evt, PlayerID playerIndex)
     _callbacks.on_event(&info);
     break;
 
-  case UdpEvent::DataExchange:
-
-    //char data[MAX_GGPO_DATA_SIZE];
-    //auto userName = _PlayerNames[playerIndex];
-
-    // strcpy_s(text, evt.u.chat.data);
-    // NOTE: I don't think that I need to do this copy.... I think I can use the data arrat directly....
-
+  case UdpEvent::Datagram:
 
     info.code = GGPO_EVENTCODE_DATA_EXCHANGE;
-    info.u.chat.player_index = (uint8_t)playerIndex;
-    memcpy_s(info.u.chat.data, MAX_GGPO_DATA_SIZE, evt.u.chat.data, evt.u.chat.dataSize);
-
-    //info.u.chat.username = userName;
-    //info.u.chat.text = data;
-
-    // _callbacks.on_event(&info);
+    info.u.datagram.player_index = (uint8_t)playerIndex;
+    memcpy_s(info.u.datagram.data, MAX_GGPO_DATA_SIZE, evt.u.chat.data, evt.u.chat.dataSize);
 
     break;
 

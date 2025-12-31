@@ -208,7 +208,7 @@ extern "C" {
         uint8_t code;
         uint8_t dataSize;
         char data[MAX_GGPO_DATA_SIZE];
-      } chat;
+      } datagram;
 
     } u;
   } GGPOEvent;
