@@ -19,6 +19,7 @@ extern "C" {
 #endif
 
 #include <stdarg.h>
+#include <stdint.h>
 
   // On windows, export at build time and import at runtime.
   // ELF systems don't need an explicit export/import.
@@ -43,7 +44,7 @@ extern "C" {
 #define GGPO_SPECTATOR_INPUT_INTERVAL     4
 
  // TODO: Share with main program / put this with defs elsewhere....
-  const static size_t MAX_GGPOCHAT_SIZE = 128;	 // 128 characters is enough?
+  const static size_t MAX_GGPO_DATA_SIZE = 128;	 // 128 characters is probably enough.
   const static size_t MAX_NAME_SIZE = 16;
 
 
@@ -163,7 +164,7 @@ extern "C" {
     GGPO_EVENTCODE_TIMESYNC = 1005,
     GGPO_EVENTCODE_CONNECTION_INTERRUPTED = 1006,
     GGPO_EVENTCODE_CONNECTION_RESUMED = 1007,
-    GGPO_EVENTCODE_CHATCOMMAND = 1008,
+    GGPO_EVENTCODE_DATA_EXCHANGE = 1008,
   } GGPOEventCode;
 
   /*
@@ -172,7 +173,8 @@ extern "C" {
    * explanation of each event.
    */
   typedef struct {
-    GGPOEventCode code;
+    // REFACTOR: 'player_index' can be a first class member of this struct, it is used so many times...
+    GGPOEventCode code;     // REFACTOR: -> EventCode
     union {
       struct {
         PlayerID  player_index;
@@ -202,8 +204,10 @@ extern "C" {
 
       // NOTE: I expect to change this definition at some point....
       struct {
-        char* username;
-        char* text;
+        uint8_t player_index;
+        uint8_t code;
+        uint8_t dataSize;
+        char data[MAX_GGPO_DATA_SIZE];
       } chat;
 
     } u;
@@ -271,7 +275,7 @@ extern "C" {
 
     // OBOSOLETE:  This will be removed!
     /* Get the name of the player for the given index */
-    char*(__cdecl* get_player_name)(PlayerID index);
+    char* (__cdecl* get_player_name)(PlayerID index);
 
   } GGPOSessionCallbacks;
 
@@ -520,8 +524,7 @@ extern "C" {
    * Disconnects a remote player from a game.  Will return GGPO_ERRORCODE_PLAYER_DISCONNECTED
    * if you try to disconnect a player who has already been disconnected.
    */
-  GGPO_API GGPOErrorCode __cdecl ggpo_disconnect_player(GGPOSession*,
-    PlayerID player);
+  GGPO_API GGPOErrorCode __cdecl ggpo_disconnect_player(GGPOSession*, PlayerID playerIndex);
 
   /*
    * ggpo_advance_frame --
@@ -601,11 +604,15 @@ extern "C" {
     const char* fmt,
     va_list args);
 
-  GGPO_API bool __cdecl ggpo_client_chat(GGPOSession* ggpo, char* text);
+  GGPO_API bool __cdecl ggpo_send_chat(GGPOSession* ggpo, char* text);
 
   /* get the name of the player at the given index */
   GGPO_API char* __cdecl ggpo_get_playerName(GGPOSession* ggpo, PlayerID index);
 
+  // Send some data to all endpoints.
+  // 'data' parameter is meant to be interpreted depending on the value of 'code'.
+  // It can be used for chat, and other data that needs to be exchanged (client versions, local stats, etc.)
+  GGPO_API void __cdecl ggpo_send_data(GGPOSession* ggpo, uint8_t code, void* data, uint8_t dataSize);
 
 #ifdef __cplusplus
 };

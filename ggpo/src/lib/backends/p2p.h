@@ -42,7 +42,8 @@ public:
    virtual GGPOErrorCode SetDisconnectTimeout(int timeout);
    virtual GGPOErrorCode SetDisconnectNotifyStart(int timeout);
 
-   virtual bool ChatCommand(char* text);
+   virtual bool SendChat(char* text);
+   virtual bool SendData(UINT8 command, void* data, UINT8 dataSize);
 
 public:
    virtual void OnMsg(sockaddr_in &from, UdpMsg *msg, int len);

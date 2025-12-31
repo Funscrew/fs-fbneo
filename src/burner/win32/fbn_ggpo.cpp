@@ -199,9 +199,12 @@ bool __cdecl ggpo_on_event_callback(GGPOEvent* info)
     VidOverlaySetSystemMessage(_T(""));
     VidSSetSystemMessage(_T(""));
     // send ReceiveVersion message
-    char temp[16];
-    sprintf(temp, "%d", NET_VERSION);
-    QuarkSendChatCmd(temp, 'V');
+    //char temp[16];
+    //sprintf(temp, "%d", NET_VERSION);
+    //QuarkSendChatCmd(temp, 'V');
+
+    uint8_t data = NET_VERSION;
+    QuarkSendData('V', &data, sizeof(uint8_t));
     break;
   }
 
@@ -218,35 +221,40 @@ bool __cdecl ggpo_on_event_callback(GGPOEvent* info)
     break;
 
 
-  case GGPO_EVENTCODE_CHATCOMMAND:
+  case GGPO_EVENTCODE_DATA_EXCHANGE:
 
-    if (strlen(info->u.chat.text) > 0) {
-      char& first = info->u.chat.text[0];
-      char* msg = info->u.chat.text + 1;
-
-      if (first == 'T' || first == 'C')
-      {
-        TCHAR szUser[MAX_CHAT_SIZE];
-        TCHAR szText[MAX_CHAT_SIZE];
-
-        ANSIToTCHAR(info->u.chat.username, szUser, MAX_CHAT_SIZE);
-        ANSIToTCHAR(msg, szText, MAX_CHAT_SIZE);
-
-        // NOTE: Kind of silly that we have to come up with another string when we already have the 'C' command code.
-        TCHAR* useName = first == 'C' ? _T("Command") : szUser;
-        VidOverlayAddChatLine(useName, szText);
-
-        // ummmm.... do we know what this is all about?
-        // --> It appears that there is some other overlay / OSD layer that isn't used.  Might be for the DDraw7 stuff which we don't care about.
-        // I think in 2025 that such a rendering approach can be ignored / removed.
-        //TCHAR szTemp[MAX_CHAT_SIZE];
-        //_sntprintf(szTemp, MAX_CHAT_SIZE, _T("«%.32hs» "), info->u.chat.username);
-        //VidSAddChatLine(szTemp, 0XFFA000, ANSIToTCHAR(info->u.chat.text, NULL, 0), 0xEEEEEE);
-      }
-
+    switch (info->u.chat.code)
+    {
+    default:
+      break;
     }
-    break;
+    //if (strlen(info->u.chat.text) > 0) {
+    //  char& first = info->u.chat.text[0];
+    //  char* msg = info->u.chat.text + 1;
 
+    //  if (first == 'T' || first == 'C')
+    //  {
+    //    TCHAR szUser[MAX_CHAT_SIZE];
+    //    TCHAR szText[MAX_CHAT_SIZE];
+
+    //    ANSIToTCHAR(info->u.chat.username, szUser, MAX_CHAT_SIZE);
+    //    ANSIToTCHAR(msg, szText, MAX_CHAT_SIZE);
+
+    //    // NOTE: Kind of silly that we have to come up with another string when we already have the 'C' command code.
+    //    TCHAR* useName = first == 'C' ? _T("Command") : szUser;
+    //    VidOverlayAddChatLine(useName, szText);
+
+    //    // ummmm.... do we know what this is all about?
+    //    // --> It appears that there is some other overlay / OSD layer that isn't used.  Might be for the DDraw7 stuff which we don't care about.
+    //    // I think in 2025 that such a rendering approach can be ignored / removed.
+    //    //TCHAR szTemp[MAX_CHAT_SIZE];
+    //    //_sntprintf(szTemp, MAX_CHAT_SIZE, _T("«%.32hs» "), info->u.chat.username);
+    //    //VidSAddChatLine(szTemp, 0XFFA000, ANSIToTCHAR(info->u.chat.text, NULL, 0), 0xEEEEEE);
+    //  }
+
+    //}
+
+    break;
 
   default:
     break;
@@ -824,6 +832,12 @@ void QuarkRunIdle(int ms)
 }
 
 // -------------------------------------------------------------------------------------------------------------------
+// Disconnect ourselves from the system...
+void QuarkDisconnect() {
+  ggpo_disconnect_player(ggpo, _playerIndex);
+}
+
+// -------------------------------------------------------------------------------------------------------------------
 bool QuarkGetInput(void* values, int isize, int playerIndex)
 {
   // NOTE: This call is handling both the addition of the local inputs, and the sync call....
@@ -858,30 +872,53 @@ bool QuarkIncrementFrame()
 }
 
 // --------------------------------------------------------------------------------------------------------
-void QuarkSendChatText(char* text)
+void QuarkSendChat(char* text)
 {
-  QuarkSendChatCmd(text, 'T');
-
+  ggpo_send_chat(ggpo, text);
 }
 
+
 // --------------------------------------------------------------------------------------------------------
-void QuarkSendChatCmd(char* text, char cmd)
+void QuarkSendData(uint8_t code, void* data, uint8_t dataSize)
 {
-  static char msgBuffer[MAX_CHAT_SIZE]; // command chat  +1 for command char +1 for zero termination.
-  memset(msgBuffer, 0, MAX_CHAT_SIZE);
+  if (code == 'T' && _playerIndex != PLAYER_NOT_SET && ggpo && !isChatMuted)
+  {
+    static char msgBuffer[MAX_GGPO_DATA_SIZE]; // command chat  +1 for command char +1 for zero termination.
+    auto useSize = (std::min)(dataSize, (uint8_t)(MAX_GGPO_DATA_SIZE - 1));
+    memcpy_s(msgBuffer, MAX_GGPO_DATA_SIZE, data, useSize);
+    msgBuffer[useSize] = 0;
 
-  msgBuffer[0] = cmd;
-  strncpy(&msgBuffer[1], text, MAX_CHAT_SIZE - 1);
-
-  // Print the chat line on our local:
-  if (cmd == 'T' && _playerIndex != PLAYER_NOT_SET && ggpo && !isChatMuted) {
     auto playerName = ggpo_get_playerName(ggpo, _playerIndex);
     wchar_t nameBuffer[16 * 2];
     wcscpy(nameBuffer, ANSIToTCHAR(playerName, NULL, NULL));
 
     VidOverlayAddChatLine(nameBuffer, ANSIToTCHAR(msgBuffer + 1, NULL, NULL));
   }
-  ggpo_client_chat(ggpo, msgBuffer);
+
+
+  ggpo_send_data(ggpo, code, data, dataSize);
+}
+
+// --------------------------------------------------------------------------------------------------------
+// [OBSOLETE:  THIS DOES NOTHING!]
+void QuarkSendChatCmd(char* text, char code)
+{
+  return;
+
+  static char msgBuffer[MAX_CHAT_SIZE]; // command chat  +1 for command char +1 for zero termination.
+  memset(msgBuffer, 0, MAX_CHAT_SIZE);
+
+  msgBuffer[0] = code;
+  strncpy(&msgBuffer[1], text, MAX_CHAT_SIZE - 1);
+
+  // Print the chat line on our local:
+  if (code == 'T' && _playerIndex != PLAYER_NOT_SET && ggpo && !isChatMuted) {
+    auto playerName = ggpo_get_playerName(ggpo, _playerIndex);
+    wchar_t nameBuffer[16 * 2];
+    wcscpy(nameBuffer, ANSIToTCHAR(playerName, NULL, NULL));
+
+  }
+  ggpo_send_chat(ggpo, msgBuffer);
 }
 
 // --------------------------------------------------------------------------------------------------------
@@ -889,7 +926,7 @@ void QuarkUpdateStats(double fps)
 {
   GGPONetworkStats stats;
   ggpo_get_stats(ggpo, &stats, _otherPlayerIndex);
-  VidSSetStats(fps, stats.network.ping, iDelay);
+  // VidSSetStats(fps, stats.network.ping, iDelay);
 
   // NOTE: This is where the rollback, etc. data is sent.  Pretty sure that 'VidSSetStats' doesn't get used anymore, or is for other overlay systems that we will never see again.....
   VidOverlaySetStats(fps, stats.network.ping, iDelay);

@@ -14,27 +14,30 @@
 
 
 struct GGPOSession {
-   virtual ~GGPOSession() { }
-   virtual GGPOErrorCode DoPoll(int timeout) { return GGPO_OK; }
-   virtual GGPOErrorCode AddPlayer(GGPOPlayer *player) = 0;
-   virtual GGPOErrorCode AddLocalInput(PlayerID playerIndex, void *values, int totalSize) = 0;
-   virtual GGPOErrorCode SyncInput(void *values, int totalSize, int playerCount) = 0;
-   virtual GGPOErrorCode IncrementFrame(void) { return GGPO_OK; }
-   virtual bool ChatCommand(char *text) { return true; }
-   virtual GGPOErrorCode DisconnectPlayer(PlayerID handle) { return GGPO_OK; }
-   virtual bool GetNetworkStats(GGPONetworkStats *stats, PlayerID playerIndex) { return GGPO_OK; }
-   virtual GGPOErrorCode Logv(const char *fmt, va_list list) { Utils::LogIt_v(fmt, list); return GGPO_OK; }
+  virtual ~GGPOSession() {}
+  virtual GGPOErrorCode DoPoll(int timeout) { return GGPO_OK; }
+  virtual GGPOErrorCode AddPlayer(GGPOPlayer* player) = 0;
+  virtual GGPOErrorCode AddLocalInput(PlayerID playerIndex, void* values, int totalSize) = 0;
+  virtual GGPOErrorCode SyncInput(void* values, int totalSize, int playerCount) = 0;
+  virtual GGPOErrorCode IncrementFrame(void) { return GGPO_OK; }
 
-   virtual void SetFrameDelay(int delay) { throw std::exception("not supported!"); }
-   virtual GGPOErrorCode SetDisconnectTimeout(int timeout) { return GGPO_ERRORCODE_UNSUPPORTED; }
-   virtual GGPOErrorCode SetDisconnectNotifyStart(int timeout) { return GGPO_ERRORCODE_UNSUPPORTED; }
+  virtual bool SendChat(char* text) { return true; }
+  virtual bool SendData(uint8_t code, void* data, uint8_t dataSize) { throw std::exception("NOT IMPLEMENTED!"); }
 
-   char* GetPlayerName(UINT16 index) { return _PlayerNames[index]; }
+  virtual GGPOErrorCode DisconnectPlayer(PlayerID handle) { return GGPO_OK; }
+  virtual bool GetNetworkStats(GGPONetworkStats* stats, PlayerID playerIndex) { return GGPO_OK; }
+  virtual GGPOErrorCode Logv(const char* fmt, va_list list) { Utils::LogIt_v(fmt, list); return GGPO_OK; }
 
-   // Additions:
+  virtual void SetFrameDelay(int delay) { throw std::exception("not supported!"); }
+  virtual GGPOErrorCode SetDisconnectTimeout(int timeout) { return GGPO_ERRORCODE_UNSUPPORTED; }
+  virtual GGPOErrorCode SetDisconnectNotifyStart(int timeout) { return GGPO_ERRORCODE_UNSUPPORTED; }
+
+  char* GetPlayerName(UINT16 index) { return _PlayerNames[index]; }
+
+  // Additions:
 protected:
-	IN_ADDR _RemoteAddr;
-	uint16 _RemotePort = 0;
+  IN_ADDR _RemoteAddr;
+  uint16 _RemotePort = 0;
   PlayerID _playerIndex = 0;
 
   char _PlayerNames[2][MAX_NAME_SIZE];

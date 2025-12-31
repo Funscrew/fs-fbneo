@@ -130,55 +130,37 @@ ggpo_synchronize_input(GGPOSession* ggpo,
 }
 
 GGPOErrorCode ggpo_disconnect_player(GGPOSession* ggpo,
-  PlayerID player)
+  PlayerID playerIndex)
 {
   if (!ggpo) {
     return GGPO_ERRORCODE_INVALID_SESSION;
   }
-  return ggpo->DisconnectPlayer(player);
+  return ggpo->DisconnectPlayer(playerIndex);
 }
 
-GGPOErrorCode
-ggpo_advance_frame(GGPOSession* ggpo)
+// ----------------------------------------------------------------------------------------------------------------
+GGPOErrorCode ggpo_advance_frame(GGPOSession* ggpo)
 {
-  if (!ggpo) {
-    return GGPO_ERRORCODE_INVALID_SESSION;
-  }
+  if (!ggpo) { return GGPO_ERRORCODE_INVALID_SESSION; }
   return ggpo->IncrementFrame();
 }
 
-//// ORIGINAL:
-//GGPOErrorCode
-//ggpo_client_chat(GGPOSession* ggpo, char* text)
-//{
-//	if (!ggpo) {
-//		return GGPO_ERRORCODE_INVALID_SESSION;
-//	}
-//	return ggpo->ChatCommand(text);
-//}
-
+// ----------------------------------------------------------------------------------------------------------------
 // NOTE: ChatCommand is not actually implemented in the open source GGPO code.
 // We will have to figure this out, but shouldn't be too hard.....
-bool ggpo_client_chat(GGPOSession* ggpo, char* text)
+bool ggpo_send_chat(GGPOSession* ggpo, char* text)
 {
-  if (!ggpo) {
-    return false;
-  }
-  bool res = ggpo->ChatCommand(text);
+  if (!ggpo) { return false; }
+  bool res = ggpo->SendChat(text);
   return res;
 }
 
-// Original:
-//GGPOErrorCode
-//ggpo_get_network_stats(GGPOSession* ggpo,
-//	PlayerID player,
-//	GGPONetworkStats* stats)
-//{
-//	if (!ggpo) {
-//		return GGPO_ERRORCODE_INVALID_SESSION;
-//	}
-//	return ggpo->GetNetworkStats(stats, player);
-//}
+// ----------------------------------------------------------------------------------------------------------------
+void ggpo_send_data(GGPOSession* ggpo, uint8_t code, void* data, uint8_t dataSize) {
+  if (!ggpo) { return; }
+
+  ggpo->SendData(code, data, dataSize);
+}
 
 // ----------------------------------------------------------------------------------------------------------------
 bool ggpo_get_stats(GGPOSession* ggpo, GGPONetworkStats* stats, PlayerID playerIndex)

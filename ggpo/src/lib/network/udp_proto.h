@@ -28,7 +28,7 @@ struct UdpEvent {
     Disconnected,
     NetworkInterrupted,
     NetworkResumed,
-    ChatCommand
+    DataExchange
   };
 
   Type      type;
@@ -51,8 +51,10 @@ struct UdpEvent {
     } network_interrupted;
 
     struct {
-      char		text[MAX_GGPOCHAT_SIZE + 1];
-    } chat;
+      uint8_t code;
+      uint8_t dataSize;
+      char		data[MAX_GGPO_DATA_SIZE];
+    } chat;   // REFACTOR: Rename to 'data' or something like that...
 
   } u;			// REFACTOR: Rename this to 'data'
 
@@ -89,6 +91,7 @@ public:
   bool IsRunning() { return _current_state == Running; }
   void SendInput(GameInput& input);
   void SendChat(char* text);
+  void SendData(uint8_t command, void* data, uint8_t dataSize);
   void SendInputAck();
   bool HandlesMsg(sockaddr_in& from, UdpMsg* msg);
   void OnMsg(UdpMsg* msg, int len);
@@ -132,6 +135,8 @@ protected:
   void SendSyncRequest();
   void SendMsg(UdpMsg* msg);
   void PumpSendQueue();
+
+  // REFACTOR:  All of the 'len' types should be 'size_t'
   void DispatchMsg(uint8* buffer, int len);
   void SendPendingOutput();
   bool OnInvalid(UdpMsg* msg, int len);
@@ -142,7 +147,7 @@ protected:
   bool OnQualityReport(UdpMsg* msg, int len);
   bool OnQualityReply(UdpMsg* msg, int len);
   bool OnKeepAlive(UdpMsg* msg, int len);
-  bool OnChat(UdpMsg* msg, int len);
+  bool OnData(UdpMsg* msg, int len);
 
 protected:
   /*

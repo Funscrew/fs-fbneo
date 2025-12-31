@@ -267,7 +267,7 @@ INT32 VidSSetStats(double fps, INT32 ping, INT32 delay);
 INT32 VidSShowStats(INT32 show);
 INT32 VidSAddChatLine(const TCHAR* pID, INT32 nIDRGB, const TCHAR* pMain, INT32 nMainRGB);
 
-const static UINT MAX_CHAT_SIZE = 16;
+const static UINT MAX_CHAT_SIZE = 128;
 
 extern INT32 nVidSDisplayStatus;
 extern INT32 nMaxChatFontSize;

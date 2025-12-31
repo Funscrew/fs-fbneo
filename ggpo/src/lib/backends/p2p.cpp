@@ -9,8 +9,6 @@
 #include <algorithm>
 
 
-
-
 static const int RECOMMENDATION_INTERVAL = 240;
 
 // TEMP: We are hard coding the system to never time out for now.
@@ -337,16 +335,31 @@ GGPOErrorCode Peer2PeerBackend::AddPlayer(GGPOPlayer* player)
   return GGPO_OK;
 }
 
-
 // -------------------------------------------------------------------------------------------------------------------
-bool Peer2PeerBackend::ChatCommand(char* text) {
+bool Peer2PeerBackend::SendData(UINT8 code, void* data, UINT8 dataSize) {
 
   for (int i = 0; i < _num_players; i++) {
-    // if (i == _playerIndex) { continue; }      // Don't chat to ourselves....
+    if (i == _playerIndex) { continue; }      // Don't chat to ourselves....
+    _endpoints[i].SendData(code, data, dataSize);
 
-    if (_endpoints[i].IsInitialized()) {
-      _endpoints[i].SendChat(text);
-    }
+    //if (_endpoints[i].IsInitialized()) {
+    //  _endpoints[i].SendChat(text);
+    //}
+  }
+
+  return true;
+}
+
+// -------------------------------------------------------------------------------------------------------------------
+bool Peer2PeerBackend::SendChat(char* text) {
+
+  for (int i = 0; i < _num_players; i++) {
+    if (i == _playerIndex) { continue; }      // Don't chat to ourselves....
+    _endpoints[i].SendChat(text);
+
+    //if (_endpoints[i].IsInitialized()) {
+    //  _endpoints[i].SendChat(text);
+    //}
   }
 
   return true;
@@ -480,18 +493,23 @@ void Peer2PeerBackend::OnUdpProtocolEvent(UdpEvent& evt, PlayerID playerIndex)
     _callbacks.on_event(&info);
     break;
 
-  case UdpEvent::ChatCommand:
+  case UdpEvent::DataExchange:
 
-    char text[MAX_GGPOCHAT_SIZE + 1];
-    auto userName = _PlayerNames[playerIndex];
+    //char data[MAX_GGPO_DATA_SIZE];
+    //auto userName = _PlayerNames[playerIndex];
 
-    strcpy_s(text, evt.u.chat.text);
+    // strcpy_s(text, evt.u.chat.data);
+    // NOTE: I don't think that I need to do this copy.... I think I can use the data arrat directly....
 
-    info.code = GGPO_EVENTCODE_CHATCOMMAND;
-    info.u.chat.username = userName;
-    info.u.chat.text = text;
 
-    _callbacks.on_event(&info);
+    info.code = GGPO_EVENTCODE_DATA_EXCHANGE;
+    info.u.chat.player_index = (uint8_t)playerIndex;
+    memcpy_s(info.u.chat.data, MAX_GGPO_DATA_SIZE, evt.u.chat.data, evt.u.chat.dataSize);
+
+    //info.u.chat.username = userName;
+    //info.u.chat.text = data;
+
+    // _callbacks.on_event(&info);
 
     break;
 
@@ -501,11 +519,10 @@ void Peer2PeerBackend::OnUdpProtocolEvent(UdpEvent& evt, PlayerID playerIndex)
 
 }
 
-/*
- * Called only as the result of a local decision to disconnect.  The remote
- * decisions to disconnect are a result of us parsing the peer_connect_settings
- * blob in every endpoint periodically.
- */
+// ----------------------------------------------------------------------------------------------------------
+// Called only as the result of a local decision to disconnect.  The remote
+// decisions to disconnect are a result of us parsing the peer_connect_settings
+// blob in every endpoint periodically.
 GGPOErrorCode Peer2PeerBackend::DisconnectPlayer(PlayerID playerIndex)
 {
   //  uint16 playerIndex = player;
@@ -514,10 +531,11 @@ GGPOErrorCode Peer2PeerBackend::DisconnectPlayer(PlayerID playerIndex)
     return GGPO_ERRORCODE_PLAYER_DISCONNECTED;
   }
 
-  if (!_endpoints[playerIndex].IsInitialized()) {
+  // xxx: we should be tracking who the local player is, but for now assume
+  // that if the endpoint is not initalized, this must be the local player.
+  // if (!_endpoints[playerIndex].IsInitialized()) {
+  if (playerIndex == _playerIndex) {
     int current_frame = _sync.GetFrameCount();
-    // xxx: we should be tracking who the local player is, but for now assume
-    // that if the endpoint is not initalized, this must be the local player.
     Utils::LogIt(CATEGORY_ENDPOINT, "Disconnecting local player %d at frame %d by user request.", playerIndex, _local_connect_status[playerIndex].last_frame);
     for (uint16 i = 0; i < _num_players; i++) {
       if (_endpoints[i].IsInitialized()) {

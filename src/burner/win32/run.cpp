@@ -523,19 +523,20 @@ static void BurnerHandlerKeyCallback(MSG* Msg, INT32 KeyDown, INT32 KeyType)
   }
 }
 
+// --------------------------------------------------------------------------------------------------------------------
 // The main message loop
 int RunMessageLoop()
 {
-  MSG Msg;
+  MSG msg;
 
   do {
     bRestartVideo = 0;
     bDrvExit = 0;
 
     // Remove pending initialisation messages from the queue
-    while (PeekMessage(&Msg, NULL, WM_APP + 0, WM_APP + 0, PM_NOREMOVE)) {
-      if (Msg.message != WM_QUIT) {
-        PeekMessage(&Msg, NULL, WM_APP + 0, WM_APP + 0, PM_REMOVE);
+    while (PeekMessage(&msg, NULL, WM_APP + 0, WM_APP + 0, PM_NOREMOVE)) {
+      if (msg.message != WM_QUIT) {
+        PeekMessage(&msg, NULL, WM_APP + 0, WM_APP + 0, PM_REMOVE);
       }
     }
 
@@ -563,13 +564,21 @@ int RunMessageLoop()
     */
 
     while (true) {
-      if (PeekMessage(&Msg, NULL, 0, 0, PM_REMOVE)) {
+      if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE)) {
         // A message is waiting to be processed
-        if (Msg.message == WM_QUIT) {											// Quit program
+        if (msg.message == WM_QUIT) {											// Quit program
+
           VidOverlayQuit();
+          QuarkDisconnect();
+
+          // Need a way to send out the final disconnect notices.....
+          // Normally GGPO sends disconnect via CHAT COMMAND, and as a FLAG on the input frames.....
+          // I feel like the best way is to just blast out some disconnect specific packets, immediately, and then quit the app....
+          // Like, we can't really wait around for ACK....
+
           break;
         }
-        if (Msg.message == (WM_APP + 0)) {										// Restart video
+        if (msg.message == (WM_APP + 0)) {										// Restart video
           bRestartVideo = 1;
           break;
         }
@@ -588,15 +597,15 @@ int RunMessageLoop()
         }
 
         if (bMenuEnabled && nVidFullscreen == 0) {								// Handle keyboard messages for the menu
-          if (MenuHandleKeyboard(&Msg)) {
+          if (MenuHandleKeyboard(&msg)) {
             continue;
           }
         }
 
-        if (Msg.message == WM_SYSKEYDOWN || Msg.message == WM_KEYDOWN) {
-          if (Msg.lParam & 0x20000000) {
+        if (msg.message == WM_SYSKEYDOWN || msg.message == WM_KEYDOWN) {
+          if (msg.lParam & 0x20000000) {
             // An Alt/AltGr-key was pressed
-            switch (Msg.wParam) {
+            switch (msg.wParam) {
 
 #if defined (FBNEO_DEBUG)
             case 'C': {
@@ -726,7 +735,7 @@ int RunMessageLoop()
             case '8':
             case '9':
               if (kNetLua) {
-                CallRegisteredLuaFunctions((LuaCallID)(LUACALL_HOTKEY_1 + Msg.wParam - '1'));
+                CallRegisteredLuaFunctions((LuaCallID)(LUACALL_HOTKEY_1 + msg.wParam - '1'));
               }
               break;
             }
@@ -734,9 +743,9 @@ int RunMessageLoop()
           else {
 
             if (cBurnerKeyCallback)
-              BurnerHandlerKeyCallback(&Msg, (Msg.message == WM_KEYDOWN) ? 1 : 0, 0);
+              BurnerHandlerKeyCallback(&msg, (msg.message == WM_KEYDOWN) ? 1 : 0, 0);
 
-            switch (Msg.wParam) {
+            switch (msg.wParam) {
 
 #if 0	//defined (FBNEO_DEBUG)
             case 'N':
@@ -788,7 +797,7 @@ int RunMessageLoop()
                   {
                     char text[MAX_CHAT_SIZE + 1];
                     TCHARToANSI(EditText, text, MAX_CHAT_SIZE + 1);
-                    QuarkSendChatText(text);
+                    QuarkSendChat(text);
                   }
 
                 }
@@ -806,7 +815,7 @@ int RunMessageLoop()
 
             case VK_F1:
               if (!kNetGame) {
-                if (Msg.lParam & 0x20000000) {
+                if (msg.lParam & 0x20000000) {
                   bool bOldAppDoFast = bAppDoFast;
 
                   if (((GetAsyncKeyState(VK_CONTROL) | GetAsyncKeyState(VK_SHIFT)) & 0x80000000) == 0) {
@@ -850,7 +859,7 @@ int RunMessageLoop()
 
             case 'T':
               if (kNetGame && !bEditActive) {
-                if (AppMessage(&Msg)) {
+                if (AppMessage(&msg)) {
                   ActivateChat();
                 }
               }
@@ -944,12 +953,12 @@ int RunMessageLoop()
           }
         }
         else {
-          if (Msg.message == WM_SYSKEYUP || Msg.message == WM_KEYUP) {
+          if (msg.message == WM_SYSKEYUP || msg.message == WM_KEYUP) {
 
             if (cBurnerKeyCallback)
-              BurnerHandlerKeyCallback(&Msg, (Msg.message == WM_KEYDOWN) ? 1 : 0, 0);
+              BurnerHandlerKeyCallback(&msg, (msg.message == WM_KEYDOWN) ? 1 : 0, 0);
 
-            switch (Msg.wParam) {
+            switch (msg.wParam) {
             case VK_MENU:
               continue;
             case VK_F1:
@@ -969,12 +978,12 @@ int RunMessageLoop()
         }
 
         // Check for messages for dialogs etc.
-        if (AppMessage(&Msg)) {
-          if (TranslateAccelerator(hScrnWnd, hAccel, &Msg) == 0) {
+        if (AppMessage(&msg)) {
+          if (TranslateAccelerator(hScrnWnd, hAccel, &msg) == 0) {
             if (bEditActive) {
-              TranslateMessage(&Msg);
+              TranslateMessage(&msg);
             }
-            DispatchMessage(&Msg);
+            DispatchMessage(&msg);
           }
         }
       }

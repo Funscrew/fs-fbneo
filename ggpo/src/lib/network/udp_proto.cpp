@@ -92,20 +92,27 @@ void UdpProtocol::Init(Udp* udp,
 }
 
 // ----------------------------------------------------------------------------------------------------------
+void UdpProtocol::SendData(uint8_t code, void* data, uint8_t dataSize) {
+  if (_udp && _current_state == Running) {
+
+    UdpMsg* msg = new UdpMsg(UdpMsg::DataExchange);
+
+    msg->u.chat.code = code;
+    msg->u.chat.dataSize = dataSize;
+    if (data != nullptr) {
+      memcpy_s(msg->u.chat.data, MAX_GGPO_DATA_SIZE, data, dataSize);
+    }
+
+    SendMsg(msg);
+  }
+}
+
+// ----------------------------------------------------------------------------------------------------------
 void UdpProtocol::SendChat(char* text) {
 
-  if (_udp) {
-    if (_current_state == Running) {
-
-      UdpMsg* msg = new UdpMsg(UdpMsg::ChatCommand);
-      size_t len = strnlen_s(text, MAX_GGPOCHAT_SIZE);
-
-      // copy string + zero terminate.
-      memcpy_s(msg->u.chat.text, MAX_GGPOCHAT_SIZE, text, len);
-      msg->u.chat.text[len] = 0;
-
-      SendMsg(msg);
-    }
+  if (_udp && _current_state == Running) {
+    size_t len = strnlen_s(text, MAX_GGPO_DATA_SIZE);
+    SendData('T', text, (uint8_t)len);
   }
 }
 
@@ -365,10 +372,10 @@ void UdpProtocol::OnMsg(UdpMsg* msg, int len)
      &UdpProtocol::OnQualityReply,        /* QualityReply */
      &UdpProtocol::OnKeepAlive,           /* KeepAlive */
      &UdpProtocol::OnInputAck,            /* InputAck */
-     &UdpProtocol::OnChat					/* ChatCommand - A chat message / command was received */
+     &UdpProtocol::OnData					        /* Data Exchange - A chat message or other type of data was received */
   };
 
-  // filter out messages that don't match what we expect
+  // Filter out messages that don't match what we expect
   uint16 seq = msg->header.sequence_number;
   if (msg->header.type != UdpMsg::SyncRequest && msg->header.type != UdpMsg::SyncReply) {
     if (msg->header.magic != _remote_magic_number) {
@@ -507,12 +514,14 @@ bool UdpProtocol::OnSyncReply(UdpMsg* msg, int len)
 }
 
 // ----------------------------------------------------------------------------------------------------------
-bool UdpProtocol::OnChat(UdpMsg* msg, int msgLen)
+bool UdpProtocol::OnData(UdpMsg* msg, int dataSize)
 {
+  UdpEvent evt(UdpEvent::DataExchange);
+  auto dataLen = (uint8_t)(dataSize - sizeof(UdpMsg::header));
 
-  UdpEvent evt(UdpEvent::ChatCommand);
-  int textlen = msgLen - sizeof(UdpMsg::header);
-  strcpy_s(evt.u.chat.text, textlen + 1, msg->u.chat.text);
+  evt.u.chat.code = msg->u.chat.code;
+  evt.u.chat.dataSize = msg->u.chat.dataSize;
+  memcpy_s(evt.u.chat.data, MAX_GGPO_DATA_SIZE, msg->u.chat.data, dataLen);
 
   QueueEvent(evt);
 

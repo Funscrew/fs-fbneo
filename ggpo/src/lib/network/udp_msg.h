@@ -26,7 +26,7 @@ struct UdpMsg
     QualityReply = 5,
     KeepAlive = 6,
     InputAck = 7,
-    ChatCommand = 8
+    DataExchange = 8
   };
 
   // This struct saves us one byte of space.
@@ -83,7 +83,9 @@ struct UdpMsg
     } input_ack;
 
     struct {
-      char text[MAX_GGPOCHAT_SIZE + 1];
+      uint8_t code;
+      uint8_t dataSize;
+      char data[MAX_GGPO_DATA_SIZE];
     } chat;
 
   } u;
@@ -126,9 +128,11 @@ public:
 
       return size;
 
-    case ChatCommand:
-      // Include one extra byte to ensure zero termination.
-      size = strnlen_s(u.chat.text, MAX_GGPOCHAT_SIZE) + 1;
+    case DataExchange:
+      size = sizeof(uint8_t) * 2;     // code + dataSize
+      size += u.chat.dataSize;
+
+      // size = strnlen_s(u.chat.data, MAX_GGPO_DATA_SIZE) + 1;
       return size;
     }
 

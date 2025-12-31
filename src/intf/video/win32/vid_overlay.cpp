@@ -93,6 +93,7 @@ enum {
 bool LoadD3DTextureFromFile(IDirect3DDevice9* device, const char* filename, IDirect3DTexture9*& texture, int& width, int& height);
 
 //------------------------------------------------------------------------------------------------------------------------------
+// REFACTOR: These are being used both for game state AND to overlay stuff onto the screen.  Not great IMO.
 // overlay vars
 //------------------------------------------------------------------------------------------------------------------------------
 static int game_enabled = 0;
@@ -1023,11 +1024,15 @@ void VidOverlayEnd()
   pD3DDevice = NULL;
 }
 
+// --------------------------------------------------------------------------------------------------------------------
+// REFACTOR: This has nothing to do with the video overlay, and should be placed somewhere else in code.
 void VidOverlayQuit()
 {
+  // Ragequit detector.
   if (kNetGame && game_ranked && gameDetector.state == GameDetector::ST_WAIT_WINNER) {
-    QuarkSendChatCmd("quit", 'S');
   }
+  QuarkSendData('Q', NULL, 0);
+  // QuarkSendChatCmd("quit", 'S');
 }
 
 void VidOverlaySetSize(const RECT& dest, float size)
@@ -1398,6 +1403,7 @@ static UINT32 rollbackPct = 0;
 static UINT32 nLastCount = 0;
 static UINT32 nRollbacks1CycleAgo = 0;
 
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------
 void VidOverlaySetStats(double fps, int ping, int delay)
 {
   if (ping > 0 && nRollbackCount > 0 && prev_runahead != nVidRunahead) {
@@ -1558,6 +1564,7 @@ void VidOverlaySetChatInput(const wchar_t* text)
 bool bMutedWarnSent = false;
 void VidOverlayAddChatLine(const wchar_t* name, const wchar_t* text)
 {
+  // TODO: We won't be using chat for special commands + functionality any more.
   if (!wcscmp(name, _T("Command"))) {
     int cmd;
     int idx;
@@ -1571,6 +1578,7 @@ void VidOverlayAddChatLine(const wchar_t* name, const wchar_t* text)
           bOpInfoRcvd = true;
         }
         break;
+
         // opponent has ingame chat muted
       case CMD_CHAT_MUTED:
         if (idx != game_playerIndex) {

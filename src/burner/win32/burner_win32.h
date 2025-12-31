@@ -469,11 +469,17 @@ void QuarkTogglePerfMon();
 void QuarkRunIdle(int ms);
 bool QuarkGetInput(void* values, int isize, int playerCount);
 bool QuarkIncrementFrame();
-void QuarkSendChatText(char* text);
-void QuarkSendChatCmd(char* text, char cmd);
+void QuarkSendChat(char* text);
+
+// [OBSOLETE]
+void QuarkSendChatCmd(char* text, char code);
+
+void QuarkSendData(UINT8 code, void* data, UINT8 dataSize);
+
 void QuarkUpdateStats(double fps);
 void QuarkRecordReplay();
 void QuarkFinishReplay();
+void QuarkDisconnect();
 
 // replay.cpp
 extern int nReplayStatus;
