@@ -47,7 +47,7 @@ SyncTestBackend::DoPoll(int timeout)
   if (!_running) {
     GGPOEvent info;
 
-    info.code = GGPO_EVENTCODE_RUNNING;
+    info.event_code = GGPO_EVENTCODE_RUNNING;
     _callbacks.on_event(&info);
     _running = true;
   }

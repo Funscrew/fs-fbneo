@@ -174,37 +174,24 @@ extern "C" {
    */
   typedef struct {
     // REFACTOR: 'player_index' can be a first class member of this struct, it is used so many times...
-    GGPOEventCode code;     // REFACTOR: -> EventCode
+    GGPOEventCode event_code;
+    PlayerID  player_index;
     union {
       struct {
-        PlayerID  player_index;
-        // char playerName[MAX_NAME_SIZE];
-      } connected;
-      struct {
-        PlayerID  player_index;
         int               count;
         int               total;
       } synchronizing;
       struct {
-        PlayerID  player_index;
-      } synchronized;
-      struct {
-        PlayerID  player_index;
-      } disconnected;
-      struct {
         int               frames_ahead;
       } timesync;
       struct {
-        PlayerID  player_index;
         int               disconnect_timeout;
       } connection_interrupted;
       struct {
-        PlayerID  player_index;
       } connection_resumed;
 
       // NOTE: I expect to change this definition at some point....
       struct {
-        uint8_t player_index;
         uint8_t code;
         uint8_t dataSize;
         char data[MAX_GGPO_DATA_SIZE];

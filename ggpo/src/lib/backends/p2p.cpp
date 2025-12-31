@@ -226,7 +226,7 @@ GGPOErrorCode Peer2PeerBackend::DoPoll(int timeout)
 
         if (interval > 0) {
           GGPOEvent info;
-          info.code = GGPO_EVENTCODE_TIMESYNC;
+          info.event_code = GGPO_EVENTCODE_TIMESYNC;
           info.u.timesync.frames_ahead = interval;
           _callbacks.on_event(&info);
           _next_recommended_sleep = current_frame + RECOMMENDATION_INTERVAL;
@@ -458,47 +458,46 @@ void Peer2PeerBackend::OnUdpProtocolEvent(UdpEvent& evt, PlayerID playerIndex)
 
   switch (evt.type) {
   case UdpEvent::Connected:
-    info.code = GGPO_EVENTCODE_CONNECTED_TO_PEER;
-    info.u.connected.player_index = playerIndex;
+    info.event_code = GGPO_EVENTCODE_CONNECTED_TO_PEER;
+    info.player_index = playerIndex;
 
     strcpy_s(_PlayerNames[playerIndex], evt.u.connected.playerName);
-
-    // strcpy_s(info.u.connected.playerName, evt.u.connected.playerName);
-
     _callbacks.on_event(&info);
+
     break;
   case UdpEvent::Synchronizing:
-    info.code = GGPO_EVENTCODE_SYNCHRONIZING_WITH_PEER;
-    info.u.synchronizing.player_index = playerIndex;
+    info.event_code = GGPO_EVENTCODE_SYNCHRONIZING_WITH_PEER;
+    info.player_index = playerIndex;
     info.u.synchronizing.count = evt.u.synchronizing.count;
     info.u.synchronizing.total = evt.u.synchronizing.total;
     _callbacks.on_event(&info);
     break;
+
   case UdpEvent::Synchronized:
-    info.code = GGPO_EVENTCODE_SYNCHRONIZED_WITH_PEER;
-    info.u.synchronized.player_index = playerIndex;
+    info.event_code = GGPO_EVENTCODE_SYNCHRONIZED_WITH_PEER;
+    info.player_index = playerIndex;
     _callbacks.on_event(&info);
 
     CheckInitialSync();
     break;
 
   case UdpEvent::NetworkInterrupted:
-    info.code = GGPO_EVENTCODE_CONNECTION_INTERRUPTED;
-    info.u.connection_interrupted.player_index = playerIndex;
+    info.event_code = GGPO_EVENTCODE_CONNECTION_INTERRUPTED;
+    info.player_index = playerIndex;
     info.u.connection_interrupted.disconnect_timeout = evt.u.network_interrupted.disconnect_timeout;
     _callbacks.on_event(&info);
     break;
 
   case UdpEvent::NetworkResumed:
-    info.code = GGPO_EVENTCODE_CONNECTION_RESUMED;
-    info.u.connection_resumed.player_index = playerIndex;
+    info.event_code = GGPO_EVENTCODE_CONNECTION_RESUMED;
+    info.player_index = playerIndex;
     _callbacks.on_event(&info);
     break;
 
   case UdpEvent::Datagram:
 
-    info.code = GGPO_EVENTCODE_DATA_EXCHANGE;
-    info.u.datagram.player_index = (uint8_t)playerIndex;
+    info.event_code = GGPO_EVENTCODE_DATA_EXCHANGE;
+    info.player_index = (uint8_t)playerIndex;
     memcpy_s(info.u.datagram.data, MAX_GGPO_DATA_SIZE, evt.u.chat.data, evt.u.chat.dataSize);
 
     break;
@@ -560,8 +559,8 @@ void Peer2PeerBackend::DisconnectPlayer(PlayerID playerIndex, int syncto)
     Utils::LogIt(CATEGORY_ENDPOINT, "finished adjusting simulation.");
   }
 
-  info.code = GGPO_EVENTCODE_DISCONNECTED_FROM_PEER;
-  info.u.disconnected.player_index = playerIndex;
+  info.event_code = GGPO_EVENTCODE_DISCONNECTED_FROM_PEER;
+  info.player_index = playerIndex;
   _callbacks.on_event(&info);
 
   CheckInitialSync();
@@ -646,7 +645,7 @@ void Peer2PeerBackend::CheckInitialSync()
     }
 
     GGPOEvent info;
-    info.code = GGPO_EVENTCODE_RUNNING;
+    info.event_code = GGPO_EVENTCODE_RUNNING;
     _callbacks.on_event(&info);
     _synchronizing = false;
   }

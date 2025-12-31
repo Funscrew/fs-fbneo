@@ -112,45 +112,45 @@ SpectatorBackend::OnUdpProtocolEvent(UdpEvent &evt)
 
    switch (evt.type) {
    case UdpEvent::Connected:
-      info.code = GGPO_EVENTCODE_CONNECTED_TO_PEER;
-      info.u.connected.player_index = 0;
+      info.event_code = GGPO_EVENTCODE_CONNECTED_TO_PEER;
+      info.player_index = 0;
       _callbacks.on_event(&info);
       break;
    case UdpEvent::Synchronizing:
-      info.code = GGPO_EVENTCODE_SYNCHRONIZING_WITH_PEER;
-      info.u.synchronizing.player_index = 0;
+      info.event_code = GGPO_EVENTCODE_SYNCHRONIZING_WITH_PEER;
+      info.player_index = 0;
       info.u.synchronizing.count = evt.u.synchronizing.count;
       info.u.synchronizing.total = evt.u.synchronizing.total;
       _callbacks.on_event(&info);
       break;
    case UdpEvent::Synchronized:
       if (_synchronizing) {
-         info.code = GGPO_EVENTCODE_SYNCHRONIZED_WITH_PEER;
-         info.u.synchronized.player_index = 0;
+         info.event_code = GGPO_EVENTCODE_SYNCHRONIZED_WITH_PEER;
+         info.player_index = 0;
          _callbacks.on_event(&info);
 
-         info.code = GGPO_EVENTCODE_RUNNING;
+         info.event_code = GGPO_EVENTCODE_RUNNING;
          _callbacks.on_event(&info);
          _synchronizing = false;
       }
       break;
 
    case UdpEvent::NetworkInterrupted:
-      info.code = GGPO_EVENTCODE_CONNECTION_INTERRUPTED;
-      info.u.connection_interrupted.player_index = 0;
+      info.event_code = GGPO_EVENTCODE_CONNECTION_INTERRUPTED;
+      info.player_index = 0;
       info.u.connection_interrupted.disconnect_timeout = evt.u.network_interrupted.disconnect_timeout;
       _callbacks.on_event(&info);
       break;
 
    case UdpEvent::NetworkResumed:
-      info.code = GGPO_EVENTCODE_CONNECTION_RESUMED;
-      info.u.connection_resumed.player_index = 0;
+      info.event_code = GGPO_EVENTCODE_CONNECTION_RESUMED;
+      info.player_index = 0;
       _callbacks.on_event(&info);
       break;
 
    case UdpEvent::Disconnected:
-      info.code = GGPO_EVENTCODE_DISCONNECTED_FROM_PEER;
-      info.u.disconnected.player_index = 0;
+      info.event_code = GGPO_EVENTCODE_DISCONNECTED_FROM_PEER;
+      info.player_index = 0;
       _callbacks.on_event(&info);
       break;
 
