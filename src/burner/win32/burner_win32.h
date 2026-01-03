@@ -253,7 +253,7 @@ extern int bRunFrame;
 extern int bRunPause;
 extern int bAltPause;
 extern int bAlwaysDrawFrames;
-extern int bShowFPS;
+extern int showStatsMode;
 extern int kNetVersion;
 extern int kNetGame;
 extern int kNetSpectator;
@@ -474,7 +474,15 @@ void QuarkSendChat(char* text);
 // [OBSOLETE]
 void QuarkSendChatCmd(char* text, char code);
 
-void QuarkSendData(UINT8 code, void* data, UINT8 dataSize);
+// static const uint8_t DATAGRAM_CODE_MUTED = 'M';
+enum EDataCode {
+  DATAGRAM_CODE_INVALID = 0
+  , DATAGRAM_CODE_MUTED = 1
+  , DATAGRAM_CODE_CHAT = 2
+  , DATAGRAM_CODE_GGPO_SETTINGS = 3
+};
+
+void QuarkSendData(uint8_t code, void* data, UINT8 dataSize);
 
 void QuarkUpdateStats(double fps);
 void QuarkRecordReplay();

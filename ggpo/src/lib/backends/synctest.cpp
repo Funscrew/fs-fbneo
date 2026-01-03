@@ -55,17 +55,17 @@ SyncTestBackend::DoPoll(int timeout)
 }
 
 GGPOErrorCode
-SyncTestBackend::AddPlayer(GGPOPlayer* player, PlayerID* handle)
+SyncTestBackend::AddPlayer(GGPOPlayer* player, uint8_t* handle)
 {
   if (player->player_index > _num_players) {
     return GGPO_ERRORCODE_PLAYER_OUT_OF_RANGE;
   }
-  *handle = (PlayerID)(player->player_index - 1);
+  *handle = (uint8_t)(player->player_index - 1);
   return GGPO_OK;
 }
 
 GGPOErrorCode
-SyncTestBackend::AddLocalInput(PlayerID player, void* values, int size)
+SyncTestBackend::AddLocalInput(uint8_t player, void* values, int size)
 {
   if (!_running) {
     return GGPO_ERRORCODE_NOT_SYNCHRONIZED;

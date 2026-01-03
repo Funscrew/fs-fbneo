@@ -99,7 +99,7 @@ bool LoadD3DTextureFromFile(IDirect3DDevice9* device, const char* filename, IDir
 static int game_enabled = 0;
 static int game_spectator = 0;
 static int game_ranked = 0;
-static UINT16 game_playerIndex = 0;
+static uint8_t game_playerIndex = 0;
 static bool show_spectators = false;
 static bool show_chat_input = false;
 static bool show_chat = false;
@@ -789,10 +789,13 @@ struct Text
 {
   wchar_t str[300] = {};
   unsigned int color = 0;
+  bool isActive = false;
+
   Text();
   void Set(const wchar_t* text);
   void Copy(const Text& text);
   void Render(float x, float y, float alpha, float scale, unsigned int mode);
+  void SetActive(bool isActive_) { isActive = isActive_; }
 };
 
 Text::Text()
@@ -803,17 +806,18 @@ Text::Text()
 void Text::Set(const wchar_t* text)
 {
   wcscpy(str, text);
+  isActive = (str[0]);
 }
 
-void Text::Copy(const Text& text)
+void Text::Copy(const Text& from)
 {
-  color = text.color;
-  Set(text.str);
+  color = from.color;
+  Set(from.str);
 }
 
 void Text::Render(float x, float y, float alpha, float scale, unsigned int mode)
 {
-  if (str[0]) {
+  if (str[0] && isActive) {
     fontWrite(str, x, y, color, alpha, scale, mode);
   }
 }
@@ -1124,15 +1128,17 @@ void VidOverlayRender(const RECT& dest, int gameWidth, int gameHeight, int scan_
     // volume
     volume.Render(frame_width - 0.0035f, 0.003f, 1.f, FNT_MED, FONT_ALIGN_RIGHT);
   }
-  else if (bShowFPS) {
+  // TODO: This is doing even more work, when it should have all been done in the line_x.Set code!
+  // REFACTOR: Change the overlay lines so that they are active / not / colored / have the message set all in one place!
+  else if (showStatsMode) {
     // stats (fps & ping)
     stats_line1.color = (stats_line1_warning >= WARNING_THRESHOLD) ? RED : WHITE;
-    stats_line1.Render((bShowFPS == 2) ? frame_width - 0.0015f : frame_width - 0.0035f, 0.003f, 0.90f, FNT_MED * 0.9f, FONT_ALIGN_RIGHT);
-    if (bShowFPS > 1) {
+    stats_line1.Render((showStatsMode == 2) ? frame_width - 0.0015f : frame_width - 0.0035f, 0.003f, 0.90f, FNT_MED * 0.9f, FONT_ALIGN_RIGHT);
+    if (showStatsMode > 1) {
       stats_line2.color = (stats_line2_warning >= WARNING_THRESHOLD) ? RED : WHITE;
       stats_line2.Render((jitterAvg >= 10) ? frame_width - 0.0052f : frame_width - 0.0035f, 0.023f, 0.90f, FNT_MED * 0.9f, FONT_ALIGN_RIGHT);
     }
-    if (bShowFPS > 2) {
+    if (showStatsMode > 2) {
       stats_line3.color = (stats_line3_warning >= WARNING_THRESHOLD) ? RED : WHITE;
       stats_line3.Render(frame_width - 0.0035f, 0.043f, 0.90f, FNT_MED * 0.9f, FONT_ALIGN_RIGHT);
     }
@@ -1310,7 +1316,7 @@ void VidOverlayRender(const RECT& dest, int gameWidth, int gameHeight, int scan_
 // REFACTOR:  This function needs to be updated to take actual parameters, and not whatever bullshit transcoded into a string.
 // Just pass in two structs FFS!  No point in formatting strings, to pass them to a function only so they can be unparsed,
 // or worse yet, nothing happens if you don't get it right.
-void VidOverlaySetGameInfo(const wchar_t* name1, const wchar_t* name2, int spectator, int ranked, UINT16 playerIndex)
+void VidOverlaySetGameInfo(const wchar_t* name1, const wchar_t* name2, int spectator, int ranked, uint8_t playerIndex)
 {
   game_enabled = 1;
   game_spectator = spectator;
@@ -1379,10 +1385,17 @@ void VidOverlaySetSystemMessage(const wchar_t* text)
   system_message.Set(text);
 }
 
+// --------------------------------------------------------------------------------------------------------------------
 void SendToPeer(int delay, int runahead) {
-  char buffer[32];
-  sprintf(buffer, "%d,%d,%d,%d", CMD_DELAY_RUNAHEAD, game_playerIndex, delay, runahead);
-  QuarkSendChatCmd(buffer, 'C');
+  const int BUFFER_SIZE = 4;
+  char buffer[BUFFER_SIZE];
+
+  buffer[0] = CMD_DELAY_RUNAHEAD;
+  buffer[1] = game_playerIndex;
+  buffer[2] = delay;
+  buffer[3] = runahead;
+
+  QuarkSendData(DATAGRAM_CODE_GGPO_SETTINGS, buffer, BUFFER_SIZE);
 }
 
 static int op_delay = 0;
@@ -1403,32 +1416,65 @@ static UINT32 rollbackPct = 0;
 static UINT32 nLastCount = 0;
 static UINT32 nRollbacks1CycleAgo = 0;
 
+const wchar_t* FPS_ONLY_MSG = _T("%2.2f fps");
+const wchar_t* FPS_AND_NETSTATS_MSG = _T("%2.2f fps | Ping: %d | Rollback: %d");
+
+
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------
+void VidOverlaySetRemoteStats(int delay, int runahead) {
+  op_delay = delay;
+  op_runahead = runahead;
+}
+
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------
 void VidOverlaySetStats(double fps, int ping, int delay)
-{
-  if (ping > 0 && nRollbackCount > 0 && prev_runahead != nVidRunahead) {
+{  if (ping > 0 && nRollbackCount > 0 && prev_runahead != nVidRunahead) {
     prev_runahead = nVidRunahead;
     SendToPeer(delay, nVidRunahead);
   }
 
-  if (bShowFPS == SHOWSTATS_NONE) { return; }
+  if (showStatsMode == SHOWSTATS_NONE) { return; }
 
   wchar_t buf_line1[64];
   wchar_t buf_line2[64];
   wchar_t buf_line3[64];
 
-  if ((game_spectator || ping <= 0 || ping > 40000) && (bShowFPS >= 1)) {
-    if (game_spectator || (bShowFPS > 0 && bShowFPS < 3))
+  // FPS always goes on line 1.
+  const wchar_t* line1Msg = nullptr;
+  if (showStatsMode >= SHOWSTATS_FPS_AND_ROLLBACK) {
+    swprintf(buf_line1, 64, FPS_AND_NETSTATS_MSG, fps, ping, nAvgRollbackFrameCount);
+  }
+  else if (showStatsMode == SHOWSTATS_FPS_ONLY) {
+    swprintf(buf_line1, 64, FPS_ONLY_MSG, fps);
+  }
+  stats_line1.Set(buf_line1);
+
+  if (showStatsMode >= SHOWSTATS_ALL) {
+    // Slap some data onto line 2.....
+    if (game_playerIndex == 0) {
+      swprintf(buf_line2, 64, _T("P1: d%d-ra%d  |  P2: d%d-ra%d   "), delay, nVidRunahead, op_delay, op_runahead);
+    }
+    else {
+      swprintf(buf_line2, 64, _T("P1: d%d-ra%d  |  P2: d%d-ra%d   "), op_delay, op_runahead, delay, nVidRunahead);
+    }
+
+    stats_line2.Set(buf_line2);
+  }
+
+  return;
+
+  if ((game_spectator || ping <= 0 || ping > 40000) && (showStatsMode >= 1)) {
+    if (game_spectator || (showStatsMode > 0 && showStatsMode < 3))
     {
       swprintf(buf_line1, 64, _T("%2.2f fps"), fps);
     }
-    else if (bShowFPS >= 3) {
+    else if (showStatsMode >= 3) {
       swprintf(buf_line1, 64, _T("%2.2f fps  |  ra%d "), fps, nVidRunahead);
     }
     stats_line1.Set(buf_line1);
   }
   else {
-    if (bShowFPS >= 1) {
+    if (showStatsMode >= 1) {
       // rollback frames
 
       INT32 msPerFrame = 100000 / nBurnFPS;
@@ -1453,12 +1499,12 @@ void VidOverlaySetStats(double fps, int ping, int delay)
       nLastRollbackCount = nRollbackCount;
       nLastRollbackFrames = nRollbackFrames;
 
-      if (bShowFPS == 1) swprintf(buf_line1, 64, _T(" %2.2f fps  |  d%d-ra%d "), fps, delay, nVidRunahead);
-      else if (bShowFPS == 2) swprintf(buf_line1, 64, _T(" %2.2f fps  |      d%d-ra%d        "), fps, delay, nVidRunahead);
+      if (showStatsMode == 1) swprintf(buf_line1, 64, _T(" %2.2f fps  |  d%d-ra%d "), fps, delay, nVidRunahead);
+      else if (showStatsMode == 2) swprintf(buf_line1, 64, _T(" %2.2f fps  |      d%d-ra%d        "), fps, delay, nVidRunahead);
       else swprintf(buf_line1, 64, _T(" %2.2f fps  |  Rollback %df "), fps, nAvgRollbackFrameCount);
       stats_line1.Set(buf_line1);
     }
-    if (bShowFPS >= 2) {
+    if (showStatsMode >= 2) {
       // jitter
       if (ping > 0 && nFramesEmulated > 600) {
         int pingSum = 0;
@@ -1489,7 +1535,7 @@ void VidOverlaySetStats(double fps, int ping, int delay)
       swprintf(buf_line2, 64, _T("%s%s"), buf_ping, buf_jitter);
       stats_line2.Set(buf_line2);
     }
-    if (bShowFPS >= 3) {
+    if (showStatsMode >= 3) {
       if (nFramesEmulated >= nLastCount + 600) {
         nRollbacksIn1Cycle = nRollbackCount - nRollbacks1CycleAgo;
         nRollbacks1CycleAgo = nRollbackCount;
@@ -1520,6 +1566,7 @@ void VidOverlaySetStats(double fps, int ping, int delay)
 
 }
 
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------
 void VidOverlaySetWarning(int amount, int line)
 {
 
@@ -1595,10 +1642,8 @@ void VidOverlayAddChatLine(const wchar_t* name, const wchar_t* text)
   // NOTE: This is a great demonstration of how double-dipping on the 'name' parameter just makes things more difficult to deal with.
   if (isChatMuted && wcscmp(name, _T("System"))) {
     if (!bMutedWarnSent) {
-      char buffer[16];
+      QuarkSendData(DATAGRAM_CODE_MUTED, nullptr, 0);
       bMutedWarnSent = true;
-      sprintf(buffer, "%d,%d", CMD_CHAT_MUTED, game_playerIndex);
-      QuarkSendChatCmd(buffer, 'C');
     }
     return;
   }

@@ -261,14 +261,11 @@ extern TCHAR szAppPCBsPath[MAX_PATH];
 extern TCHAR szAppHistoryPath[MAX_PATH];
 
 // Used for displaying stats in the upper-right corner.
-enum EShowStatsOptions {
+enum EShowStatsMode {
   SHOWSTATS_NONE = 0
   , SHOWSTATS_FPS_ONLY = 1
-  
-  // For net games only.
-  // NOTE: Not sure if these descriptors are correct....
-  , SHOWSTATS_NET_FPS_DELAY = 2
-  , SHOWSTATS_NET_FPS_DELAY_ROLLBACK = 3
-  , SHOWSTATS_NET_FPS_RUNAHEAD = 4
+  , SHOWSTATS_FPS_AND_ROLLBACK = 2
+  , SHOWSTATS_ALL = 3     // FPS: Rollback: Runahead + delay for both players.
 
+  , SHOWSTATS_MAX
 };

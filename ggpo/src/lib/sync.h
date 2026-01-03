@@ -52,8 +52,8 @@ public:
 
   void SetLastConfirmedFrame(int frame);
   void SetFrameDelay(int queue, int delay);
-  bool AddLocalInput(PlayerID playerIndex, GameInput& input);
-  void AddRemoteInput(PlayerID playerIndex, GameInput& input);
+  bool AddLocalInput(uint8_t playerIndex, GameInput& input);
+  void AddRemoteInput(uint8_t playerIndex, GameInput& input);
 
   // NOTE: This function appears to be unused!
   int GetConfirmedInputs(void* values, int size, int frame);

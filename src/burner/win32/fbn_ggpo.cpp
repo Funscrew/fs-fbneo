@@ -2,6 +2,7 @@
 #include "burner.h"
 #include "ggpoclient.h"
 #include "ggpo_perfmon.h"
+// #include "GGPOSession.h";
 
 extern "C" {
 #include "ggponet.h"
@@ -26,8 +27,8 @@ extern int nAcbVersion;
 extern int nAcbLoadState;
 extern int bMediaExit;
 
-PlayerID _playerIndex = PLAYER_NOT_SET;
-PlayerID _otherPlayerIndex = PLAYER_NOT_SET;
+uint8_t _playerIndex = PLAYER_NOT_SET;
+uint8_t _otherPlayerIndex = PLAYER_NOT_SET;
 
 // rollback counter
 // NOTE: These are only used in the video overlay. --> so they should be part of the overlay vars?
@@ -159,7 +160,7 @@ bool __cdecl ggpo_on_event_callback(GGPOEvent* info)
   //if (ggpo_is_client_gameevent(info->code)) {
   //	return ggpo_on_client_game_callback((GGPOClientEvent *)info);
   //}
-  switch (info->code) {
+  switch (info->event_code) {
   case GGPO_EVENTCODE_CONNECTED_TO_PEER:
   {
     VidOverlaySetSystemMessage(_T("Connected to Peer"));
@@ -221,34 +222,58 @@ bool __cdecl ggpo_on_event_callback(GGPOEvent* info)
 
     switch (info->u.datagram.code)
     {
+    case DATAGRAM_CODE_GGPO_SETTINGS:
+    {
+      auto data = info->u.datagram.data;
+
+      // DEFINED in vid_overlay.cpp
+      int delay = data[2];
+      int runahead = data[3];
+      VidOverlaySetRemoteStats(delay, runahead);
+      //op_delay = data[2];
+      //op_runahead = data[3]
+      //buffer[0] = CMD_DELAY_RUNAHEAD;
+      //buffer[1] = game_playerIndex;
+      //buffer[2] = delay;
+      //buffer[3] = runahead;
+    }
+    break;
+
+    case DATAGRAM_CODE_CHAT:
+    {
+      TCHAR szUser[MAX_CHAT_SIZE];
+      TCHAR szText[MAX_CHAT_SIZE];
+
+      auto msg = info->u.datagram.data;
+
+      // NOTE: I have the player index, but not the actual lookup table for them... that should come from the client...
+      // NOTE: I can't include 'ggposession.h' at this time because it will break the compilation.  I will go back and
+      // find a proper way to include it later......
+      char* playerName = "FIXME"; // ggpo->GetPlayerName(info->player_index);
+      ANSIToTCHAR(playerName, szUser, MAX_NAME_SIZE);
+
+      ANSIToTCHAR(msg, szText, info->u.datagram.dataSize);
+
+      // Chat messages must be zero terminated...
+      szText[info->u.datagram.dataSize] = 0;
+
+
+      // NOTE: Kind of silly that we have to come up with another string when we already have the 'C' command code.
+      // TCHAR* useName = first == 'C' ? _T("Command") : szUser;
+      VidOverlayAddChatLine(szUser, szText);
+
+      // ummmm.... do we know what this is all about?
+      // --> It appears that there is some other overlay / OSD layer that isn't used.  Might be for the DDraw7 stuff which we don't care about.
+      // I think in 2025 that such a rendering approach can be ignored / removed.
+      //TCHAR szTemp[MAX_CHAT_SIZE];
+      //_sntprintf(szTemp, MAX_CHAT_SIZE, _T("«%.32hs» "), info->u.chat.username);
+      //VidSAddChatLine(szTemp, 0XFFA000, ANSIToTCHAR(info->u.chat.text, NULL, 0), 0xEEEEEE);
+    }
+    break;
+
     default:
       break;
     }
-    //if (strlen(info->u.chat.text) > 0) {
-    //  char& first = info->u.chat.text[0];
-    //  char* msg = info->u.chat.text + 1;
-
-    //  if (first == 'T' || first == 'C')
-    //  {
-    //    TCHAR szUser[MAX_CHAT_SIZE];
-    //    TCHAR szText[MAX_CHAT_SIZE];
-
-    //    ANSIToTCHAR(info->u.chat.username, szUser, MAX_CHAT_SIZE);
-    //    ANSIToTCHAR(msg, szText, MAX_CHAT_SIZE);
-
-    //    // NOTE: Kind of silly that we have to come up with another string when we already have the 'C' command code.
-    //    TCHAR* useName = first == 'C' ? _T("Command") : szUser;
-    //    VidOverlayAddChatLine(useName, szText);
-
-    //    // ummmm.... do we know what this is all about?
-    //    // --> It appears that there is some other overlay / OSD layer that isn't used.  Might be for the DDraw7 stuff which we don't care about.
-    //    // I think in 2025 that such a rendering approach can be ignored / removed.
-    //    //TCHAR szTemp[MAX_CHAT_SIZE];
-    //    //_sntprintf(szTemp, MAX_CHAT_SIZE, _T("«%.32hs» "), info->u.chat.username);
-    //    //VidSAddChatLine(szTemp, 0XFFA000, ANSIToTCHAR(info->u.chat.text, NULL, 0), 0xEEEEEE);
-    //  }
-
-    //}
 
     break;
 

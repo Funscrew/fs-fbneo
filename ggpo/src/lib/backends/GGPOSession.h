@@ -17,15 +17,15 @@ struct GGPOSession {
   virtual ~GGPOSession() {}
   virtual GGPOErrorCode DoPoll(int timeout) { return GGPO_OK; }
   virtual GGPOErrorCode AddPlayer(GGPOPlayer* player) = 0;
-  virtual GGPOErrorCode AddLocalInput(PlayerID playerIndex, void* values, int totalSize) = 0;
+  virtual GGPOErrorCode AddLocalInput(uint8_t playerIndex, void* values, int totalSize) = 0;
   virtual GGPOErrorCode SyncInput(void* values, int totalSize, int playerCount) = 0;
   virtual GGPOErrorCode IncrementFrame(void) { return GGPO_OK; }
 
   virtual bool SendChat(char* text) { return true; }
   virtual bool SendData(uint8_t code, void* data, uint8_t dataSize) { throw std::exception("NOT IMPLEMENTED!"); }
 
-  virtual GGPOErrorCode DisconnectPlayer(PlayerID handle) { return GGPO_OK; }
-  virtual bool GetNetworkStats(GGPONetworkStats* stats, PlayerID playerIndex) { return GGPO_OK; }
+  virtual GGPOErrorCode DisconnectPlayer(uint8_t handle) { return GGPO_OK; }
+  virtual bool GetNetworkStats(GGPONetworkStats* stats, uint8_t playerIndex) { return GGPO_OK; }
   virtual GGPOErrorCode Logv(const char* fmt, va_list list) { Utils::LogIt_v(fmt, list); return GGPO_OK; }
 
   virtual void SetFrameDelay(int delay) { throw std::exception("not supported!"); }
@@ -37,8 +37,8 @@ struct GGPOSession {
   // Additions:
 protected:
   IN_ADDR _RemoteAddr;
-  uint16 _RemotePort = 0;
-  PlayerID _playerIndex = 0;
+  uint16_t _RemotePort = 0;
+  uint8_t _playerIndex = 0;
 
   char _PlayerNames[2][MAX_NAME_SIZE];
 

@@ -1605,7 +1605,7 @@ int VidSDrawTV(RECT *rcDest)
 
 	}
 
-	if (bShowFPS) {
+	if (showStatsMode) {
 		SetTextAlign(hDC, TA_TOP | TA_RIGHT);
 		static int test = 0;
 		MyTextOut(hDC, rcDest->right - rcDest->left - 2, 3, szPing, _tcslen(szPing), nChatShadowOffset, RGB(0xee, 0xee, 0xee));

@@ -22,7 +22,7 @@ Peer2PeerBackend::Peer2PeerBackend(GGPOSessionCallbacks* cb,
   uint16 localport,
   char* remoteIp,
   uint16 remotePort,
-  PlayerID playerIndex,
+  uint8_t playerIndex,
   std::string playerName,
   uint32_t clientVersion)
   :
@@ -79,7 +79,7 @@ Peer2PeerBackend::Peer2PeerBackend(GGPOSessionCallbacks* cb,
 
 
   // Add the players.  Any player that doesn't match _playerIndex is the remote player.
-  for (uint16 i = 0; i < PLAYER_COUNT; i++)
+  for (uint8_t i = 0; i < PLAYER_COUNT; i++)
   {
     GGPOPlayer p;
     bool isLocal = i == _playerIndex;
@@ -115,7 +115,7 @@ Peer2PeerBackend::~Peer2PeerBackend()
 // -------------------------------------------------------------------------------------------------------------------
 // NOTE: We already know what our player playerIndex is so we don't have to pass it in.
 // That could be different if we had two local players, but we can figure that out later....
-GGPOErrorCode Peer2PeerBackend::AddLocalInput(PlayerID playerIndex, void* values, int isize) {
+GGPOErrorCode Peer2PeerBackend::AddLocalInput(uint8_t playerIndex, void* values, int isize) {
 
   GameInput input;
 
@@ -244,11 +244,11 @@ GGPOErrorCode Peer2PeerBackend::DoPoll(int timeout)
 // ----------------------------------------------------------------------------------------------------------
 int Peer2PeerBackend::Poll2Players(int current_frame)
 {
-  uint16  i;
+  // uint8_t  i;
 
   // discard confirmed frames as appropriate
   int total_min_confirmed = MAX_INT;
-  for (i = 0; i < _num_players; i++) {
+  for (uint8_t i = 0; i < _num_players; i++) {
     bool queue_connected = true;
     if (_endpoints[i].IsRunning()) {
       int ignore;
@@ -325,7 +325,7 @@ GGPOErrorCode Peer2PeerBackend::AddPlayer(GGPOPlayer* player)
     return GGPO_ERRORCODE_GENERAL_FAILURE;
   }
 
-  PlayerID playerIndex = player->player_index;
+  uint8_t playerIndex = player->player_index;
   if (player->player_index > _num_players) {
     return GGPO_ERRORCODE_PLAYER_OUT_OF_RANGE;
   }
@@ -416,7 +416,7 @@ void Peer2PeerBackend::PollSyncEvents(void)
 void Peer2PeerBackend::PollUdpProtocolEvents(void)
 {
   UdpEvent evt;
-  for (uint16 i = 0; i < _num_players; i++) {
+  for (uint8_t i = 0; i < _num_players; i++) {
     while (_endpoints[i].GetEvent(evt)) {
       OnUdpProtocolPeerEvent(evt, i);
     }
@@ -424,7 +424,7 @@ void Peer2PeerBackend::PollUdpProtocolEvents(void)
 }
 
 // ----------------------------------------------------------------------------------------------------------
-void Peer2PeerBackend::OnUdpProtocolPeerEvent(UdpEvent& evt, PlayerID playerIndex)
+void Peer2PeerBackend::OnUdpProtocolPeerEvent(UdpEvent& evt, uint8_t playerIndex)
 {
   OnUdpProtocolEvent(evt, playerIndex);
   switch (evt.type) {
@@ -452,7 +452,7 @@ void Peer2PeerBackend::OnUdpProtocolPeerEvent(UdpEvent& evt, PlayerID playerInde
 }
 
 // ----------------------------------------------------------------------------------------------------------
-void Peer2PeerBackend::OnUdpProtocolEvent(UdpEvent& evt, PlayerID playerIndex)
+void Peer2PeerBackend::OnUdpProtocolEvent(UdpEvent& evt, uint8_t playerIndex)
 {
   GGPOEvent info;
 
@@ -512,7 +512,7 @@ void Peer2PeerBackend::OnUdpProtocolEvent(UdpEvent& evt, PlayerID playerIndex)
 // Called only as the result of a local decision to disconnect.  The remote
 // decisions to disconnect are a result of us parsing the peer_connect_settings
 // blob in every endpoint periodically.
-GGPOErrorCode Peer2PeerBackend::DisconnectPlayer(PlayerID playerIndex)
+GGPOErrorCode Peer2PeerBackend::DisconnectPlayer(uint8_t playerIndex)
 {
   //  uint16 playerIndex = player;
 
@@ -526,7 +526,7 @@ GGPOErrorCode Peer2PeerBackend::DisconnectPlayer(PlayerID playerIndex)
   if (playerIndex == _playerIndex) {
     int current_frame = _sync.GetFrameCount();
     Utils::LogIt(CATEGORY_ENDPOINT, "Disconnecting local player %d at frame %d by user request.", playerIndex, _local_connect_status[playerIndex].last_frame);
-    for (uint16 i = 0; i < _num_players; i++) {
+    for (uint8_t i = 0; i < _num_players; i++) {
       if (_endpoints[i].IsInitialized()) {
         DisconnectPlayer(i, current_frame);
       }
@@ -540,7 +540,7 @@ GGPOErrorCode Peer2PeerBackend::DisconnectPlayer(PlayerID playerIndex)
 }
 
 // --------------------------------------------------------------------------------------------------------------
-void Peer2PeerBackend::DisconnectPlayer(PlayerID playerIndex, int syncto)
+void Peer2PeerBackend::DisconnectPlayer(uint8_t playerIndex, int syncto)
 {
   GGPOEvent info;
   int framecount = _sync.GetFrameCount();
@@ -568,7 +568,7 @@ void Peer2PeerBackend::DisconnectPlayer(PlayerID playerIndex, int syncto)
 
 
 // --------------------------------------------------------------------------------------------------------------
-bool Peer2PeerBackend::GetNetworkStats(GGPONetworkStats* stats, PlayerID playerIndex)
+bool Peer2PeerBackend::GetNetworkStats(GGPONetworkStats* stats, uint8_t playerIndex)
 {
   memset(stats, 0, sizeof * stats);
   _endpoints[playerIndex].GetNetworkStats(stats);
@@ -605,18 +605,6 @@ Peer2PeerBackend::SetDisconnectNotifyStart(int timeout)
   }
   return GGPO_OK;
 }
-
-//// OBSOLETE: This will be removed as it just removes 1 from the player playerIndex.
-//GGPOErrorCode
-//Peer2PeerBackend::PlayerHandleToQueue(PlayerID player, int* playerIndex)
-//{
-//  int offset = ((int)player - 1);
-//  if (offset < 0 || offset >= _num_players) {
-//    return GGPO_ERRORCODE_INVALID_PLAYER_HANDLE;
-//  }
-//  *playerIndex = offset;
-//  return GGPO_OK;
-//}
 
 // ----------------------------------------------------------------------------------------------------------
 void Peer2PeerBackend::OnMsg(sockaddr_in& from, UdpMsg* msg, int len)

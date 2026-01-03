@@ -41,7 +41,7 @@ GGPOSession* ggpo_start_session(
   uint16 localPort,
   char* remoteIp,
   uint16 remotePort,
-  PlayerID playerIndex,
+  uint8_t playerIndex,
   char* playerName,
   uint32_t clientVersion)
 {
@@ -77,14 +77,13 @@ ggpo_start_synctest(GGPOSession** ggpo,
   int frames)
 {
   return GGPO_ERRORCODE_UNSUPPORTED;
-  //*ggpo = (GGPOSession *)new SyncTestBackend(cb, game, frames, num_players);
-  //return GGPO_OK;
 }
 
 void ggpo_set_frame_delay(GGPOSession* ggpo, int frame_delay) {
   ggpo->SetFrameDelay(frame_delay);
 }
 
+// ----------------------------------------------------------------------------------------------------------------
 GGPOErrorCode
 ggpo_idle(GGPOSession* ggpo, int timeout)
 {
@@ -94,31 +93,7 @@ ggpo_idle(GGPOSession* ggpo, int timeout)
   return ggpo->DoPoll(timeout);
 }
 
-//GGPOErrorCode
-//ggpo_add_local_input(GGPOSession *ggpo,
-//                     PlayerID player,
-//                     void *values,
-//                     int isize)
-//{
-//   if (!ggpo) {
-//      return GGPO_ERRORCODE_INVALID_SESSION;
-//   }
-//   return ggpo->AddLocalInput(player, values, isize);
-//}
-
-// LEGACY
-//GGPOErrorCode
-//ggpo_synchronize_input(GGPOSession *ggpo,
-//                       void *values,
-//                       int isize,
-//                       int *disconnect_flags)
-//{
-//   if (!ggpo) {
-//      return GGPO_ERRORCODE_INVALID_SESSION;
-//   }
-//   return ggpo->SyncInput(values, isize, disconnect_flags);
-//}
-
+// ----------------------------------------------------------------------------------------------------------------
 GGPOErrorCode
 ggpo_synchronize_input(GGPOSession* ggpo,
   void* values,
@@ -131,8 +106,8 @@ ggpo_synchronize_input(GGPOSession* ggpo,
   return ggpo->SyncInput(values, isize, playerCount);
 }
 
-GGPOErrorCode ggpo_disconnect_player(GGPOSession* ggpo,
-  PlayerID playerIndex)
+// ----------------------------------------------------------------------------------------------------------------
+GGPOErrorCode ggpo_disconnect_player(GGPOSession* ggpo, uint8_t playerIndex)
 {
   if (!ggpo) {
     return GGPO_ERRORCODE_INVALID_SESSION;
@@ -165,7 +140,7 @@ void ggpo_send_data(GGPOSession* ggpo, uint8_t code, void* data, uint8_t dataSiz
 }
 
 // ----------------------------------------------------------------------------------------------------------------
-bool ggpo_get_stats(GGPOSession* ggpo, GGPONetworkStats* stats, PlayerID playerIndex)
+bool ggpo_get_stats(GGPOSession* ggpo, GGPONetworkStats* stats, uint8_t playerIndex)
 {
   if (!ggpo) {
     return false;
@@ -175,7 +150,7 @@ bool ggpo_get_stats(GGPOSession* ggpo, GGPONetworkStats* stats, PlayerID playerI
 }
 
 // ----------------------------------------------------------------------------------------------------------------
-char* ggpo_get_playerName(GGPOSession* ggpo, PlayerID index) {
+char* ggpo_get_playerName(GGPOSession* ggpo, uint8_t index) {
   if (!ggpo) { return nullptr; }
   auto res = ggpo->GetPlayerName(index);
   return res;

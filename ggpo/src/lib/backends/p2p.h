@@ -26,18 +26,18 @@ static const uint16 INPUT_SIZE = 5;
 // ==========================================================================================================
 class Peer2PeerBackend : public GGPOSession, IPollSink, Udp::Callbacks {
 public:
-   Peer2PeerBackend(GGPOSessionCallbacks *cb, const char *gamename, uint16 localport, char* remoteIp, uint16 remotePort, PlayerID playerIndex, std::string playerName, uint32_t client_version);
+   Peer2PeerBackend(GGPOSessionCallbacks *cb, const char *gamename, uint16 localport, char* remoteIp, uint16 remotePort, uint8_t playerIndex, std::string playerName, uint32_t client_version);
    virtual ~Peer2PeerBackend();
 
 
 public:
    virtual GGPOErrorCode DoPoll(int timeout);
    virtual GGPOErrorCode AddPlayer(GGPOPlayer *player);
-   virtual GGPOErrorCode AddLocalInput(PlayerID playerIndex, void *values, int totalSize);
+   virtual GGPOErrorCode AddLocalInput(uint8_t playerIndex, void *values, int totalSize);
    virtual GGPOErrorCode SyncInput(void *values, int totalSize, int playerCount);
    virtual GGPOErrorCode IncrementFrame(void);
-   virtual GGPOErrorCode DisconnectPlayer(PlayerID playerIndex);
-   virtual bool GetNetworkStats(GGPONetworkStats *stats, PlayerID playerIndex);
+   virtual GGPOErrorCode DisconnectPlayer(uint8_t playerIndex);
+   virtual bool GetNetworkStats(GGPONetworkStats *stats, uint8_t playerIndex);
    virtual void SetFrameDelay(int delay);
    virtual GGPOErrorCode SetDisconnectTimeout(int timeout);
    virtual GGPOErrorCode SetDisconnectNotifyStart(int timeout);
@@ -49,15 +49,15 @@ public:
    virtual void OnMsg(sockaddr_in &from, UdpMsg *msg, int len);
 
 protected:
-   void DisconnectPlayer(PlayerID playerIndex, int syncto);
+   void DisconnectPlayer(uint8_t playerIndex, int syncto);
    void PollUdpProtocolEvents(void);
    void CheckInitialSync(void);
    int Poll2Players(int current_frame);
    int PollNPlayers(int current_frame);
    void AddRemotePlayer(char *remoteip, uint16 reportport, int queue);
    
-   virtual void OnUdpProtocolEvent(UdpEvent &e, PlayerID playerIndex);
-   virtual void OnUdpProtocolPeerEvent(UdpEvent &e, PlayerID playerIndex);
+   virtual void OnUdpProtocolEvent(UdpEvent &e, uint8_t playerIndex);
+   virtual void OnUdpProtocolPeerEvent(UdpEvent &e, uint8_t playerIndex);
 
    // OBSOLETE:  These functions don't actually do anything....
    void PollSyncEvents(void);

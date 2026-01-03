@@ -126,7 +126,7 @@ int ConfigAppLoad()
 		VAR(nEnableSOCD);
 		VAR(bForce60Hz);
 		VAR(bAlwaysDrawFrames);
-		VAR(bShowFPS);
+		VAR(showStatsMode);
 
 		VAR(nVidSelect);
 		VAR(nVidBlitterOpt[0]);
@@ -475,7 +475,7 @@ int ConfigAppSave()
 	_ftprintf(h, _T("\n// If zero, skip frames when needed to keep the emulation running at full speed\n"));
 	VAR(bAlwaysDrawFrames);
 	_ftprintf(h, _T("\n// Show stats on screen (0=disabled,  1=FPS+rollback frames, 2=ping+jitter, 3=delay and runahead)\n"));
-	VAR(bShowFPS);
+	VAR(showStatsMode);
 
 	_ftprintf(h, _T("\n"));
 	_ftprintf(h, _T("// --- DirectDraw blitter module settings -------------------------------------\n"));

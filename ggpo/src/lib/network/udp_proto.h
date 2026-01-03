@@ -174,9 +174,9 @@ protected:
   /*
    * Network Stats
    */
-  int            _round_trip_time;            // REFACTOR: This is 'ping'
-  int            _packets_sent;               // REFACTOR: 'totalPacketsSent'
-  int            _bytes_sent;                 // REFACTOR: This is total bytes sent minus the UDP overhead... find a clever name....  'total packet bytes'?
+  int            _round_trip_time = 0;            // REFACTOR: This is 'ping'
+  int            _packets_sent = 0;               // REFACTOR: 'totalPacketsSent'
+  int            _bytes_sent = 0;                 // REFACTOR: This is total bytes sent minus the UDP overhead... find a clever name....  'total packet bytes'?
   int            _kbps_sent;
   int            _stats_start_time;
 

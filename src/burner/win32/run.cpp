@@ -7,7 +7,7 @@ int bAltPause = 0;
 int bAlwaysDrawFrames = 0;
 
 // REFACTOR: Rename to 'ShowStats' or similar.  
-int bShowFPS = SHOWSTATS_NONE;
+int showStatsMode = SHOWSTATS_NONE;
 
 static unsigned int nDoFPS = 0;
 
@@ -25,7 +25,7 @@ char kNetQuarkId[128] = {};				// Network quark id
 int counter;								// General purpose variable used when debugging
 #endif
 
-static double nFrameLast = 0;
+static int nFrameLast = 0;
 static bool bAppDoStep = 0;
 static bool bAppDoFast = 0;
 static bool bAppDoFastToggled = 0;
@@ -165,20 +165,59 @@ static int GetInput(bool bCopy)
   return 0;
 }
 
-static time_t fpstimer;
+static LONGLONG lastTime;
 static unsigned int nPreviousFrames;
 
-static void DisplayFPSInit()
+static void InitOverlay()
 {
   nDoFPS = 0;
-  fpstimer = 0;
+  lastTime = 0;
   nPreviousFrames = nFramesRendered;
 }
 
-static void DisplayFPS()
+// TODO: We should put this in its own class or something....
+static bool is_clock_init = false;
+static LARGE_INTEGER clock_freq;
+static float pcFreq = 0.0f;
+
+static const int MS_PER_SEC = 1000;
+
+// ------------------------------------------------------------------------------------------------
+static void init_clock() {
+  if (!is_clock_init)
+  {
+    LARGE_INTEGER freq;
+    bool getFreq = QueryPerformanceFrequency(&clock_freq);
+    if (!getFreq) {
+      throw std::exception("could not get clock frequency!");
+    }
+
+    is_clock_init = true;
+  }
+}
+
+// ------------------------------------------------------------------------------------------------
+static LONGLONG get_ms() {
+  init_clock();
+
+  LARGE_INTEGER time;
+  QueryPerformanceCounter(&time);
+
+  time.QuadPart *= 1000;
+  time.QuadPart /= clock_freq.QuadPart;
+  return time.QuadPart;
+}
+
+// ------------------------------------------------------------------------------------------------
+static void UpdateOverlay()
 {
-  time_t temptime = clock();
-  double fps = (double)(nFramesRendered - nPreviousFrames) * CLOCKS_PER_SEC / (temptime - fpstimer);
+  // NOTE: I think that there are better resolution ways to measure this.....
+  auto now = get_ms();
+  auto elapsed = now - lastTime;
+
+  int frameDiff = nFramesRendered - nPreviousFrames;
+
+  double fps = (double)(frameDiff) * MS_PER_SEC / elapsed; // / (now - lastTime);
   if (bAppDoFast) {
     fps *= nFastSpeed + 1;
   }
@@ -189,13 +228,13 @@ static void DisplayFPS()
     QuarkUpdateStats(fps);
   }
   else {
-    if (fpstimer && (temptime - fpstimer) > 0) { // avoid strange fps values
+    if (lastTime && elapsed > 0) { // avoid strange fps values
       VidSSetStats(fps, 0, 0);
       VidOverlaySetStats(fps, 0, 0);
     }
   }
 
-  fpstimer = temptime;
+  lastTime = now;
   nPreviousFrames = nFramesRendered;
 }
 
@@ -467,26 +506,31 @@ int RunIdle()
   VidPaint(3);
 
   // fps
+  // OPTIONS:
+  const int FPS_UPDATE_RATE = 30;
   if (nDoFPS < nFramesRendered) {
-    DisplayFPS();
-    nDoFPS = nFramesRendered + 30;
+    UpdateOverlay();
+    nDoFPS = nFramesRendered + FPS_UPDATE_RATE;
   }
 
   return 0;
 }
 
+// --------------------------------------------------------------------------------------------------------------------
 // TODO: Find a better name for this function!
 int RunReset()
 {
   // Reset FPS display
-  DisplayFPSInit();
+  InitOverlay();
 
   // Reset the speed throttling code
+  // TODO: Use our new clock-based code.
   nFrameLast = timeGetTime();
 
   return 0;
 }
 
+// --------------------------------------------------------------------------------------------------------------------
 int RunInit()
 {
   AudSoundPlay();
@@ -834,7 +878,7 @@ int RunMessageLoop()
                   }
 
                   if (bOldAppDoFast != bAppDoFast) {
-                    DisplayFPSInit(); // resync fps display
+                    InitOverlay(); // resync fps display
                   }
                 }
               }
@@ -849,11 +893,11 @@ int RunMessageLoop()
                 }
               }
               else if (!bEditActive) { // Backspace: toggles FPS
-                bShowFPS = (bShowFPS + 1) % (kNetGame ? 4 : 2);
+                showStatsMode = (showStatsMode + 1) % (kNetGame ? SHOWSTATS_MAX: 2);
                 VidOverlaySetWarning(-5000, 1);
                 VidOverlaySetWarning(-5000, 2);
                 VidOverlaySetWarning(-5000, 3);
-                DisplayFPS();
+                UpdateOverlay();
                 MenuUpdate();
               }
               break;
@@ -970,7 +1014,7 @@ int RunMessageLoop()
                   bAppDoFast = 0;
                 bAppDoFastToggled = 0;
                 if (bOldAppDoFast != bAppDoFast) {
-                  DisplayFPSInit(); // resync fps display
+                  InitOverlay(); // resync fps display
                 }
               }
               break;
