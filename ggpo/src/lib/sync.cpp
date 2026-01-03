@@ -161,6 +161,9 @@ void Sync::AdjustSimulation(int seek_to)
   int count = _curFrame - seek_to;   // This is assumed to be positive b/c we are rolling back to an earlier frame.  Therefore, _framecount is always > seek_to.
 
   Utils::LogIt(CATEGORY_SYNC, "RB:%d,%d", _curFrame, count);
+
+  _callbacks.on_rollback(_curFrame, count);
+  
   _rollingback = true;
 
   /*
@@ -183,7 +186,7 @@ void Sync::AdjustSimulation(int seek_to)
 
   _rollingback = false;
 
-  Utils::LogIt(CATEGORY_SYNC, "---");
+  // Utils::LogIt(CATEGORY_SYNC, "---");
 }
 
 // ------------------------------------------------------------------------------------------------------------------------

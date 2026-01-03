@@ -32,8 +32,9 @@ uint8_t _otherPlayerIndex = PLAYER_NOT_SET;
 
 // rollback counter
 // NOTE: These are only used in the video overlay. --> so they should be part of the overlay vars?
-int nRollbackFrames = 0;              // The number of frames that were rolled back.
-int nRollbackCount = 0;               // The total number of rollbacks.
+int totalRollbackFrames = 0;              // The number of frames that were rolled back.
+int rollbackCount = 0;               // The total number of rollbacks.
+int lastRollbackFrame = 0;            // Frame number where the last rollback was encountered.
 
 static char pGameName[MAX_PATH];
 static bool bDelayLoad = false;
@@ -152,6 +153,22 @@ bool __cdecl ggpo_on_client_event_callback(GGPOClientEvent* info)
 //	return true;
 //}
 
+// --------------------------------------------------------------------------------------------------------------------
+void __cdecl ggpo_on_rollback(int onFrame, int frameCount) {
+  rollbackCount += 1;
+  totalRollbackFrames += frameCount;
+
+  int frameDiff = (std::max)(1, onFrame - lastRollbackFrame);
+  int frameAvg = frameCount / frameDiff;
+  
+
+  VidOverlaySetRollbackStats(onFrame, frameAvg);
+
+  lastRollbackFrame = onFrame;
+
+}
+
+// --------------------------------------------------------------------------------------------------------------------
 bool __cdecl ggpo_on_event_callback(GGPOEvent* info)
 {
   //if (ggpo_is_client_eventcode(info->code)) {
@@ -361,7 +378,6 @@ bool __cdecl ggpo_rollback_frame_callback(int flags)
 {
   bSkipPerfmonUpdates = true;
   nFramesEmulated--;
-  nRollbackFrames++;
 
   // Run the frame.  This will not sync inputs and will draw / do sound, etc.
   // NOTE: The reference implementation syncs inputs on rollback....
@@ -527,8 +543,6 @@ bool __cdecl ggpo_load_game_state_callback(unsigned char* buffer, int len)
   nAcbLoadState = 0;
   nAcbVersion = nBurnVer;
 
-
-  nRollbackCount++;
   return true;
 }
 
@@ -643,6 +657,7 @@ int InitDirectConnection(DirectConnectionOptions& ops, GGPOLogOptions& logOps)
   cb.free_buffer = ggpo_free_buffer_callback;
   cb.rollback_frame = ggpo_rollback_frame_callback;
   cb.on_event = ggpo_on_event_callback;
+  cb.on_rollback = ggpo_on_rollback;
 
 
   // SET GLOBALS

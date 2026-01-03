@@ -1403,22 +1403,31 @@ static int op_runahead = 0;
 static int prev_runahead = -1;
 static int bOpInfoRcvd = false;
 
-extern int nRollbackFrames;
-extern int nRollbackCount;
+extern int rollbackFrames;
+extern int rollbackCount;
+extern int lastRollbackFrame; 
 
-static int nLastRollbackCount = 0;
-static UINT32 nLastRollbackFrames = 0;
-static UINT32 nAvgRollbackFrameCount = 0;       // Average number of frames rolled back, per rollback.
-static UINT32 nLastRollbackAt = 0;
-//static UINT32 nMaxRollback = 0;
-static UINT32 nRollbacksIn1Cycle = 0;
-static UINT32 rollbackPct = 0;
-static UINT32 nLastCount = 0;
-static UINT32 nRollbacks1CycleAgo = 0;
+static int lastRollbackFrameCount = 0;
+//static int nLastRollbackCount = 0;
+//static UINT32 nLastRollbackFrames = 0;
+//static UINT32 nAvgRollbackFrameCount = 0;       // Average number of frames rolled back, per rollback.
+//static UINT32 nLastRollbackAt = 0;
+////static UINT32 nMaxRollback = 0;
+//static UINT32 nRollbacksIn1Cycle = 0;
+//
+//static UINT32 rollbackPct = 0;
+//static UINT32 nLastCount = 0;
+//static UINT32 nRollbacks1CycleAgo = 0;
 
 const wchar_t* FPS_ONLY_MSG = _T("%2.2f fps");
 const wchar_t* FPS_AND_NETSTATS_MSG = _T("%2.2f fps | Ping: %d | Rollback: %d");
 
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------
+void VidOverlaySetRollbackStats(int onFrame, int frameCount) { 
+
+  // ggpo->GetFrame
+  lastRollbackFrameCount = frameCount;
+}
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------
 void VidOverlaySetRemoteStats(int delay, int runahead) {
@@ -1428,10 +1437,12 @@ void VidOverlaySetRemoteStats(int delay, int runahead) {
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------
 void VidOverlaySetStats(double fps, int ping, int delay)
-{  if (ping > 0 && nRollbackCount > 0 && prev_runahead != nVidRunahead) {
+{  if (ping > 0 && rollbackCount > 0 && prev_runahead != nVidRunahead) {
     prev_runahead = nVidRunahead;
     SendToPeer(delay, nVidRunahead);
   }
+
+
 
   if (showStatsMode == SHOWSTATS_NONE) { return; }
 
@@ -1442,7 +1453,7 @@ void VidOverlaySetStats(double fps, int ping, int delay)
   // FPS always goes on line 1.
   const wchar_t* line1Msg = nullptr;
   if (showStatsMode >= SHOWSTATS_FPS_AND_ROLLBACK) {
-    swprintf(buf_line1, 64, FPS_AND_NETSTATS_MSG, fps, ping, nAvgRollbackFrameCount);
+    swprintf(buf_line1, 64, FPS_AND_NETSTATS_MSG, fps, ping, lastRollbackFrameCount);
   }
   else if (showStatsMode == SHOWSTATS_FPS_ONLY) {
     swprintf(buf_line1, 64, FPS_ONLY_MSG, fps);
@@ -1463,99 +1474,99 @@ void VidOverlaySetStats(double fps, int ping, int delay)
 
   return;
 
-  if ((game_spectator || ping <= 0 || ping > 40000) && (showStatsMode >= 1)) {
-    if (game_spectator || (showStatsMode > 0 && showStatsMode < 3))
-    {
-      swprintf(buf_line1, 64, _T("%2.2f fps"), fps);
-    }
-    else if (showStatsMode >= 3) {
-      swprintf(buf_line1, 64, _T("%2.2f fps  |  ra%d "), fps, nVidRunahead);
-    }
-    stats_line1.Set(buf_line1);
-  }
-  else {
-    if (showStatsMode >= 1) {
-      // rollback frames
+  //if ((game_spectator || ping <= 0 || ping > 40000) && (showStatsMode >= 1)) {
+  //  if (game_spectator || (showStatsMode > 0 && showStatsMode < 3))
+  //  {
+  //    swprintf(buf_line1, 64, _T("%2.2f fps"), fps);
+  //  }
+  //  else if (showStatsMode >= 3) {
+  //    swprintf(buf_line1, 64, _T("%2.2f fps  |  ra%d "), fps, nVidRunahead);
+  //  }
+  //  stats_line1.Set(buf_line1);
+  //}
+  //else {
+  //  if (showStatsMode >= 1) {
+  //    // rollback frames
 
-      INT32 msPerFrame = 100000 / nBurnFPS;
-      UINT32 rollbackWarnThreshold = 3 + ((ping / 2) / msPerFrame);
-      if (nLastRollbackFrames > 0 && nLastRollbackCount > 0) {
-        if (nRollbackCount > nLastRollbackCount) {
-          nAvgRollbackFrameCount = (nRollbackFrames - nLastRollbackFrames) / (nRollbackCount - nLastRollbackCount);
-          nLastRollbackAt = nFramesEmulated;
+  //    INT32 msPerFrame = 100000 / nBurnFPS;
+  //    UINT32 rollbackWarnThreshold = 3 + ((ping / 2) / msPerFrame);
+  //    if (nLastRollbackFrames > 0 && nLastRollbackCount > 0) {
+  //      if (nRollbackCount > nLastRollbackCount) {
+  //        nAvgRollbackFrameCount = (nRollbackFrames - nLastRollbackFrames) / (nRollbackCount - nLastRollbackCount);
+  //        nLastRollbackAt = nFramesEmulated;
 
-          if (nAvgRollbackFrameCount > rollbackWarnThreshold) {
-            if (nFramesEmulated > 1000 && nAvgRollbackFrameCount > 0) {
-              VidOverlaySetWarning(WARNING_FRAMES, 1);
-            }
-          }
+  //        if (nAvgRollbackFrameCount > rollbackWarnThreshold) {
+  //          if (nFramesEmulated > 1000 && nAvgRollbackFrameCount > 0) {
+  //            VidOverlaySetWarning(WARNING_FRAMES, 1);
+  //          }
+  //        }
 
-        }
-        // Just clear it out after 10 seconds, OK!
-        else if (nFramesEmulated > nLastRollbackAt + 600) {
-          nAvgRollbackFrameCount = 0;
-        }
-      }
-      nLastRollbackCount = nRollbackCount;
-      nLastRollbackFrames = nRollbackFrames;
+  //      }
+  //      // Just clear it out after 10 seconds, OK!
+  //      else if (nFramesEmulated > nLastRollbackAt + 600) {
+  //        nAvgRollbackFrameCount = 0;
+  //      }
+  //    }
+  //    nLastRollbackCount = nRollbackCount;
+  //    nLastRollbackFrames = nRollbackFrames;
 
-      if (showStatsMode == 1) swprintf(buf_line1, 64, _T(" %2.2f fps  |  d%d-ra%d "), fps, delay, nVidRunahead);
-      else if (showStatsMode == 2) swprintf(buf_line1, 64, _T(" %2.2f fps  |      d%d-ra%d        "), fps, delay, nVidRunahead);
-      else swprintf(buf_line1, 64, _T(" %2.2f fps  |  Rollback %df "), fps, nAvgRollbackFrameCount);
-      stats_line1.Set(buf_line1);
-    }
-    if (showStatsMode >= 2) {
-      // jitter
-      if (ping > 0 && nFramesEmulated > 600) {
-        int pingSum = 0;
-        int jitterSum = 0;
-        jitterPingArray[jitterArrayPos] = ping;
-        if (jitterArrayPos > 0)
-          jitterArray[jitterArrayPos - 1] = abs(jitterPingArray[jitterArrayPos] - jitterPingArray[jitterArrayPos - 1]);
-        for (int i = 0; i < PINGSIZE; i++) {
-          pingSum += jitterArray[i];
-          if (i < PINGSIZE - 1) jitterSum += jitterArray[i];
-        }
-        jitterPingAvg = pingSum / PINGSIZE;
-        jitterAvg = jitterSum / (PINGSIZE - 1);
-        jitterArrayPos++;
-        if (jitterArrayPos > PINGSIZE) {
-          jitterArrayPos = 0;
-        }
-      }
-      if (jitterAvg > jitterPingAvg * 0.15 && jitterAvg > 10) VidOverlaySetWarning(120, 2);
+  //    if (showStatsMode == 1) swprintf(buf_line1, 64, _T(" %2.2f fps  |  d%d-ra%d "), fps, delay, nVidRunahead);
+  //    else if (showStatsMode == 2) swprintf(buf_line1, 64, _T(" %2.2f fps  |      d%d-ra%d        "), fps, delay, nVidRunahead);
+  //    else swprintf(buf_line1, 64, _T(" %2.2f fps  |  Rollback %df "), fps, nAvgRollbackFrameCount);
+  //    stats_line1.Set(buf_line1);
+  //  }
+  //  if (showStatsMode >= 2) {
+  //    // jitter
+  //    if (ping > 0 && nFramesEmulated > 600) {
+  //      int pingSum = 0;
+  //      int jitterSum = 0;
+  //      jitterPingArray[jitterArrayPos] = ping;
+  //      if (jitterArrayPos > 0)
+  //        jitterArray[jitterArrayPos - 1] = abs(jitterPingArray[jitterArrayPos] - jitterPingArray[jitterArrayPos - 1]);
+  //      for (int i = 0; i < PINGSIZE; i++) {
+  //        pingSum += jitterArray[i];
+  //        if (i < PINGSIZE - 1) jitterSum += jitterArray[i];
+  //      }
+  //      jitterPingAvg = pingSum / PINGSIZE;
+  //      jitterAvg = jitterSum / (PINGSIZE - 1);
+  //      jitterArrayPos++;
+  //      if (jitterArrayPos > PINGSIZE) {
+  //        jitterArrayPos = 0;
+  //      }
+  //    }
+  //    if (jitterAvg > jitterPingAvg * 0.15 && jitterAvg > 10) VidOverlaySetWarning(120, 2);
 
-      wchar_t buf_ping[30];
-      wchar_t buf_jitter[30];
-      if (ping < 1000) wsprintf(buf_ping, _T("Ping %dms  |"), ping);
-      else wsprintf(buf_ping, _T("Ping +999ms  |"));
-      if (jitterAvg < 10) wsprintf(buf_jitter, _T("  Jitter  %dms  "), jitterAvg);
-      else if (jitterAvg < 100) wsprintf(buf_jitter, _T("  Jitter %dms"), jitterAvg);
-      else wsprintf(buf_jitter, _T("Jitter +99ms"));
-      swprintf(buf_line2, 64, _T("%s%s"), buf_ping, buf_jitter);
-      stats_line2.Set(buf_line2);
-    }
-    if (showStatsMode >= 3) {
-      if (nFramesEmulated >= nLastCount + 600) {
-        nRollbacksIn1Cycle = nRollbackCount - nRollbacks1CycleAgo;
-        nRollbacks1CycleAgo = nRollbackCount;
-        rollbackPct = (100 * nRollbacksIn1Cycle) / (nFramesEmulated - nLastCount);
-        nLastCount = nFramesEmulated;
-      }
-      if (rollbackPct >= 50) VidOverlaySetWarning(120, 3);
+  //    wchar_t buf_ping[30];
+  //    wchar_t buf_jitter[30];
+  //    if (ping < 1000) wsprintf(buf_ping, _T("Ping %dms  |"), ping);
+  //    else wsprintf(buf_ping, _T("Ping +999ms  |"));
+  //    if (jitterAvg < 10) wsprintf(buf_jitter, _T("  Jitter  %dms  "), jitterAvg);
+  //    else if (jitterAvg < 100) wsprintf(buf_jitter, _T("  Jitter %dms"), jitterAvg);
+  //    else wsprintf(buf_jitter, _T("Jitter +99ms"));
+  //    swprintf(buf_line2, 64, _T("%s%s"), buf_ping, buf_jitter);
+  //    stats_line2.Set(buf_line2);
+  //  }
+  //  if (showStatsMode >= 3) {
+  //    if (nFramesEmulated >= nLastCount + 600) {
+  //      nRollbacksIn1Cycle = nRollbackCount - nRollbacks1CycleAgo;
+  //      nRollbacks1CycleAgo = nRollbackCount;
+  //      rollbackPct = (100 * nRollbacksIn1Cycle) / (nFramesEmulated - nLastCount);
+  //      nLastCount = nFramesEmulated;
+  //    }
+  //    if (rollbackPct >= 50) VidOverlaySetWarning(120, 3);
 
-      //swprintf(buf_line3, 64, _T("Delay %d  | Runahead %d"), delay, nVidRunahead);
-      if (!bOpInfoRcvd) {
-        if (game_playerIndex == 0) swprintf(buf_line3, 64, _T("P1: d%d-ra%d  |  P2: d?-ra?    "), delay, nVidRunahead);
-        else swprintf(buf_line3, 64, _T("P1: d?-ra?  |  P2: d%d-ra%d   "), delay, nVidRunahead);
-      }
-      else {
-        if (game_playerIndex == 0) swprintf(buf_line3, 64, _T("P1: d%d-ra%d  |  P2: d%d-ra%d   "), delay, nVidRunahead, op_delay, op_runahead);
-        else swprintf(buf_line3, 64, _T("P1: d%d-ra%d  |  P2: d%d-ra%d   "), op_delay, op_runahead, delay, nVidRunahead);
-      }
-      stats_line3.Set(buf_line3);
-    }
-  }
+  //    //swprintf(buf_line3, 64, _T("Delay %d  | Runahead %d"), delay, nVidRunahead);
+  //    if (!bOpInfoRcvd) {
+  //      if (game_playerIndex == 0) swprintf(buf_line3, 64, _T("P1: d%d-ra%d  |  P2: d?-ra?    "), delay, nVidRunahead);
+  //      else swprintf(buf_line3, 64, _T("P1: d?-ra?  |  P2: d%d-ra%d   "), delay, nVidRunahead);
+  //    }
+  //    else {
+  //      if (game_playerIndex == 0) swprintf(buf_line3, 64, _T("P1: d%d-ra%d  |  P2: d%d-ra%d   "), delay, nVidRunahead, op_delay, op_runahead);
+  //      else swprintf(buf_line3, 64, _T("P1: d%d-ra%d  |  P2: d%d-ra%d   "), op_delay, op_runahead, delay, nVidRunahead);
+  //    }
+  //    stats_line3.Set(buf_line3);
+  //  }
+  //}
 
   // send warning if fps went down the thresold
   if (fps < ((nBurnFPS / 100) - 4)) {

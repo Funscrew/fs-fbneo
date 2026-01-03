@@ -252,6 +252,10 @@ extern "C" {
      */
     bool(__cdecl* rollback_frame)(int flags);
 
+    // Gives information about the rollback.
+    // 'onFrame' = the frame # where the rollback was triggered.
+    // 'frameCount' = the number of frames that will be rolled back.
+    void(__cdecl* on_rollback)(int onFrame, int frameCount);
     /*
      * on_event - Notification that something has happened.  See the GGPOEventCode
      * structure above for more information.

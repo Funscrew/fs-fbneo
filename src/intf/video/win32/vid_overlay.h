@@ -18,6 +18,7 @@ void VidOverlaySetGameSpectators(int num);
 void VidOverlaySetSystemMessage(const wchar_t *text);
 void VidOverlaySetStats(double fps, int ping, int delay);
 void VidOverlaySetRemoteStats(int delay, int runahead);
+void VidOverlaySetRollbackStats(int onFrame, int frameCount);
 void VidOverlaySetWarning(int warning, int line);
 void VidOverlayShowVolume(const wchar_t *text);
 void VidOverlaySetChatInput(const wchar_t *text);
