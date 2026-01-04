@@ -278,7 +278,7 @@ bool Sync::CheckSimulationConsistency(int* seekTo)
   int first_incorrect = GameInput::NullFrame;
   for (int i = 0; i < _config.num_players; i++) {
     int incorrect = _input_queues[i].GetFirstIncorrectFrame();
-    Utils::LogIt(CATEGORY_SYNC, "considering incorrect frame %d reported by queue %d.", incorrect, i);
+    Utils::LogIt(CATEGORY_SYNC, "Incorrect frame? %d by player %d.", incorrect, i);
 
     if (incorrect != GameInput::NullFrame && (first_incorrect == GameInput::NullFrame || incorrect < first_incorrect)) {
       first_incorrect = incorrect;

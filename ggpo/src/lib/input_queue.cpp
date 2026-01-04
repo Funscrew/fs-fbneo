@@ -218,8 +218,7 @@ InputQueue::AddInput(GameInput& input)
   input.frame = new_frame;
 }
 
-void
-InputQueue::AddDelayedInputToQueue(GameInput& input, int frame_number)
+void InputQueue::AddDelayedInputToQueue(GameInput& input, int frame_number)
 {
   Utils::LogIt(CATEGORY_INPUT_QUEUE, "adding delayed input frame number %d to queue.", frame_number);
 

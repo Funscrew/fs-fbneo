@@ -1053,6 +1053,7 @@ void VidOverlaySetSize(const RECT& dest, float size)
   frame_height = frame_width * (dest.bottom - dest.top) / (dest.right - dest.left);
 }
 
+// --------------------------------------------------------------------------------------------------------------------
 void VidOverlayRender(const RECT& dest, int gameWidth, int gameHeight, int scan_intensity)
 {
   if (!pD3DDevice) {
@@ -1131,17 +1132,12 @@ void VidOverlayRender(const RECT& dest, int gameWidth, int gameHeight, int scan_
   // TODO: This is doing even more work, when it should have all been done in the line_x.Set code!
   // REFACTOR: Change the overlay lines so that they are active / not / colored / have the message set all in one place!
   else if (showStatsMode) {
-    // stats (fps & ping)
-    stats_line1.color = (stats_line1_warning >= WARNING_THRESHOLD) ? RED : WHITE;
-    stats_line1.Render((showStatsMode == 2) ? frame_width - 0.0015f : frame_width - 0.0035f, 0.003f, 0.90f, FNT_MED * 0.9f, FONT_ALIGN_RIGHT);
-    if (showStatsMode > 1) {
-      stats_line2.color = (stats_line2_warning >= WARNING_THRESHOLD) ? RED : WHITE;
-      stats_line2.Render((jitterAvg >= 10) ? frame_width - 0.0052f : frame_width - 0.0035f, 0.023f, 0.90f, FNT_MED * 0.9f, FONT_ALIGN_RIGHT);
-    }
-    if (showStatsMode > 2) {
-      stats_line3.color = (stats_line3_warning >= WARNING_THRESHOLD) ? RED : WHITE;
-      stats_line3.Render(frame_width - 0.0035f, 0.043f, 0.90f, FNT_MED * 0.9f, FONT_ALIGN_RIGHT);
-    }
+
+    // TODO: Having pixel based coords would probably be a good thing!
+    stats_line1.Render(frame_width - 0.0035f, 0.003f, 0.90f, FNT_MED * 0.9f, FONT_ALIGN_RIGHT);
+    stats_line2.Render(frame_width - 0.0035f, 0.023f, 0.90f, FNT_MED * 0.9f, FONT_ALIGN_RIGHT);
+    stats_line3.Render(frame_width - 0.0035f, 0.043f, 0.90f, FNT_MED * 0.9f, FONT_ALIGN_RIGHT);
+
   }
 
   // text info
@@ -1471,6 +1467,24 @@ void VidOverlaySetStats(double fps, int ping, int delay)
 
     stats_line2.Set(buf_line2);
   }
+  else {
+    stats_line2.isActive = false;
+  }
+
+  // NOTE: This was some other code for setting the stats text, etc.
+  // --> I am trying to wrangle all of the stats message + formatting code into one place as that makes the most sense.
+  // We can do something about the warning thresholds, etc. later, once we decide where to put everything.
+
+  //stats_line1.color = (stats_line1_warning >= WARNING_THRESHOLD) ? RED : WHITE;
+  //if (showStatsMode > 1) {
+  //  stats_line2.color = (stats_line2_warning >= WARNING_THRESHOLD) ? RED : WHITE;
+  //  stats_line2.Render((jitterAvg >= 10) ? frame_width - 0.0052f : frame_width - 0.0035f, 0.023f, 0.90f, FNT_MED * 0.9f, FONT_ALIGN_RIGHT);
+  //}
+  //if (showStatsMode > 2) {
+  //  stats_line3.color = (stats_line3_warning >= WARNING_THRESHOLD) ? RED : WHITE;
+  //  stats_line3.Render(frame_width - 0.0035f, 0.043f, 0.90f, FNT_MED * 0.9f, FONT_ALIGN_RIGHT);
+  //}
+
 
   return;
 

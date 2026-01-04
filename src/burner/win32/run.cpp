@@ -198,6 +198,7 @@ static void init_clock() {
 
 // ------------------------------------------------------------------------------------------------
 static LONGLONG get_ms() {
+  // TODO: Find a better place to init this clock.....
   init_clock();
 
   LARGE_INTEGER time;
