@@ -197,6 +197,7 @@ static void init_clock() {
 }
 
 // ------------------------------------------------------------------------------------------------
+// NOTE: This is not linux compatible.....  maybe use <chrono> in the future?
 static LONGLONG get_ms() {
   // TODO: Find a better place to init this clock.....
   init_clock();
@@ -205,6 +206,8 @@ static LONGLONG get_ms() {
   QueryPerformanceCounter(&time);
 
   time.QuadPart *= 1000;
+
+  // TODO: Make this a multiply......
   time.QuadPart /= clock_freq.QuadPart;
   return time.QuadPart;
 }
@@ -212,13 +215,14 @@ static LONGLONG get_ms() {
 // ------------------------------------------------------------------------------------------------
 static void UpdateOverlay()
 {
-  // NOTE: I think that there are better resolution ways to measure this.....
   auto now = get_ms();
   auto elapsed = now - lastTime;
 
   int frameDiff = nFramesRendered - nPreviousFrames;
 
-  double fps = (double)(frameDiff) * MS_PER_SEC / elapsed; // / (now - lastTime);
+  // NOTE: in run.cpp there is nFPS, which is the current FPS, already computed.....
+  // that is what actually runs the emulator, so to me it makes sense that we might use that instead of recomputing the FPS.
+  double fps = (double)(frameDiff * MS_PER_SEC) / elapsed;
   if (bAppDoFast) {
     fps *= nFastSpeed + 1;
   }
@@ -239,6 +243,7 @@ static void UpdateOverlay()
   nPreviousFrames = nFramesRendered;
 }
 
+// ------------------------------------------------------------------------------------------------
 // define this function somewhere above RunMessageLoop()
 void ToggleLayer(unsigned char thisLayer)
 {
