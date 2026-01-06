@@ -163,8 +163,17 @@ extern "C" {
     GGPO_EVENTCODE_TIMESYNC = 1005,
     GGPO_EVENTCODE_CONNECTION_INTERRUPTED = 1006,
     GGPO_EVENTCODE_CONNECTION_RESUMED = 1007,
-    GGPO_EVENTCODE_DATA_EXCHANGE = 1008,
+    GGPO_EVENTCODE_DATAGRAM = 1008,
   } GGPOEventCode;
+
+
+  typedef enum {
+    DATAGRAM_CODE_INVALID = 0
+    , DATAGRAM_CODE_MUTED = 1
+    , DATAGRAM_CODE_CHAT = 2
+    , DATAGRAM_CODE_GGPO_SETTINGS = 3
+    , DATAGRAM_CODE_DISCONNECT = 4        // Player is disconnecting.
+  } EDatagramCode;
 
   /*
    * The GGPOEvent structure contains an asynchronous event notification sent
@@ -508,13 +517,16 @@ extern "C" {
     int playerCount);
 
 
-  /*
-   * ggpo_disconnect_player --
-   *
-   * Disconnects a remote player from a game.  Will return GGPO_ERRORCODE_PLAYER_DISCONNECTED
-   * if you try to disconnect a player who has already been disconnected.
-   */
-  GGPO_API GGPOErrorCode __cdecl ggpo_disconnect_player(GGPOSession*, uint8_t playerIndex);
+  ///*
+  // * ggpo_disconnect_player --
+  // *
+  // * Disconnects a remote player from a game.  Will return GGPO_ERRORCODE_PLAYER_DISCONNECTED
+  // * if you try to disconnect a player who has already been disconnected.
+  // */
+  //GGPO_API GGPOErrorCode __cdecl ggpo_disconnect_player(GGPOSession*, uint8_t playerIndex);
+
+  // Disconnect ourselves.
+  GGPO_API void __cdecl ggpo_disconnect(GGPOSession*);
 
   /*
    * ggpo_advance_frame --

@@ -35,6 +35,7 @@ uint8_t _otherPlayerIndex = PLAYER_NOT_SET;
 int totalRollbackFrames = 0;              // The number of frames that were rolled back.
 int rollbackCount = 0;               // The total number of rollbacks.
 int lastRollbackFrame = 0;            // Frame number where the last rollback was encountered.
+int avgRollbackFrames = 0;
 
 static char pGameName[MAX_PATH];
 static bool bDelayLoad = false;
@@ -160,7 +161,7 @@ void __cdecl ggpo_on_rollback(int onFrame, int frameCount) {
 
   int frameDiff = (std::max)(1, onFrame - lastRollbackFrame);
   int frameAvg = frameCount / frameDiff;
-  
+
 
   VidOverlaySetRollbackStats(onFrame, frameAvg);
 
@@ -235,7 +236,7 @@ bool __cdecl ggpo_on_event_callback(GGPOEvent* info)
     break;
 
 
-  case GGPO_EVENTCODE_DATA_EXCHANGE:
+  case GGPO_EVENTCODE_DATAGRAM:
 
     switch (info->u.datagram.code)
     {
@@ -869,8 +870,9 @@ void QuarkRunIdle(int ms)
 
 // -------------------------------------------------------------------------------------------------------------------
 // Disconnect ourselves from the system...
-void QuarkDisconnect() {
-  ggpo_disconnect_player(ggpo, _playerIndex);
+void QuarkDisconnect() 
+{
+  ggpo_disconnect(ggpo);
 }
 
 // -------------------------------------------------------------------------------------------------------------------

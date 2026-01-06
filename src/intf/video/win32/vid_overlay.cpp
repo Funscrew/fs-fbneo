@@ -6,6 +6,9 @@
 #include "vid_detector.h"
 #include <d3dx9.h>
 
+#include "ggponet.h"
+
+
 //#define PRINT_DEBUG_INFO
 //#define TEST_OVERLAY
 //#define TEST_VERSION				L"RC7 v3"
@@ -1028,17 +1031,6 @@ void VidOverlayEnd()
   pD3DDevice = NULL;
 }
 
-// --------------------------------------------------------------------------------------------------------------------
-// REFACTOR: This has nothing to do with the video overlay, and should be placed somewhere else in code.
-void VidOverlayQuit()
-{
-  // Ragequit detector.
-  if (kNetGame && game_ranked && gameDetector.state == GameDetector::ST_WAIT_WINNER) {
-  }
-  QuarkSendData('Q', NULL, 0);
-  // QuarkSendChatCmd("quit", 'S');
-}
-
 void VidOverlaySetSize(const RECT& dest, float size)
 {
   frame_dest = dest;
@@ -1400,10 +1392,12 @@ static int prev_runahead = -1;
 static int bOpInfoRcvd = false;
 
 extern int rollbackFrames;
+extern int totalRollbackFrames;
+extern int lastRollbackFrame;
+extern int avgRollbackFrames;
 extern int rollbackCount;
-extern int lastRollbackFrame; 
 
-static int lastRollbackFrameCount = 0;
+// static int lastRollbackFrameCount = 0;
 //static int nLastRollbackCount = 0;
 //static UINT32 nLastRollbackFrames = 0;
 //static UINT32 nAvgRollbackFrameCount = 0;       // Average number of frames rolled back, per rollback.
@@ -1419,10 +1413,13 @@ const wchar_t* FPS_ONLY_MSG = _T("%2.2f fps");
 const wchar_t* FPS_AND_NETSTATS_MSG = _T("%2.2f fps | Ping: %d | Rollback: %d");
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------
-void VidOverlaySetRollbackStats(int onFrame, int frameCount) { 
+void VidOverlaySetRollbackStats(int onFrame, int frameCount) {
 
-  // ggpo->GetFrame
-  lastRollbackFrameCount = frameCount;
+  int frameDiff = onFrame - lastRollbackFrame;
+
+  avgRollbackFrames = frameCount / frameDiff;
+
+  lastRollbackFrame = onFrame;
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1433,12 +1430,11 @@ void VidOverlaySetRemoteStats(int delay, int runahead) {
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------
 void VidOverlaySetStats(double fps, int ping, int delay)
-{  if (ping > 0 && rollbackCount > 0 && prev_runahead != nVidRunahead) {
+{
+  if (ping > 0 && rollbackCount > 0 && prev_runahead != nVidRunahead) {
     prev_runahead = nVidRunahead;
     SendToPeer(delay, nVidRunahead);
   }
-
-
 
   if (showStatsMode == SHOWSTATS_NONE) { return; }
 
@@ -1449,7 +1445,7 @@ void VidOverlaySetStats(double fps, int ping, int delay)
   // FPS always goes on line 1.
   const wchar_t* line1Msg = nullptr;
   if (showStatsMode >= SHOWSTATS_FPS_AND_ROLLBACK) {
-    swprintf(buf_line1, 64, FPS_AND_NETSTATS_MSG, fps, ping, lastRollbackFrameCount);
+    swprintf(buf_line1, 64, FPS_AND_NETSTATS_MSG, fps, ping, avgRollbackFrames);
   }
   else if (showStatsMode == SHOWSTATS_FPS_ONLY) {
     swprintf(buf_line1, 64, FPS_ONLY_MSG, fps);

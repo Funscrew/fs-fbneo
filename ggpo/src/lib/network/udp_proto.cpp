@@ -315,10 +315,29 @@ bool UdpProtocol::OnLoopPoll(void* cookie)
 }
 
 // ------------------------------------------------------------------------------------------------
-void UdpProtocol::Disconnect()
+void UdpProtocol::DisconnectEx(int onFrame)
 {
+  // We send out duplicate message packets in case of packet loss.
+  const int MSG_COUNT = 5;
+  for (size_t i = 0; i < MSG_COUNT; i++)
+  {
+    UdpMsg* msg = new UdpMsg(UdpMsg::MsgType::Datagram);
+    msg->u.datagram.code = DATAGRAM_CODE_DISCONNECT;
+
+    *(int*)msg->u.datagram.data = onFrame;
+    msg->u.datagram.dataSize = sizeof(int);
+    
+    SendMsg(msg);
+  }
+
   _current_state = Disconnected;
   _shutdown_timeout = Platform::GetCurrentTimeMS() + UDP_SHUTDOWN_TIMER;
+}
+
+// ------------------------------------------------------------------------------------------------
+void UdpProtocol::Disconnect()
+{
+  throw std::exception("OBSOLETE!");
 }
 
 // ------------------------------------------------------------------------------------------------

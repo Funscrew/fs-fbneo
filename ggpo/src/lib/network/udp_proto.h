@@ -95,7 +95,10 @@ public:
   void SendInputAck();
   bool HandlesMsg(sockaddr_in& from, UdpMsg* msg);
   void OnMsg(UdpMsg* msg, int len);
+
+  // [OBSOLETE]  --> This functionality will be replaced with 'DisconnectEx' in the future.
   void Disconnect();
+  void DisconnectEx(int onFrame);
 
   void GetNetworkStats(struct GGPONetworkStats* stats);
   bool GetEvent(UdpEvent& e);

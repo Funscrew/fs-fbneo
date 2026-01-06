@@ -496,7 +496,7 @@ void Peer2PeerBackend::OnUdpProtocolEvent(UdpEvent& evt, uint8_t playerIndex)
 
   case UdpEvent::Datagram:
 
-    info.event_code = GGPO_EVENTCODE_DATA_EXCHANGE;
+    info.event_code = GGPO_EVENTCODE_DATAGRAM;
     info.player_index = (uint8_t)playerIndex;
     memcpy_s(info.u.datagram.data, MAX_GGPO_DATA_SIZE, evt.u.chat.data, evt.u.chat.dataSize);
 
@@ -537,6 +537,18 @@ GGPOErrorCode Peer2PeerBackend::DisconnectPlayer(uint8_t playerIndex)
     DisconnectPlayer(playerIndex, _local_connect_status[playerIndex].last_frame);
   }
   return GGPO_OK;
+}
+
+// --------------------------------------------------------------------------------------------------------------
+// Immediately disconnect the local player.
+void Peer2PeerBackend::DisconnectEx() {
+
+  int curFrame = _sync.GetFrameCount();
+  for (size_t i = 0; i < PLAYER_COUNT; i++)
+  {
+    if (i == _playerIndex) { continue; }
+    _endpoints[i].DisconnectEx(curFrame);
+  }
 }
 
 // --------------------------------------------------------------------------------------------------------------

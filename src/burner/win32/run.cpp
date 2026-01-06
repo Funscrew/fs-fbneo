@@ -25,7 +25,7 @@ char kNetQuarkId[128] = {};				// Network quark id
 int counter;								// General purpose variable used when debugging
 #endif
 
-static int nFrameLast = 0;
+static double nFrameLast = 0;   // REFACTOR: --> 'lastFrameTime' or similar.
 static bool bAppDoStep = 0;
 static bool bAppDoFast = 0;
 static bool bAppDoFastToggled = 0;
@@ -619,17 +619,11 @@ int RunMessageLoop()
         // A message is waiting to be processed
         if (msg.message == WM_QUIT) {											// Quit program
 
-          VidOverlayQuit();
           QuarkDisconnect();
-
-          // Need a way to send out the final disconnect notices.....
-          // Normally GGPO sends disconnect via CHAT COMMAND, and as a FLAG on the input frames.....
-          // I feel like the best way is to just blast out some disconnect specific packets, immediately, and then quit the app....
-          // Like, we can't really wait around for ACK....
 
           break;
         }
-        if (msg.message == (WM_APP + 0)) {										// Restart video
+        if (msg.message == (WM_APP + 0)) {                // Restart video
           bRestartVideo = 1;
           break;
         }

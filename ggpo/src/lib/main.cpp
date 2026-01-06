@@ -94,8 +94,7 @@ ggpo_idle(GGPOSession* ggpo, int timeout)
 }
 
 // ----------------------------------------------------------------------------------------------------------------
-GGPOErrorCode
-ggpo_synchronize_input(GGPOSession* ggpo,
+GGPOErrorCode ggpo_synchronize_input(GGPOSession* ggpo,
   void* values,
   int isize,
   int playerCount)
@@ -107,13 +106,22 @@ ggpo_synchronize_input(GGPOSession* ggpo,
 }
 
 // ----------------------------------------------------------------------------------------------------------------
-GGPOErrorCode ggpo_disconnect_player(GGPOSession* ggpo, uint8_t playerIndex)
+void ggpo_disconnect(GGPOSession* ggpo)
 {
   if (!ggpo) {
-    return GGPO_ERRORCODE_INVALID_SESSION;
+    return;
   }
-  return ggpo->DisconnectPlayer(playerIndex);
+  return ggpo->DisconnectEx();
 }
+
+//// ----------------------------------------------------------------------------------------------------------------
+//GGPOErrorCode ggpo_disconnect_player(GGPOSession* ggpo, uint8_t playerIndex)
+//{
+//  if (!ggpo) {
+//    return GGPO_ERRORCODE_INVALID_SESSION;
+//  }
+//  return ggpo->DisconnectPlayer(playerIndex);
+//}
 
 // ----------------------------------------------------------------------------------------------------------------
 GGPOErrorCode ggpo_advance_frame(GGPOSession* ggpo)

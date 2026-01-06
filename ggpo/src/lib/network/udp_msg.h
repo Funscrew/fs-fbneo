@@ -15,6 +15,7 @@
 
 #pragma pack(push, 1)
 
+
 struct UdpMsg
 {
   enum MsgType {
@@ -32,6 +33,11 @@ struct UdpMsg
   // This struct saves us one byte of space.
   // Makes ports to other languages a bit annoying to deal with, so
   // do we really need to save one byte on the packets?
+  // NOTE: The implementation in fbneo doesn't really get used at all, so I am going to remix the whole thing...
+  // I think that broadcasting a datagram that indicates we are disconnecting is the cleanest way to handle this
+  // as the current approach to disconnect requires that the disconnecting player queues input packets, and then sends them
+  // out to indicate that they have disconnected.  Not really ideal in the scenario where someone slaps the 'x' button and
+  // quits immediately.  With the datagram approach, they can quickly and easily blast out the disconnect message to all listening endpoints.
   struct connect_status {
     unsigned int   disconnected : 1;
     int            last_frame : 31;

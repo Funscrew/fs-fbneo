@@ -25,6 +25,8 @@ struct GGPOSession {
   virtual bool SendData(uint8_t code, void* data, uint8_t dataSize) { throw std::exception("NOT IMPLEMENTED!"); }
 
   virtual GGPOErrorCode DisconnectPlayer(uint8_t handle) { return GGPO_OK; }
+  virtual void DisconnectEx() { throw std::exception("NOT IMPLEMENTED!"); }
+
   virtual bool GetNetworkStats(GGPONetworkStats* stats, uint8_t playerIndex) { return GGPO_OK; }
   virtual GGPOErrorCode Logv(const char* fmt, va_list list) { Utils::LogIt_v(fmt, list); return GGPO_OK; }
 

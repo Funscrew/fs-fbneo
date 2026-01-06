@@ -474,13 +474,13 @@ void QuarkSendChat(char* text);
 // [OBSOLETE]
 void QuarkSendChatCmd(char* text, char code);
 
-// static const uint8_t DATAGRAM_CODE_MUTED = 'M';
-enum EDataCode {
-  DATAGRAM_CODE_INVALID = 0
-  , DATAGRAM_CODE_MUTED = 1
-  , DATAGRAM_CODE_CHAT = 2
-  , DATAGRAM_CODE_GGPO_SETTINGS = 3
-};
+//enum EDatagramCode {
+//  DATAGRAM_CODE_INVALID = 0
+//  , DATAGRAM_CODE_MUTED = 1
+//  , DATAGRAM_CODE_CHAT = 2
+//  , DATAGRAM_CODE_GGPO_SETTINGS = 3
+//  , DATAGRAM_CODE_DISCONNECT = 4        // Player is disconnecting.
+//};
 
 void QuarkSendData(uint8_t code, void* data, UINT8 dataSize);
 
