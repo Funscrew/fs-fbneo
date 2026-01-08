@@ -265,7 +265,8 @@ enum EShowStatsMode {
   SHOWSTATS_NONE = 0
   , SHOWSTATS_FPS_ONLY = 1
   , SHOWSTATS_FPS_AND_ROLLBACK = 2
-  , SHOWSTATS_ALL = 3     // FPS: Rollback: Runahead + delay for both players.
+  , SHOWSTATS_FPS_ROLLBACK_PING
+  , SHOWSTATS_ALL     // FPS: Rollback: Ping: Runahead + delay for both players.
 
   , SHOWSTATS_MAX
 };

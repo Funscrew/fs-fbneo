@@ -32,10 +32,16 @@ uint8_t _otherPlayerIndex = PLAYER_NOT_SET;
 
 // rollback counter
 // NOTE: These are only used in the video overlay. --> so they should be part of the overlay vars?
-int totalRollbackFrames = 0;              // The number of frames that were rolled back.
-int rollbackCount = 0;               // The total number of rollbacks.
-int lastRollbackFrame = 0;            // Frame number where the last rollback was encountered.
-int avgRollbackFrames = 0;
+//int totalRollbackFrames = 0;              // The number of frames that were rolled back.
+//int rollbackCount = 0;               // The total number of rollbacks.
+//int lastRollbackFrame = 0;            // Frame number where the last rollback was encountered.
+//int avgRollbackFrames = 0;
+
+// rollback counter
+int totalRollbackFrames = 0;
+int totalRollbacks = 0;
+
+
 
 static char pGameName[MAX_PATH];
 static bool bDelayLoad = false;
@@ -155,17 +161,14 @@ bool __cdecl ggpo_on_client_event_callback(GGPOClientEvent* info)
 //}
 
 // --------------------------------------------------------------------------------------------------------------------
-void __cdecl ggpo_on_rollback(int onFrame, int frameCount) {
-  rollbackCount += 1;
+void __cdecl ggpo_on_rollback(int onFrame, int frameCount)
+{
+  totalRollbacks++;
   totalRollbackFrames += frameCount;
 
-  int frameDiff = (std::max)(1, onFrame - lastRollbackFrame);
-  int frameAvg = frameCount / frameDiff;
 
 
-  VidOverlaySetRollbackStats(onFrame, frameAvg);
 
-  lastRollbackFrame = onFrame;
 
 }
 
@@ -870,7 +873,7 @@ void QuarkRunIdle(int ms)
 
 // -------------------------------------------------------------------------------------------------------------------
 // Disconnect ourselves from the system...
-void QuarkDisconnect() 
+void QuarkDisconnect()
 {
   ggpo_disconnect(ggpo);
 }

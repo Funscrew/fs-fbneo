@@ -318,7 +318,7 @@ bool UdpProtocol::OnLoopPoll(void* cookie)
 void UdpProtocol::DisconnectEx(int onFrame)
 {
   // We send out duplicate message packets in case of packet loss.
-  const int MSG_COUNT = 5;
+  const int MSG_COUNT = 3;
   for (size_t i = 0; i < MSG_COUNT; i++)
   {
     UdpMsg* msg = new UdpMsg(UdpMsg::MsgType::Datagram);

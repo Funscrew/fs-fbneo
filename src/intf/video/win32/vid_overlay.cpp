@@ -1031,6 +1031,7 @@ void VidOverlayEnd()
   pD3DDevice = NULL;
 }
 
+// --------------------------------------------------------------------------------------------------------------------
 void VidOverlaySetSize(const RECT& dest, float size)
 {
   frame_dest = dest;
@@ -1391,36 +1392,22 @@ static int op_runahead = 0;
 static int prev_runahead = -1;
 static int bOpInfoRcvd = false;
 
-extern int rollbackFrames;
 extern int totalRollbackFrames;
-extern int lastRollbackFrame;
-extern int avgRollbackFrames;
-extern int rollbackCount;
+extern int totalRollbacks;
 
-// static int lastRollbackFrameCount = 0;
-//static int nLastRollbackCount = 0;
-//static UINT32 nLastRollbackFrames = 0;
-//static UINT32 nAvgRollbackFrameCount = 0;       // Average number of frames rolled back, per rollback.
-//static UINT32 nLastRollbackAt = 0;
-////static UINT32 nMaxRollback = 0;
-//static UINT32 nRollbacksIn1Cycle = 0;
-//
-//static UINT32 rollbackPct = 0;
-//static UINT32 nLastCount = 0;
-//static UINT32 nRollbacks1CycleAgo = 0;
+static int lastTotalRollbacks = 0;
+static UINT32 lastTotalRollbackFrames = 0;
+static UINT32 nRollbackRealtime = 0;
+static UINT32 nLastRollbackAt = 0;
+static UINT32 nMaxRollback = 0;
+static UINT32 nRollbacksIn1Cycle = 0;
+static UINT32 rollbackPct = 0;
+static UINT32 nLastCount = 0;
+static UINT32 nRollbacks1CycleAgo = 0;
+
 
 const wchar_t* FPS_ONLY_MSG = _T("%2.2f fps");
 const wchar_t* FPS_AND_NETSTATS_MSG = _T("%2.2f fps | Ping: %d | Rollback: %d");
-
-// ---------------------------------------------------------------------------------------------------------------------------------------------------------
-void VidOverlaySetRollbackStats(int onFrame, int frameCount) {
-
-  int frameDiff = onFrame - lastRollbackFrame;
-
-  avgRollbackFrames = frameCount / frameDiff;
-
-  lastRollbackFrame = onFrame;
-}
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------
 void VidOverlaySetRemoteStats(int delay, int runahead) {
@@ -1431,7 +1418,7 @@ void VidOverlaySetRemoteStats(int delay, int runahead) {
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------
 void VidOverlaySetStats(double fps, int ping, int delay)
 {
-  if (ping > 0 && rollbackCount > 0 && prev_runahead != nVidRunahead) {
+  if (ping > 0 && totalRollbacks > 0 && prev_runahead != nVidRunahead) {
     prev_runahead = nVidRunahead;
     SendToPeer(delay, nVidRunahead);
   }
@@ -1442,30 +1429,130 @@ void VidOverlaySetStats(double fps, int ping, int delay)
   wchar_t buf_line2[64];
   wchar_t buf_line3[64];
 
-  // FPS always goes on line 1.
-  const wchar_t* line1Msg = nullptr;
-  if (showStatsMode >= SHOWSTATS_FPS_AND_ROLLBACK) {
-    swprintf(buf_line1, 64, FPS_AND_NETSTATS_MSG, fps, ping, avgRollbackFrames);
+
+  // Update rollback stats....
+  // TODO: Should this be done when the rollback is first triggered?
+  nMaxRollback = 3 + ((ping / 2) / (100000 / nBurnFPS));
+  if (lastTotalRollbackFrames > 0 && lastTotalRollbacks > 0) {
+    if (totalRollbacks > lastTotalRollbacks) {
+      nRollbackRealtime = (totalRollbackFrames - lastTotalRollbackFrames) / (totalRollbacks - lastTotalRollbacks);
+      nLastRollbackAt = nFramesEmulated;
+      if (nRollbackRealtime > nMaxRollback) {
+        if (nFramesEmulated > 1000 && nRollbackRealtime > 0) {
+          VidOverlaySetWarning(180, 1);
+        }
+      }
+
+    }
+    else if (nFramesEmulated > nLastRollbackAt + 600) {
+      nRollbackRealtime = 0;
+    }
   }
-  else if (showStatsMode == SHOWSTATS_FPS_ONLY) {
-    swprintf(buf_line1, 64, FPS_ONLY_MSG, fps);
+  lastTotalRollbacks = totalRollbacks;
+  lastTotalRollbackFrames = totalRollbackFrames;
+
+  if (showStatsMode == SHOWSTATS_FPS_ONLY)
+  {
+    swprintf(buf_line1, 64, _T(" %2.2f fps"), fps);
+  }
+  else if (showStatsMode >= SHOWSTATS_FPS_AND_ROLLBACK)
+  {
+    swprintf(buf_line1, 64, _T(" %2.2f fps  |  Rollback %df "), fps, nRollbackRealtime);
   }
   stats_line1.Set(buf_line1);
 
-  if (showStatsMode >= SHOWSTATS_ALL) {
-    // Slap some data onto line 2.....
-    if (game_playerIndex == 0) {
-      swprintf(buf_line2, 64, _T("P1: d%d-ra%d  |  P2: d%d-ra%d   "), delay, nVidRunahead, op_delay, op_runahead);
-    }
-    else {
-      swprintf(buf_line2, 64, _T("P1: d%d-ra%d  |  P2: d%d-ra%d   "), op_delay, op_runahead, delay, nVidRunahead);
-    }
 
+  // Ping, etc. stats.
+  // jitter
+  if (showStatsMode >= SHOWSTATS_FPS_ROLLBACK_PING)
+  {
+    if (ping > 0 && nFramesEmulated > 600) {
+      int pingSum = 0;
+      int jitterSum = 0;
+      jitterPingArray[jitterArrayPos] = ping;
+      if (jitterArrayPos > 0)
+        jitterArray[jitterArrayPos - 1] = abs(jitterPingArray[jitterArrayPos] - jitterPingArray[jitterArrayPos - 1]);
+      for (int i = 0; i < PINGSIZE; i++) {
+        pingSum += jitterArray[i];
+        if (i < PINGSIZE - 1) jitterSum += jitterArray[i];
+      }
+      jitterPingAvg = pingSum / PINGSIZE;
+      jitterAvg = jitterSum / (PINGSIZE - 1);
+      jitterArrayPos++;
+      if (jitterArrayPos > PINGSIZE) {
+        jitterArrayPos = 0;
+      }
+    }
+    if (jitterAvg > jitterPingAvg * 0.15 && jitterAvg > 10) VidOverlaySetWarning(120, 2);
+
+    wchar_t buf_ping[30];
+    wchar_t buf_jitter[30];
+    if (ping < 1000) wsprintf(buf_ping, _T("Ping %dms  |"), ping);
+    else wsprintf(buf_ping, _T("Ping +999ms  |"));
+    if (jitterAvg < 10) wsprintf(buf_jitter, _T("  Jitter  %dms  "), jitterAvg);
+    else if (jitterAvg < 100) wsprintf(buf_jitter, _T("  Jitter %dms"), jitterAvg);
+    else wsprintf(buf_jitter, _T("Jitter +99ms"));
+    swprintf(buf_line2, 64, _T("%s%s"), buf_ping, buf_jitter);
     stats_line2.Set(buf_line2);
   }
   else {
-    stats_line2.isActive = false;
+    stats_line2.SetActive(false);
   }
+
+  if (showStatsMode == SHOWSTATS_ALL) {
+    if (nFramesEmulated >= nLastCount + 600) {
+      nRollbacksIn1Cycle = totalRollbacks - nRollbacks1CycleAgo;
+      nRollbacks1CycleAgo = totalRollbacks;
+      rollbackPct = (100 * nRollbacksIn1Cycle) / (nFramesEmulated - nLastCount);
+      nLastCount = nFramesEmulated;
+    }
+    if (rollbackPct >= 50) { VidOverlaySetWarning(120, 3); }
+
+    //swprintf(buf_line3, 64, _T("Delay %d  | Runahead %d"), delay, nVidRunahead);
+    if (!bOpInfoRcvd) {
+      if (game_playerIndex == 0) swprintf(buf_line3, 64, _T("P1: d%d-ra%d  |  P2: d?-ra?    "), delay, nVidRunahead);
+      else swprintf(buf_line3, 64, _T("P1: d?-ra?  |  P2: d%d-ra%d   "), delay, nVidRunahead);
+    }
+    else {
+      if (game_playerIndex == 0) swprintf(buf_line3, 64, _T("P1: d%d-ra%d  |  P2: d%d-ra%d   "), delay, nVidRunahead, op_delay, op_runahead);
+      else swprintf(buf_line3, 64, _T("P1: d%d-ra%d  |  P2: d%d-ra%d   "), op_delay, op_runahead, delay, nVidRunahead);
+    }
+    stats_line3.Set(buf_line3);
+  }
+  else {
+    stats_line3.SetActive(false);
+  }
+
+
+
+  // TODO:
+  // -> set warning colors based on current flags + data....
+
+
+  //// FPS always goes on line 1.
+  //const wchar_t* line1Msg = nullptr;
+  //if (showStatsMode >= SHOWSTATS_FPS_AND_ROLLBACK) {
+  //  swprintf(buf_line1, 64, FPS_AND_NETSTATS_MSG, fps, ping, avgRollbackFrames);
+  //}
+  //else if (showStatsMode == SHOWSTATS_FPS_ONLY) {
+  //  swprintf(buf_line1, 64, FPS_ONLY_MSG, fps);
+  //}
+  //stats_line1.Set(buf_line1);
+
+  //if (showStatsMode >= SHOWSTATS_ALL) {
+  //  // Slap some data onto line 2.....
+  //  if (game_playerIndex == 0) {
+  //    swprintf(buf_line2, 64, _T("P1: d%d-ra%d  |  P2: d%d-ra%d   "), delay, nVidRunahead, op_delay, op_runahead);
+  //  }
+  //  else {
+  //    swprintf(buf_line2, 64, _T("P1: d%d-ra%d  |  P2: d%d-ra%d   "), op_delay, op_runahead, delay, nVidRunahead);
+  //  }
+
+  //  stats_line2.Set(buf_line2);
+  //}
+  //else {
+  //  stats_line2.isActive = false;
+  //}
 
   // NOTE: This was some other code for setting the stats text, etc.
   // --> I am trying to wrangle all of the stats message + formatting code into one place as that makes the most sense.
@@ -1590,7 +1677,7 @@ void VidOverlaySetStats(double fps, int ping, int delay)
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------
 void VidOverlaySetWarning(int amount, int line)
 {
-
+  // TODO: Build warnings + countdowns into the text structs....
   if (line == 1) {
     stats_line1_warning += amount;
     if (stats_line1_warning > WARNING_MAX) {
@@ -1612,6 +1699,7 @@ void VidOverlaySetWarning(int amount, int line)
 
 }
 
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------
 void VidOverlayShowVolume(const wchar_t* text)
 {
   volume.Set(text);
