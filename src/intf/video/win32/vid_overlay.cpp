@@ -8,11 +8,6 @@
 
 #include "ggponet.h"
 
-
-//#define PRINT_DEBUG_INFO
-//#define TEST_OVERLAY
-//#define TEST_VERSION				L"RC7 v3"
-
 #define MIN(x,y) ((x)<(y)?(x):(y))
 #define MAX(x,y) ((x)>(y)?(x):(y))
 
@@ -1325,7 +1320,10 @@ void VidOverlaySetGameInfo(const wchar_t* name1, const wchar_t* name2, int spect
     }
     int score1;
     swscanf(&name1[pos1], _T("#%d,%d,%s"), &player1.rank, &score1, &player1.country.str);
+    
+    // TODO: We should not be writing directly to memory here!
     swprintf(player1.name.str, 256, _T("%.*s"), pos1, name1);
+    player1.name.isActive = true;
   }
   // player2#rank,score,country
   if (name2) {
@@ -1338,7 +1336,10 @@ void VidOverlaySetGameInfo(const wchar_t* name1, const wchar_t* name2, int spect
     }
     int score2;
     swscanf(&name2[pos2], _T("#%d,%d,%s"), &player2.rank, &score2, &player2.country.str);
+
+    // TODO: We should not be writing directly to memory here!
     swprintf(player2.name.str, 256, _T("%.*s"), pos2, name2);
+    player2.name.isActive = true;
   }
 
   // update scores

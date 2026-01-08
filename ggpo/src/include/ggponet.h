@@ -609,7 +609,7 @@ extern "C" {
   GGPO_API bool __cdecl ggpo_send_chat(GGPOSession* ggpo, char* text);
 
   /* get the name of the player at the given index */
-  GGPO_API char* __cdecl ggpo_get_playerName(GGPOSession* ggpo, uint8_t index);
+  GGPO_API char* __cdecl ggpo_get_playerName(GGPOSession* ggpo, uint8_t playerIndex);
 
   // Send some data to all endpoints.
   // 'data' parameter is meant to be interpreted depending on the value of 'code'.

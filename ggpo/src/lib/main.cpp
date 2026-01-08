@@ -158,9 +158,9 @@ bool ggpo_get_stats(GGPOSession* ggpo, GGPONetworkStats* stats, uint8_t playerIn
 }
 
 // ----------------------------------------------------------------------------------------------------------------
-char* ggpo_get_playerName(GGPOSession* ggpo, uint8_t index) {
+char* ggpo_get_playerName(GGPOSession* ggpo, uint8_t playerIndex) {
   if (!ggpo) { return nullptr; }
-  auto res = ggpo->GetPlayerName(index);
+  auto res = ggpo->GetPlayerName(playerIndex);
   return res;
 }
 

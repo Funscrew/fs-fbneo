@@ -154,33 +154,17 @@ bool __cdecl ggpo_on_client_event_callback(GGPOClientEvent* info)
   return true;
 }
 
-//bool __cdecl ggpo_on_client_game_callback(GGPOClientEvent *info)
-//{
-//	// DEPRECATED
-//	return true;
-//}
-
 // --------------------------------------------------------------------------------------------------------------------
 void __cdecl ggpo_on_rollback(int onFrame, int frameCount)
 {
   totalRollbacks++;
   totalRollbackFrames += frameCount;
-
-
-
-
-
 }
 
 // --------------------------------------------------------------------------------------------------------------------
 bool __cdecl ggpo_on_event_callback(GGPOEvent* info)
 {
-  //if (ggpo_is_client_eventcode(info->code)) {
-  //	return ggpo_on_client_event_callback((GGPOClientEvent *)info);
-  //}
-  //if (ggpo_is_client_gameevent(info->code)) {
-  //	return ggpo_on_client_game_callback((GGPOClientEvent *)info);
-  //}
+
   switch (info->event_code) {
   case GGPO_EVENTCODE_CONNECTED_TO_PEER:
   {
@@ -206,6 +190,7 @@ bool __cdecl ggpo_on_event_callback(GGPOEvent* info)
 
     buffer = ANSIToTCHAR(p2Final, NULL, NULL);
     wcscpy(p2w, buffer);
+
 
     VidOverlaySetGameInfo(p1w, p2w, false, false, _playerIndex);
     int x = 10;
@@ -270,14 +255,13 @@ bool __cdecl ggpo_on_event_callback(GGPOEvent* info)
       // NOTE: I have the player index, but not the actual lookup table for them... that should come from the client...
       // NOTE: I can't include 'ggposession.h' at this time because it will break the compilation.  I will go back and
       // find a proper way to include it later......
-      char* playerName = "FIXME"; // ggpo->GetPlayerName(info->player_index);
+      char* playerName =  ggpo_get_playerName(ggpo, info->player_index);
       ANSIToTCHAR(playerName, szUser, MAX_NAME_SIZE);
 
       ANSIToTCHAR(msg, szText, info->u.datagram.dataSize);
 
       // Chat messages must be zero terminated...
       szText[info->u.datagram.dataSize] = 0;
-
 
       // NOTE: Kind of silly that we have to come up with another string when we already have the 'C' command code.
       // TCHAR* useName = first == 'C' ? _T("Command") : szUser;
