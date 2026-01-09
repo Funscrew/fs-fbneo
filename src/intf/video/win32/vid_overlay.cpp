@@ -105,10 +105,9 @@ static int info_time = 0;
 static int chat_time = 0;
 static int volume_time = 0;
 
-enum
+enum 
 {
   CMD_CHAT_MUTED = 1,
-  CMD_DELAY_RUNAHEAD = 2,
 };
 
 static bool CopyFileContents(const char* src, const char* dst)
@@ -1377,13 +1376,12 @@ void VidOverlaySetSystemMessage(const wchar_t* text)
 
 // --------------------------------------------------------------------------------------------------------------------
 void SendToPeer(int delay, int runahead) {
-  const int BUFFER_SIZE = 4;
+
+  const int BUFFER_SIZE = 2;
   char buffer[BUFFER_SIZE];
 
-  buffer[0] = CMD_DELAY_RUNAHEAD;
-  buffer[1] = game_playerIndex;
-  buffer[2] = delay;
-  buffer[3] = runahead;
+  buffer[0] = delay;
+  buffer[1] = runahead;
 
   QuarkSendData(DATAGRAM_CODE_GGPO_SETTINGS, buffer, BUFFER_SIZE);
 }
@@ -1411,7 +1409,8 @@ const wchar_t* FPS_ONLY_MSG = _T("%2.2f fps");
 const wchar_t* FPS_AND_NETSTATS_MSG = _T("%2.2f fps | Ping: %d | Rollback: %d");
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------
-void VidOverlaySetRemoteStats(int delay, int runahead) {
+void VidOverlaySetRemoteStats(uint8_t delay, uint8_t runahead) {
+  bOpInfoRcvd = true;
   op_delay = delay;
   op_runahead = runahead;
 }
@@ -1728,14 +1727,6 @@ void VidOverlayAddChatLine(const wchar_t* name, const wchar_t* text)
     if (swscanf(text, _T("%d,%d"), &cmd, &idx) == 2) {
       switch (cmd)
       {
-        // get delay & runahead from opponent
-      case CMD_DELAY_RUNAHEAD:
-        if (idx != game_playerIndex) {
-          swscanf(text, _T("%d,%d,%d,%d"), &cmd, &idx, &op_delay, &op_runahead);
-          bOpInfoRcvd = true;
-        }
-        break;
-
         // opponent has ingame chat muted
       case CMD_CHAT_MUTED:
         if (idx != game_playerIndex) {

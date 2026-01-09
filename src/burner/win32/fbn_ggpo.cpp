@@ -193,7 +193,9 @@ bool __cdecl ggpo_on_event_callback(GGPOEvent* info)
 
 
     VidOverlaySetGameInfo(p1w, p2w, false, false, _playerIndex);
-    int x = 10;
+
+    VidOverlaySetRemoteStats(info->u.connected.delay, info->u.connected.runahead);
+
   }
   break;
 
@@ -233,15 +235,9 @@ bool __cdecl ggpo_on_event_callback(GGPOEvent* info)
       auto data = info->u.datagram.data;
 
       // DEFINED in vid_overlay.cpp
-      int delay = data[2];
-      int runahead = data[3];
+      uint8_t delay = data[0];
+      uint8_t runahead = data[1];
       VidOverlaySetRemoteStats(delay, runahead);
-      //op_delay = data[2];
-      //op_runahead = data[3]
-      //buffer[0] = CMD_DELAY_RUNAHEAD;
-      //buffer[1] = game_playerIndex;
-      //buffer[2] = delay;
-      //buffer[3] = runahead;
     }
     break;
 

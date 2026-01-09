@@ -514,6 +514,10 @@ bool UdpProtocol::OnSyncReply(UdpMsg* msg, int len)
   if (!_connected) {
     auto evt = UdpEvent(UdpEvent::Connected);
     strcpy_s(evt.u.connected.playerName, msg->u.sync_reply.playerName);
+
+    evt.u.connected.delay = msg->u.sync_reply.delay;
+    evt.u.connected.runahead = msg->u.sync_reply.runahead;
+
     QueueEvent(evt);
 
     _connected = true;
@@ -522,6 +526,7 @@ bool UdpProtocol::OnSyncReply(UdpMsg* msg, int len)
   Utils::LogIt(CATEGORY_SYNC, "%d round trips remaining", _state.sync.roundtrips_remaining);
   if (--_state.sync.roundtrips_remaining == 0) {
     QueueEvent(UdpEvent(UdpEvent::Synchronized));
+
     _current_state = Running;
     _last_received_input.frame = -1;
     _remote_magic_number = msg->header.magic;

@@ -461,7 +461,15 @@ void Peer2PeerBackend::OnUdpProtocolEvent(UdpEvent& evt, uint8_t playerIndex)
     info.event_code = GGPO_EVENTCODE_CONNECTED_TO_PEER;
     info.player_index = playerIndex;
 
+    // info.u.connected.delay = evt.Synchronized.
     strcpy_s(_PlayerNames[playerIndex], evt.u.connected.playerName);
+    info.u.connected.delay = evt.u.connected.delay;
+    info.u.connected.runahead = evt.u.connected.runahead;
+
+    // Set the initial delay / runahead.
+    // VidOverlaySetRemoteStats(info->u.synchronizing.
+    // op_delay
+
     _callbacks.on_event(&info);
 
     break;

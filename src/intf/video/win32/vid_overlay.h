@@ -16,7 +16,7 @@ void VidOverlaySetGameScores(int score1, int score2, int winner = 0);
 void VidOverlaySetGameSpectators(int num);
 void VidOverlaySetSystemMessage(const wchar_t *text);
 void VidOverlaySetStats(double fps, int ping, int delay);
-void VidOverlaySetRemoteStats(int delay, int runahead);
+void VidOverlaySetRemoteStats(uint8_t delay, uint8_t runahead);
 void VidOverlaySetWarning(int warning, int line);
 void VidOverlayShowVolume(const wchar_t *text);
 void VidOverlaySetChatInput(const wchar_t *text);

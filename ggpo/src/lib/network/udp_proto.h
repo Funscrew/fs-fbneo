@@ -42,8 +42,11 @@ struct UdpEvent {
       int         count;
     } synchronizing;
 
+
     struct {
       char playerName[MAX_NAME_SIZE];
+      uint8_t delay;
+      uint8_t runahead;
     } connected;
 
     struct {
@@ -56,7 +59,7 @@ struct UdpEvent {
       char		data[MAX_GGPO_DATA_SIZE];
     } chat;   // REFACTOR: Rename to 'data' or something like that...
 
-  } u;			// REFACTOR: Rename this to 'data'
+  } u;			// REFACTOR: Rename this to something descriptive.
 
   UdpEvent(Type t = Unknown) : type(t) {}
 };

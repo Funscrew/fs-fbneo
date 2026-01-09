@@ -59,6 +59,8 @@ struct UdpMsg
     struct {
       uint32      random_reply;           /* OK, here's your random data back */
       uint32      client_version;       // Version of this client, in 8 byte chunks: MAJOR - MINOR - REVISION - GGPO (protocol version)
+      uint8_t delay;                    // current delay setting.
+      uint8_t runahead;                 // current runahead setting.
       char playerName[MAX_NAME_SIZE];   /* The name of the player we synced to: */
     } sync_reply;
 
@@ -110,6 +112,7 @@ public:
     case SyncRequest:   return sizeof(u.sync_request);
     case SyncReply:
     {
+      // TODO: We could/shoud fix the size of the reply to be dependent on the player name.
       int res = sizeof(u.sync_reply);
       return res;
     }

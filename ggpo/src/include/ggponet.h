@@ -189,6 +189,12 @@ extern "C" {
         int               count;
         int               total;
       } synchronizing;
+
+      struct {
+        uint8_t delay;
+        uint8_t runahead;
+      } connected;
+
       struct {
         int               frames_ahead;
       } timesync;
