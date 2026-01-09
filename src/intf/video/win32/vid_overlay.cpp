@@ -105,7 +105,7 @@ static int info_time = 0;
 static int chat_time = 0;
 static int volume_time = 0;
 
-enum 
+enum
 {
   CMD_CHAT_MUTED = 1,
 };
@@ -1319,7 +1319,7 @@ void VidOverlaySetGameInfo(const wchar_t* name1, const wchar_t* name2, int spect
     }
     int score1;
     swscanf(&name1[pos1], _T("#%d,%d,%s"), &player1.rank, &score1, &player1.country.str);
-    
+
     // TODO: We should not be writing directly to memory here!
     swprintf(player1.name.str, 256, _T("%.*s"), pos1, name1);
     player1.name.isActive = true;
@@ -1389,7 +1389,6 @@ void SendToPeer(int delay, int runahead) {
 static int op_delay = 0;
 static int op_runahead = 0;
 static int prev_runahead = -1;
-static int bOpInfoRcvd = false;
 
 extern int totalRollbackFrames;
 extern int totalRollbacks;
@@ -1410,7 +1409,6 @@ const wchar_t* FPS_AND_NETSTATS_MSG = _T("%2.2f fps | Ping: %d | Rollback: %d");
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------
 void VidOverlaySetRemoteStats(uint8_t delay, uint8_t runahead) {
-  bOpInfoRcvd = true;
   op_delay = delay;
   op_runahead = runahead;
 }
@@ -1509,14 +1507,13 @@ void VidOverlaySetStats(double fps, int ping, int delay)
     if (rollbackPct >= 50) { VidOverlaySetWarning(120, 3); }
 
     //swprintf(buf_line3, 64, _T("Delay %d  | Runahead %d"), delay, nVidRunahead);
-    if (!bOpInfoRcvd) {
-      if (game_playerIndex == 0) swprintf(buf_line3, 64, _T("P1: d%d-ra%d  |  P2: d?-ra?    "), delay, nVidRunahead);
-      else swprintf(buf_line3, 64, _T("P1: d?-ra?  |  P2: d%d-ra%d   "), delay, nVidRunahead);
+    if (game_playerIndex == 0) {
+      swprintf(buf_line3, 64, _T("P1: d%d-ra%d  |  P2: d%d-ra%d   "), delay, nVidRunahead, op_delay, op_runahead);
     }
     else {
-      if (game_playerIndex == 0) swprintf(buf_line3, 64, _T("P1: d%d-ra%d  |  P2: d%d-ra%d   "), delay, nVidRunahead, op_delay, op_runahead);
-      else swprintf(buf_line3, 64, _T("P1: d%d-ra%d  |  P2: d%d-ra%d   "), op_delay, op_runahead, delay, nVidRunahead);
+      swprintf(buf_line3, 64, _T("P1: d%d-ra%d  |  P2: d%d-ra%d   "), op_delay, op_runahead, delay, nVidRunahead);
     }
+
     stats_line3.Set(buf_line3);
   }
   else {
