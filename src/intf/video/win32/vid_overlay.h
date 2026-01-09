@@ -17,7 +17,6 @@ void VidOverlaySetGameSpectators(int num);
 void VidOverlaySetSystemMessage(const wchar_t *text);
 void VidOverlaySetStats(double fps, int ping, int delay);
 void VidOverlaySetRemoteStats(uint8_t delay, uint8_t runahead);
-void VidOverlaySetWarning(int warning, int line);
 void VidOverlayShowVolume(const wchar_t *text);
 void VidOverlaySetChatInput(const wchar_t *text);
 void VidOverlayAddChatLine(const wchar_t *name, const wchar_t *text);
@@ -25,6 +24,7 @@ void VidOverlaySaveFiles(bool save_info, bool save_scores, bool save_characters,
 void VidOverlaySaveInfo();
 void VidOverlaySaveChatHistory(const wchar_t *text);
 bool VidOverlayCanReset();
+void VidOverlayClearWarnings();
 
 void VidDebug(const wchar_t *text, float a, float b);
 void VidDisplayInputs(int slot, int state);

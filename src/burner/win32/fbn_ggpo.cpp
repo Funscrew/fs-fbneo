@@ -175,11 +175,11 @@ bool __cdecl ggpo_on_event_callback(GGPOEvent* info)
     char* p1 = ggpo_get_playerName(ggpo, 0);
     char* p2 = ggpo_get_playerName(ggpo, 1);
 
-    char p1Final[16 * 2];   // NOTE: NAME_MAX * 2 for formatting chars, which is dumb AF.
-    char p2Final[16 * 2];   // NOTE: NAME_MAX * 2 for formatting chars, which is dumb AF.
+    char p1Final[16 * 2];   // NOTE: NAME_MAX * 2 for formatting chars....
+    char p2Final[16 * 2];   // NOTE: NAME_MAX * 2 for formatting chars....
 
-    // WOOO!  MAKEWORK BULLSHIT!
-    // Look at all of the glorious string bullshit we need to do to pass parameters to a function!
+    // TODO: REFACTOR:  In no universe should be encoding args into strings, and passing them to a function that will pull them back out via scanf.
+    // This is a pretty gigundo inefficiency!
     sprintf(p1Final, "%s#0,0", p1);
     sprintf(p2Final, "%s#0,0", p2);
 

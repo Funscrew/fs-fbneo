@@ -894,9 +894,7 @@ int RunMessageLoop()
               }
               else if (!bEditActive) { // Backspace: toggles FPS
                 showStatsMode = (showStatsMode + 1) % (kNetGame ? SHOWSTATS_MAX: 2);
-                VidOverlaySetWarning(-5000, 1);
-                VidOverlaySetWarning(-5000, 2);
-                VidOverlaySetWarning(-5000, 3);
+                VidOverlayClearWarnings();
                 UpdateOverlay();
                 MenuUpdate();
               }

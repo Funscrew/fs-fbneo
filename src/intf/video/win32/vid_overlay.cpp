@@ -53,9 +53,6 @@ static float frame_width;
 static float frame_height;
 static float frame_ratio = 1;
 static int frame_time = 0;
-static int stats_line1_warning = 0;
-static int stats_line2_warning = 0;
-static int stats_line3_warning = 0;
 
 //------------------------------------------------------------------------------------------------------------------------------
 // test inputs
@@ -705,23 +702,9 @@ void DetectorUpdate()
 {
   frame_time++;
 
-  // warnings
-  stats_line1_warning--;
-  if (stats_line1_warning < 0) {
-    stats_line1_warning = 0;
-  }
-
-  stats_line2_warning--;
-  if (stats_line2_warning < 0) {
-    stats_line2_warning = 0;
-  }
-
-  stats_line3_warning--;
-  if (stats_line3_warning < 0) {
-    stats_line3_warning = 0;
-  }
-
-  bool detector_enabled = gameDetector.run_detector && !gameDetector.frame_end && (gameDetector.state != GameDetector::ST_NONE);
+  bool detector_enabled = gameDetector.run_detector &&
+    !gameDetector.frame_end &&
+    (gameDetector.state != GameDetector::ST_NONE);
 
   // run game detector
   if (detector_enabled) {
@@ -782,17 +765,21 @@ void DetectorGetState(int& state, int& score1, int& score2, int& start1, int& st
 //------------------------------------------------------------------------------------------------------------------------------
 // text helper
 //------------------------------------------------------------------------------------------------------------------------------
+// REFACTOR:  Add more context to name....
 struct Text
 {
   wchar_t str[300] = {};
   unsigned int color = 0;
   bool isActive = false;
+  uint32_t warningAmount = 0;
 
   Text();
   void Set(const wchar_t* text);
   void Copy(const Text& text);
   void Render(float x, float y, float alpha, float scale, unsigned int mode);
   void SetActive(bool isActive_) { isActive = isActive_; }
+  void AddWarning(uint32_t amount);
+  void Update();    // NOTE: This is a game-loop type of update....
 };
 
 Text::Text()
@@ -812,6 +799,7 @@ void Text::Copy(const Text& from)
   Set(from.str);
 }
 
+//------------------------------------------------------------------------------------------------------------------------------
 void Text::Render(float x, float y, float alpha, float scale, unsigned int mode)
 {
   if (str[0] && isActive) {
@@ -819,10 +807,27 @@ void Text::Render(float x, float y, float alpha, float scale, unsigned int mode)
   }
 }
 
+//------------------------------------------------------------------------------------------------------------------------------
+void Text::AddWarning(uint32_t amount)
+{
+  // TODO: std::min/max/clamp
+  warningAmount = MIN(WARNING_MAX, warningAmount += amount);
+  warningAmount = MAX(0, warningAmount);
+}
 
 //------------------------------------------------------------------------------------------------------------------------------
+void Text::Update() {
+  warningAmount = MAX(0, warningAmount - 1);
+
+  // set the color now....
+
+}
+
+
+
+// ========================================================================================================================
 // sprite helper
-//------------------------------------------------------------------------------------------------------------------------------
+// ========================================================================================================================
 struct Sprite
 {
   enum {
@@ -1116,9 +1121,16 @@ void VidOverlayRender(const RECT& dest, int gameWidth, int gameHeight, int scan_
     // volume
     volume.Render(frame_width - 0.0035f, 0.003f, 1.f, FNT_MED, FONT_ALIGN_RIGHT);
   }
+
   // TODO: This is doing even more work, when it should have all been done in the line_x.Set code!
   // REFACTOR: Change the overlay lines so that they are active / not / colored / have the message set all in one place!
   else if (showStatsMode) {
+
+    // Warning thresholds:
+    // TODO: Let's define some consts?
+    stats_line1.color = (stats_line1.warningAmount >= 100) ? 0xffff0000 : 0xffffffff;
+    stats_line2.color = (stats_line2.warningAmount >= 100) ? 0xffff0000 : 0xffffffff;
+    stats_line3.color = (stats_line3.warningAmount >= 100) ? 0xffff0000 : 0xffffffff;
 
     // TODO: Having pixel based coords would probably be a good thing!
     stats_line1.Render(frame_width - 0.0035f, 0.003f, 0.90f, FNT_MED * 0.9f, FONT_ALIGN_RIGHT);
@@ -1427,7 +1439,6 @@ void VidOverlaySetStats(double fps, int ping, int delay)
   wchar_t buf_line2[64];
   wchar_t buf_line3[64];
 
-
   // Update rollback stats....
   // TODO: Should this be done when the rollback is first triggered?
   nMaxRollback = 3 + ((ping / 2) / (100000 / nBurnFPS));
@@ -1437,7 +1448,7 @@ void VidOverlaySetStats(double fps, int ping, int delay)
       nLastRollbackAt = nFramesEmulated;
       if (nRollbackRealtime > nMaxRollback) {
         if (nFramesEmulated > 1000 && nRollbackRealtime > 0) {
-          VidOverlaySetWarning(180, 1);
+          stats_line1.AddWarning(180);
         }
       }
 
@@ -1458,6 +1469,14 @@ void VidOverlaySetStats(double fps, int ping, int delay)
     swprintf(buf_line1, 64, _T(" %2.2f fps  |  Rollback %df "), fps, nRollbackRealtime);
   }
   stats_line1.Set(buf_line1);
+
+  // Line 1 earning criteria!
+  // send warning if fps went down the thresold
+  if (fps < ((nBurnFPS / 100) - 4)) {
+    if (nFramesEmulated > 2000) {
+      stats_line1.AddWarning(150);
+    }
+  }
 
 
   // Ping, etc. stats.
@@ -1481,7 +1500,9 @@ void VidOverlaySetStats(double fps, int ping, int delay)
         jitterArrayPos = 0;
       }
     }
-    if (jitterAvg > jitterPingAvg * 0.15 && jitterAvg > 10) VidOverlaySetWarning(120, 2);
+    if (jitterAvg > jitterPingAvg * 0.15 && jitterAvg > 10) {
+      stats_line2.AddWarning(120);
+    }
 
     wchar_t buf_ping[30];
     wchar_t buf_jitter[30];
@@ -1504,9 +1525,10 @@ void VidOverlaySetStats(double fps, int ping, int delay)
       rollbackPct = (100 * nRollbacksIn1Cycle) / (nFramesEmulated - nLastCount);
       nLastCount = nFramesEmulated;
     }
-    if (rollbackPct >= 50) { VidOverlaySetWarning(120, 3); }
+    if (rollbackPct >= 50) {
+      stats_line3.AddWarning(120);
+    }
 
-    //swprintf(buf_line3, 64, _T("Delay %d  | Runahead %d"), delay, nVidRunahead);
     if (game_playerIndex == 0) {
       swprintf(buf_line3, 64, _T("P1: d%d-ra%d  |  P2: d%d-ra%d   "), delay, nVidRunahead, op_delay, op_runahead);
     }
@@ -1519,181 +1541,6 @@ void VidOverlaySetStats(double fps, int ping, int delay)
   else {
     stats_line3.SetActive(false);
   }
-
-
-
-  // TODO:
-  // -> set warning colors based on current flags + data....
-
-
-  //// FPS always goes on line 1.
-  //const wchar_t* line1Msg = nullptr;
-  //if (showStatsMode >= SHOWSTATS_FPS_AND_ROLLBACK) {
-  //  swprintf(buf_line1, 64, FPS_AND_NETSTATS_MSG, fps, ping, avgRollbackFrames);
-  //}
-  //else if (showStatsMode == SHOWSTATS_FPS_ONLY) {
-  //  swprintf(buf_line1, 64, FPS_ONLY_MSG, fps);
-  //}
-  //stats_line1.Set(buf_line1);
-
-  //if (showStatsMode >= SHOWSTATS_ALL) {
-  //  // Slap some data onto line 2.....
-  //  if (game_playerIndex == 0) {
-  //    swprintf(buf_line2, 64, _T("P1: d%d-ra%d  |  P2: d%d-ra%d   "), delay, nVidRunahead, op_delay, op_runahead);
-  //  }
-  //  else {
-  //    swprintf(buf_line2, 64, _T("P1: d%d-ra%d  |  P2: d%d-ra%d   "), op_delay, op_runahead, delay, nVidRunahead);
-  //  }
-
-  //  stats_line2.Set(buf_line2);
-  //}
-  //else {
-  //  stats_line2.isActive = false;
-  //}
-
-  // NOTE: This was some other code for setting the stats text, etc.
-  // --> I am trying to wrangle all of the stats message + formatting code into one place as that makes the most sense.
-  // We can do something about the warning thresholds, etc. later, once we decide where to put everything.
-
-  //stats_line1.color = (stats_line1_warning >= WARNING_THRESHOLD) ? RED : WHITE;
-  //if (showStatsMode > 1) {
-  //  stats_line2.color = (stats_line2_warning >= WARNING_THRESHOLD) ? RED : WHITE;
-  //  stats_line2.Render((jitterAvg >= 10) ? frame_width - 0.0052f : frame_width - 0.0035f, 0.023f, 0.90f, FNT_MED * 0.9f, FONT_ALIGN_RIGHT);
-  //}
-  //if (showStatsMode > 2) {
-  //  stats_line3.color = (stats_line3_warning >= WARNING_THRESHOLD) ? RED : WHITE;
-  //  stats_line3.Render(frame_width - 0.0035f, 0.043f, 0.90f, FNT_MED * 0.9f, FONT_ALIGN_RIGHT);
-  //}
-
-
-  return;
-
-  //if ((game_spectator || ping <= 0 || ping > 40000) && (showStatsMode >= 1)) {
-  //  if (game_spectator || (showStatsMode > 0 && showStatsMode < 3))
-  //  {
-  //    swprintf(buf_line1, 64, _T("%2.2f fps"), fps);
-  //  }
-  //  else if (showStatsMode >= 3) {
-  //    swprintf(buf_line1, 64, _T("%2.2f fps  |  ra%d "), fps, nVidRunahead);
-  //  }
-  //  stats_line1.Set(buf_line1);
-  //}
-  //else {
-  //  if (showStatsMode >= 1) {
-  //    // rollback frames
-
-  //    INT32 msPerFrame = 100000 / nBurnFPS;
-  //    UINT32 rollbackWarnThreshold = 3 + ((ping / 2) / msPerFrame);
-  //    if (nLastRollbackFrames > 0 && nLastRollbackCount > 0) {
-  //      if (nRollbackCount > nLastRollbackCount) {
-  //        nAvgRollbackFrameCount = (nRollbackFrames - nLastRollbackFrames) / (nRollbackCount - nLastRollbackCount);
-  //        nLastRollbackAt = nFramesEmulated;
-
-  //        if (nAvgRollbackFrameCount > rollbackWarnThreshold) {
-  //          if (nFramesEmulated > 1000 && nAvgRollbackFrameCount > 0) {
-  //            VidOverlaySetWarning(WARNING_FRAMES, 1);
-  //          }
-  //        }
-
-  //      }
-  //      // Just clear it out after 10 seconds, OK!
-  //      else if (nFramesEmulated > nLastRollbackAt + 600) {
-  //        nAvgRollbackFrameCount = 0;
-  //      }
-  //    }
-  //    nLastRollbackCount = nRollbackCount;
-  //    nLastRollbackFrames = nRollbackFrames;
-
-  //    if (showStatsMode == 1) swprintf(buf_line1, 64, _T(" %2.2f fps  |  d%d-ra%d "), fps, delay, nVidRunahead);
-  //    else if (showStatsMode == 2) swprintf(buf_line1, 64, _T(" %2.2f fps  |      d%d-ra%d        "), fps, delay, nVidRunahead);
-  //    else swprintf(buf_line1, 64, _T(" %2.2f fps  |  Rollback %df "), fps, nAvgRollbackFrameCount);
-  //    stats_line1.Set(buf_line1);
-  //  }
-  //  if (showStatsMode >= 2) {
-  //    // jitter
-  //    if (ping > 0 && nFramesEmulated > 600) {
-  //      int pingSum = 0;
-  //      int jitterSum = 0;
-  //      jitterPingArray[jitterArrayPos] = ping;
-  //      if (jitterArrayPos > 0)
-  //        jitterArray[jitterArrayPos - 1] = abs(jitterPingArray[jitterArrayPos] - jitterPingArray[jitterArrayPos - 1]);
-  //      for (int i = 0; i < PINGSIZE; i++) {
-  //        pingSum += jitterArray[i];
-  //        if (i < PINGSIZE - 1) jitterSum += jitterArray[i];
-  //      }
-  //      jitterPingAvg = pingSum / PINGSIZE;
-  //      jitterAvg = jitterSum / (PINGSIZE - 1);
-  //      jitterArrayPos++;
-  //      if (jitterArrayPos > PINGSIZE) {
-  //        jitterArrayPos = 0;
-  //      }
-  //    }
-  //    if (jitterAvg > jitterPingAvg * 0.15 && jitterAvg > 10) VidOverlaySetWarning(120, 2);
-
-  //    wchar_t buf_ping[30];
-  //    wchar_t buf_jitter[30];
-  //    if (ping < 1000) wsprintf(buf_ping, _T("Ping %dms  |"), ping);
-  //    else wsprintf(buf_ping, _T("Ping +999ms  |"));
-  //    if (jitterAvg < 10) wsprintf(buf_jitter, _T("  Jitter  %dms  "), jitterAvg);
-  //    else if (jitterAvg < 100) wsprintf(buf_jitter, _T("  Jitter %dms"), jitterAvg);
-  //    else wsprintf(buf_jitter, _T("Jitter +99ms"));
-  //    swprintf(buf_line2, 64, _T("%s%s"), buf_ping, buf_jitter);
-  //    stats_line2.Set(buf_line2);
-  //  }
-  //  if (showStatsMode >= 3) {
-  //    if (nFramesEmulated >= nLastCount + 600) {
-  //      nRollbacksIn1Cycle = nRollbackCount - nRollbacks1CycleAgo;
-  //      nRollbacks1CycleAgo = nRollbackCount;
-  //      rollbackPct = (100 * nRollbacksIn1Cycle) / (nFramesEmulated - nLastCount);
-  //      nLastCount = nFramesEmulated;
-  //    }
-  //    if (rollbackPct >= 50) VidOverlaySetWarning(120, 3);
-
-  //    //swprintf(buf_line3, 64, _T("Delay %d  | Runahead %d"), delay, nVidRunahead);
-  //    if (!bOpInfoRcvd) {
-  //      if (game_playerIndex == 0) swprintf(buf_line3, 64, _T("P1: d%d-ra%d  |  P2: d?-ra?    "), delay, nVidRunahead);
-  //      else swprintf(buf_line3, 64, _T("P1: d?-ra?  |  P2: d%d-ra%d   "), delay, nVidRunahead);
-  //    }
-  //    else {
-  //      if (game_playerIndex == 0) swprintf(buf_line3, 64, _T("P1: d%d-ra%d  |  P2: d%d-ra%d   "), delay, nVidRunahead, op_delay, op_runahead);
-  //      else swprintf(buf_line3, 64, _T("P1: d%d-ra%d  |  P2: d%d-ra%d   "), op_delay, op_runahead, delay, nVidRunahead);
-  //    }
-  //    stats_line3.Set(buf_line3);
-  //  }
-  //}
-
-  // send warning if fps went down the thresold
-  if (fps < ((nBurnFPS / 100) - 4)) {
-    if (nFramesEmulated > 2000) {
-      VidOverlaySetWarning(150, 1);
-    }
-  }
-
-}
-
-// ---------------------------------------------------------------------------------------------------------------------------------------------------------
-void VidOverlaySetWarning(int amount, int line)
-{
-  // TODO: Build warnings + countdowns into the text structs....
-  if (line == 1) {
-    stats_line1_warning += amount;
-    if (stats_line1_warning > WARNING_MAX) {
-      stats_line1_warning = WARNING_MAX;
-    }
-  }
-  else if (line == 2) {
-    stats_line2_warning += amount;
-    if (stats_line2_warning > WARNING_MAX) {
-      stats_line2_warning = WARNING_MAX;
-    }
-  }
-  else if (line == 3) {
-    stats_line3_warning += amount;
-    if (stats_line3_warning > WARNING_MAX) {
-      stats_line3_warning = WARNING_MAX;
-    }
-  }
-
 }
 
 // ---------------------------------------------------------------------------------------------------------------------------------------------------------
@@ -1703,15 +1550,15 @@ void VidOverlayShowVolume(const wchar_t* text)
   volume_time = frame_time + INFO_FRAMES;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------------------------------------------
 void VidOverlaySetChatInput(const wchar_t* text)
 {
   chat_input.Set(text);
   chat_time = frame_time + CHAT_FRAMES;
   show_chat_input = true;
   show_chat = true;
-  VidOverlaySetWarning(-10000, 1);
-  VidOverlaySetWarning(-10000, 2);
-  VidOverlaySetWarning(-10000, 3);
+
+  VidOverlayClearWarnings();
 }
 
 bool bMutedWarnSent = false;
@@ -1886,9 +1733,20 @@ void VidOverlaySaveChatHistory(const wchar_t* text)
   }
 }
 
+// ------------------------------------------------------------------------------------------------------------------------
 bool VidOverlayCanReset()
 {
-  return !game_ranked || gameDetector.state != GameDetector::ST_WAIT_WINNER || kNetVersion < NET_VERSION_RESET_INGAME;
+  return !game_ranked ||
+    gameDetector.state != GameDetector::ST_WAIT_WINNER ||
+    kNetVersion < NET_VERSION_RESET_INGAME;   // TODO: <-- this should be assumed to be true!
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+void VidOverlayClearWarnings()
+{
+  stats_line1.AddWarning(-1000000);
+  stats_line2.AddWarning(-1000000);
+  stats_line3.AddWarning(-1000000);
 }
 
 
