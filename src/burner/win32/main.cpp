@@ -1049,7 +1049,7 @@ int ProcessCommandLine(LPSTR lpCmdLine)
   directConnect->add_option("-p,--player", directOps.playerNumber, "Player number (1, 2, etc.)")->required()->check(CLI::Validator(CLI::Range(1, 4)));
   directConnect->add_option("-n,--name", directOps.playerName, "Your name")->required();
   directConnect->add_option("-d,--delay", directOps.frameDelay, "Frame delay.  1 is default");
-
+  directConnect->add_option("-s,--replay", directOps.replayAddr, "Replay appliance address");
 
   std::string loadPath = "";
   auto load = app.add_subcommand("load", "Load a game state (.fs), or replay file (.fr)");

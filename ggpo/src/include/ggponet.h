@@ -364,7 +364,9 @@ extern "C" {
     uint16  remotePort,
     uint8_t playerIndex,
     char* playerName,
-    uint32_t clientVersion);
+    uint32_t clientVersion,
+    char* replayIp,
+    uint16_t replayPort);
 
   /*
    * ggpo_add_player --

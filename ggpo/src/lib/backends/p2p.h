@@ -26,7 +26,7 @@ static const uint16 INPUT_SIZE = 5;
 // ==========================================================================================================
 class Peer2PeerBackend : public GGPOSession, IPollSink, Udp::Callbacks {
 public:
-   Peer2PeerBackend(GGPOSessionCallbacks *cb, const char *gamename, uint16 localport, char* remoteIp, uint16 remotePort, uint8_t playerIndex, std::string playerName, uint32_t client_version);
+   Peer2PeerBackend(GGPOSessionCallbacks *cb, const char *gamename, uint16 localport, char* remoteIp, uint16 remotePort, uint8_t playerIndex, std::string playerName, uint32_t client_version, char* replayIp, uint16 replayPort);
    virtual ~Peer2PeerBackend();
 
 
@@ -55,7 +55,9 @@ protected:
    void CheckInitialSync(void);
    int Poll2Players(int current_frame);
    int PollNPlayers(int current_frame);
-   void AddRemotePlayer(char *remoteip, uint16 reportport, int queue);
+   
+   void AddReplayEndpoint(char* remoteIp, uint16 remotePort);
+   void AddRemotePlayer(char *remoteIp, uint16 remotePort, int playerIndex);
    
    virtual void OnUdpProtocolEvent(UdpEvent &e, uint8_t playerIndex);
    virtual void OnUdpProtocolPeerEvent(UdpEvent &e, uint8_t playerIndex);
@@ -74,12 +76,14 @@ protected:
    int                   _input_size;
 
    bool                  _synchronizing;
-   int                   _num_players;
+   uint8_t               _num_players;
    int                   _next_recommended_sleep;
 
    int                   _disconnect_timeout;
    int                   _disconnect_notify_start;
    uint32_t              _client_version;
+   uint8_t               _endpointCount;
+   bool                  _sendsReplayData = false;
 
    UdpMsg::connect_status _local_connect_status[UDP_MSG_MAX_PLAYERS];
 

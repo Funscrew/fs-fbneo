@@ -41,6 +41,8 @@ protected:
   IN_ADDR _RemoteAddr;
   uint16_t _RemotePort = 0;
   uint8_t _playerIndex = 0;
+  uint16_t _ReplayPort = 0;
+  IN_ADDR _ReplayAddr;
 
   char _PlayerNames[2][MAX_NAME_SIZE];
 

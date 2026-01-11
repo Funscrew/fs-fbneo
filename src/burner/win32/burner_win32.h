@@ -93,9 +93,11 @@ struct DirectConnectionOptions {
   std::string romName;
   std::string localAddr = "";
   std::string remoteAddr = "";
-  UINT16 playerNumber = 0;
+  uint16_t playerNumber = 0;
   std::string playerName = "";
-  UINT16 frameDelay = 1;
+  uint16_t frameDelay = 1;
+  //bool sendsReplayData = false;
+  std::string replayAddr = "";
 };
 
 // ---------------------------------------------------------------------------

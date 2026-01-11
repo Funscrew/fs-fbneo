@@ -24,7 +24,9 @@ Peer2PeerBackend::Peer2PeerBackend(GGPOSessionCallbacks* cb,
   uint16 remotePort,
   uint8_t playerIndex,
   std::string playerName,
-  uint32_t clientVersion)
+  uint32_t clientVersion,
+  char* replayIp,
+  uint16 replayPort)
   :
   _num_players(PLAYER_COUNT),
   _input_size(INPUT_SIZE),
@@ -44,6 +46,13 @@ Peer2PeerBackend::Peer2PeerBackend(GGPOSessionCallbacks* cb,
 
   inet_pton(AF_INET, remoteIp, &_RemoteAddr);
   _RemotePort = htons(remotePort);
+  
+
+  if (replayIp != nullptr) { 
+    _sendsReplayData = true;
+    inet_pton(AF_INET, replayIp, &_ReplayAddr);
+    _ReplayPort = htons(replayPort);
+  }
 
 
   /*
@@ -61,7 +70,10 @@ Peer2PeerBackend::Peer2PeerBackend(GGPOSessionCallbacks* cb,
    */
   _udp.Init(localport, &_pollMgr, this);
 
-  _endpoints = new UdpProtocol[_num_players];
+  // Add one extra endpoint slot for replay appliance.  It will always use the last endpoint index.
+  _endpointCount = _num_players + (_sendsReplayData ? 1 : 0);
+
+  _endpoints = new UdpProtocol[_endpointCount];
   memset(_local_connect_status, 0, sizeof(_local_connect_status));
   for (int i = 0; i < ARRAY_SIZE(_local_connect_status); i++) {
     _local_connect_status[i].last_frame = -1;
@@ -150,7 +162,7 @@ GGPOErrorCode Peer2PeerBackend::AddLocalInput(uint8_t playerIndex, void* values,
     // NOTE: This queues input, and it gets pumped out later....
     // NOTE: In a two player game, only one of these endpoints has the 'udp' member set, and so
     // only one of them will actully do anything.....
-    for (int i = 0; i < _num_players; i++) {
+    for (int i = 0; i < _endpointCount; i++) {
       if (_endpoints[i].IsInitialized()) {
         _endpoints[i].SendInput(input);
       }
@@ -159,19 +171,27 @@ GGPOErrorCode Peer2PeerBackend::AddLocalInput(uint8_t playerIndex, void* values,
 
   return GGPO_OK;
 }
+
 // ----------------------------------------------------------------------------------------------------------
-void Peer2PeerBackend::AddRemotePlayer(char* ip, uint16 port, int queue)
+void Peer2PeerBackend::AddReplayEndpoint(char* remoteIp, uint16 remotePort)
+{
+  _synchronizing = true;
+
+}
+
+// ----------------------------------------------------------------------------------------------------------
+void Peer2PeerBackend::AddRemotePlayer(char* remoteIp, uint16 remotePort, int playerIndex)
 {
   /*
    * Start the state machine (xxx: no)
    */
   _synchronizing = true;
 
-  _endpoints[queue].Init(&_udp, _pollMgr, queue, ip, port, _local_connect_status, _client_version);
-  _endpoints[queue].SetDisconnectTimeout(_disconnect_timeout);
-  _endpoints[queue].SetDisconnectNotifyStart(_disconnect_notify_start);
-  _endpoints[queue].Synchronize();
-  _endpoints[queue].SetPlayerName(_PlayerNames[_playerIndex]);
+  _endpoints[playerIndex].Init(&_udp, _pollMgr, playerIndex, remoteIp, remotePort, _local_connect_status, _client_version);
+  _endpoints[playerIndex].SetDisconnectTimeout(_disconnect_timeout);
+  _endpoints[playerIndex].SetDisconnectNotifyStart(_disconnect_notify_start);
+  _endpoints[playerIndex].Synchronize();
+  _endpoints[playerIndex].SetPlayerName(_PlayerNames[_playerIndex]);
 }
 
 // ----------------------------------------------------------------------------------------------------------
@@ -189,7 +209,7 @@ GGPOErrorCode Peer2PeerBackend::DoPoll(int timeout)
       // notify all of our endpoints of their local frame number for their
       // next connection quality report
       int current_frame = _sync.GetFrameCount();
-      for (int i = 0; i < _num_players; i++) {
+      for (int i = 0; i < _endpointCount; i++) {
         _endpoints[i].SetLocalFrameNumber(current_frame);
       }
 
@@ -220,7 +240,7 @@ GGPOErrorCode Peer2PeerBackend::DoPoll(int timeout)
       // send timesync notifications if now is the proper time
       if (current_frame > _next_recommended_sleep) {
         int interval = 0;
-        for (int i = 0; i < _num_players; i++) {
+        for (int i = 0; i < _endpointCount; i++) {
           interval = MAX(interval, _endpoints[i].RecommendFrameDelay());
         }
 
@@ -341,7 +361,7 @@ GGPOErrorCode Peer2PeerBackend::AddPlayer(GGPOPlayer* player)
 bool Peer2PeerBackend::SendData(UINT8 code, void* data, UINT8 dataSize) {
 
   for (int i = 0; i < _num_players; i++) {
-    if (i == _playerIndex) { continue; }      // Don't chat to ourselves....
+    if (i == _endpointCount) { continue; }      // Don't send data to ourselves....
     _endpoints[i].SendData(code, data, dataSize);
 
     //if (_endpoints[i].IsInitialized()) {
@@ -356,7 +376,7 @@ bool Peer2PeerBackend::SendData(UINT8 code, void* data, UINT8 dataSize) {
 bool Peer2PeerBackend::SendChat(char* text) {
 
   for (int i = 0; i < _num_players; i++) {
-    if (i == _playerIndex) { continue; }      // Don't chat to ourselves....
+    if (i == _endpointCount) { continue; }      // Don't chat to ourselves....
     _endpoints[i].SendChat(text);
 
     //if (_endpoints[i].IsInitialized()) {
@@ -416,7 +436,7 @@ void Peer2PeerBackend::PollSyncEvents(void)
 void Peer2PeerBackend::PollUdpProtocolEvents(void)
 {
   UdpEvent evt;
-  for (uint8_t i = 0; i < _num_players; i++) {
+  for (uint8_t i = 0; i < _endpointCount; i++) {
     while (_endpoints[i].GetEvent(evt)) {
       OnUdpProtocolPeerEvent(evt, i);
     }
@@ -534,7 +554,7 @@ GGPOErrorCode Peer2PeerBackend::DisconnectPlayer(uint8_t playerIndex)
   if (playerIndex == _playerIndex) {
     int current_frame = _sync.GetFrameCount();
     Utils::LogIt(CATEGORY_ENDPOINT, "Disconnecting local player %d at frame %d by user request.", playerIndex, _local_connect_status[playerIndex].last_frame);
-    for (uint8_t i = 0; i < _num_players; i++) {
+    for (uint8_t i = 0; i < _endpointCount; i++) {
       if (_endpoints[i].IsInitialized()) {
         DisconnectPlayer(i, current_frame);
       }
@@ -552,7 +572,7 @@ GGPOErrorCode Peer2PeerBackend::DisconnectPlayer(uint8_t playerIndex)
 void Peer2PeerBackend::DisconnectEx() {
 
   int curFrame = _sync.GetFrameCount();
-  for (size_t i = 0; i < PLAYER_COUNT; i++)
+  for (size_t i = 0; i < _endpointCount; i++)
   {
     if (i == _playerIndex) { continue; }
     _endpoints[i].DisconnectEx(curFrame);
@@ -560,6 +580,7 @@ void Peer2PeerBackend::DisconnectEx() {
 }
 
 // --------------------------------------------------------------------------------------------------------------
+// NOTE: This code / function is never called.  It may be replaced in the future...
 void Peer2PeerBackend::DisconnectPlayer(uint8_t playerIndex, int syncto)
 {
   GGPOEvent info;
@@ -606,7 +627,7 @@ GGPOErrorCode
 Peer2PeerBackend::SetDisconnectTimeout(int timeout)
 {
   _disconnect_timeout = timeout;
-  for (int i = 0; i < _num_players; i++) {
+  for (int i = 0; i < _endpointCount; i++) {
     if (_endpoints[i].IsInitialized()) {
       _endpoints[i].SetDisconnectTimeout(_disconnect_timeout);
     }
@@ -618,7 +639,7 @@ GGPOErrorCode
 Peer2PeerBackend::SetDisconnectNotifyStart(int timeout)
 {
   _disconnect_notify_start = timeout;
-  for (int i = 0; i < _num_players; i++) {
+  for (int i = 0; i < _endpointCount; i++) {
     if (_endpoints[i].IsInitialized()) {
       _endpoints[i].SetDisconnectNotifyStart(_disconnect_notify_start);
     }
@@ -629,7 +650,7 @@ Peer2PeerBackend::SetDisconnectNotifyStart(int timeout)
 // ----------------------------------------------------------------------------------------------------------
 void Peer2PeerBackend::OnMsg(sockaddr_in& from, UdpMsg* msg, int len)
 {
-  for (int i = 0; i < _num_players; i++) {
+  for (int i = 0; i < _endpointCount; i++) {
     if (_endpoints[i].HandlesMsg(from, msg)) {
       _endpoints[i].OnMsg(msg, len);
       return;
@@ -645,7 +666,7 @@ void Peer2PeerBackend::CheckInitialSync()
   if (_synchronizing) {
     // Check to see if everyone is now synchronized.  If so,
     // go ahead and tell the client that we're ok to accept input.
-    for (i = 0; i < _num_players; i++) {
+    for (i = 0; i < _endpointCount; i++) {
       // xxx: IsInitialized() must go... we're actually using it as a proxy for "represents the local player"
       if (_endpoints[i].IsInitialized() && !_endpoints[i].IsSynchronized() && !_local_connect_status[i].disconnected) {
         return;

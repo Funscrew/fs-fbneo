@@ -1316,7 +1316,7 @@ void VidOverlaySetGameInfo(const wchar_t* name1, const wchar_t* name2, int spect
   game_enabled = 1;
   game_spectator = spectator;
   game_ranked = ranked;
-  game_playerIndex = playerIndex;      // This is fucking bonkers!  we need to know our player index every time a score changes?
+  game_playerIndex = playerIndex;      // REFACTOR: We shouldn't need to pass in the local player index every time!
 #ifdef TEST_OVERLAY
   gameDetector.run_detector = true;
 #endif

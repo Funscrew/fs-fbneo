@@ -605,18 +605,22 @@ int InitDirectConnection(DirectConnectionOptions& ops, GGPOLogOptions& logOps)
   char remoteIP[MAX_HOST];
   UINT16 localPort = DEFAULT_LOCAL_PORT;
   UINT16 remotePort = DEFAULT_REMOTE_PORT;
+  UINT16 replayPort = 0;
 
   char localHost[MAX_HOST];
   char remoteHost[MAX_HOST];
+  char replayHost[MAX_HOST];
 
   try
   {
     ParseAddress(ops.localAddr.data(), localHost, &localPort);
     ParseAddress(ops.remoteAddr.data(), remoteHost, &remotePort);
+    ParseAddress(ops.replayAddr.data(), replayHost, &replayPort);
+    
   }
   catch (const std::exception&)
   {
-    throw std::exception("Could not parse local or remote address");
+    throw std::exception("Could not parse local, remote, or replay address!");
   }
 
   kNetVersion = NET_VERSION;
@@ -654,7 +658,8 @@ int InitDirectConnection(DirectConnectionOptions& ops, GGPOLogOptions& logOps)
   iDelay = ops.frameDelay;
   iSeed = 0;
 
-  ggpo = ggpo_start_session(&cb, ops.romName.data(), localPort, remoteHost, remotePort, _playerIndex, ops.playerName.data(), FS_VERSION);
+  char* useReplayIp = ops.replayAddr.length() ==0 ? nullptr : ops.replayAddr.data();
+  ggpo = ggpo_start_session(&cb, ops.romName.data(), localPort, remoteHost, remotePort, _playerIndex, ops.playerName.data(), FS_VERSION, useReplayIp, replayPort);
 
   ggpo_set_frame_delay(ggpo, ops.frameDelay);
   VidOverlaySetSystemMessage(_T("Connecting..."));
