@@ -26,7 +26,7 @@ static const uint16 INPUT_SIZE = 5;
 // ==========================================================================================================
 class Peer2PeerBackend : public GGPOSession, IPollSink, Udp::Callbacks {
 public:
-   Peer2PeerBackend(GGPOSessionCallbacks *cb, const char *gamename, uint16 localport, char* remoteIp, uint16 remotePort, uint8_t playerIndex, std::string playerName, uint32_t client_version, char* replayIp, uint16 replayPort);
+   Peer2PeerBackend(GGPOSessionCallbacks *cb, const char *gamename, uint16 localport, char* remoteIp, uint16 remotePort, uint8_t playerIndex, std::string playerName, uint32_t client_version, char* replayIp, uint16 replayPort, uint64_t sessionId_);
    virtual ~Peer2PeerBackend();
 
 
@@ -56,9 +56,9 @@ protected:
    int Poll2Players(int current_frame);
    int PollNPlayers(int current_frame);
    
-   void AddReplayEndpoint(char* remoteIp, uint16 remotePort);
-   void AddRemotePlayer(char *remoteIp, uint16 remotePort, int playerIndex);
-   
+   // void AddReplayEndpoint(char* remoteIp, uint16 remotePort);
+   // REFACTOR: -> 'AddRemoteEndpoint'
+   void AddRemotePlayer( GGPOPlayer* player, uint64_t sessionId);
    virtual void OnUdpProtocolEvent(UdpEvent &e, uint8_t playerIndex);
    virtual void OnUdpProtocolPeerEvent(UdpEvent &e, uint8_t playerIndex);
 
@@ -87,7 +87,7 @@ protected:
 
    UdpMsg::connect_status _local_connect_status[UDP_MSG_MAX_PLAYERS];
 
-
+   uint64_t                 _sessionId;
 };
 
 #endif

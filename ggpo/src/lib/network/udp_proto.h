@@ -65,7 +65,7 @@ struct UdpEvent {
 };
 
 
-
+// REFACTOR: -> GGPOEndpoint
 class UdpProtocol : public IPollSink
 {
 public:
@@ -80,6 +80,7 @@ public:
 
 public:
   virtual bool OnLoopPoll(void* cookie);
+  void SetSessionId(int64_t value) { _sessionId = value; }
 
 public:
   UdpProtocol();
@@ -113,6 +114,7 @@ public:
   void SetDisconnectNotifyStart(int timeout);
 
   void SetPlayerName(char* playerName_);
+
 protected:
 
   enum State {
@@ -154,6 +156,8 @@ protected:
   bool OnQualityReply(UdpMsg* msg, int len);
   bool OnKeepAlive(UdpMsg* msg, int len);
   bool OnData(UdpMsg* msg, int len);
+
+  uint64_t _sessionId = 0;
 
 protected:
   /*

@@ -45,7 +45,8 @@ GGPOSession* ggpo_start_session(
   char* playerName,
   uint32_t clientVersion,
   char* replayIp,
-  uint16_t replayPort)
+  uint16_t replayPort,
+  uint64_t sessionId)
 {
   auto res = (GGPOSession*)new Peer2PeerBackend(cb,
     gameName,
@@ -56,7 +57,8 @@ GGPOSession* ggpo_start_session(
     playerName,
     clientVersion,
     replayIp,
-    replayPort);
+    replayPort,
+    sessionId);
   return res;
 }
 

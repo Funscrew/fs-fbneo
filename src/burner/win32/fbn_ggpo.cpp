@@ -616,7 +616,6 @@ int InitDirectConnection(DirectConnectionOptions& ops, GGPOLogOptions& logOps)
     ParseAddress(ops.localAddr.data(), localHost, &localPort);
     ParseAddress(ops.remoteAddr.data(), remoteHost, &remotePort);
     ParseAddress(ops.replayAddr.data(), replayHost, &replayPort);
-    
   }
   catch (const std::exception&)
   {
@@ -658,8 +657,19 @@ int InitDirectConnection(DirectConnectionOptions& ops, GGPOLogOptions& logOps)
   iDelay = ops.frameDelay;
   iSeed = 0;
 
-  char* useReplayIp = ops.replayAddr.length() ==0 ? nullptr : ops.replayAddr.data();
-  ggpo = ggpo_start_session(&cb, ops.romName.data(), localPort, remoteHost, remotePort, _playerIndex, ops.playerName.data(), FS_VERSION, useReplayIp, replayPort);
+  char* useReplayIp = nullptr;
+  uint64_t useSessionId = 0;
+
+  if (ops.replayAddr.length() > 0) { 
+    useReplayIp = ops.replayAddr.data();
+
+    if (ops.replayId == 0) { 
+      throw std::exception("Invalid or missing replay id!");
+    }
+    useSessionId = ops.replayId;
+  }
+
+  ggpo = ggpo_start_session(&cb, ops.romName.data(), localPort, remoteHost, remotePort, _playerIndex, ops.playerName.data(), FS_VERSION, useReplayIp, replayPort, useSessionId);
 
   ggpo_set_frame_delay(ggpo, ops.frameDelay);
   VidOverlaySetSystemMessage(_T("Connecting..."));

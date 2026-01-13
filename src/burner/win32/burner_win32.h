@@ -96,8 +96,9 @@ struct DirectConnectionOptions {
   uint16_t playerNumber = 0;
   std::string playerName = "";
   uint16_t frameDelay = 1;
-  //bool sendsReplayData = false;
+
   std::string replayAddr = "";
+  uint64_t replayId = 0;
 };
 
 // ---------------------------------------------------------------------------

@@ -39,9 +39,6 @@ extern "C" {
 
 #define GGPO_MAX_PLAYERS                  4
 #define GGPO_MAX_PREDICTION_FRAMES        8
-#define GGPO_MAX_SPECTATORS              32
-
-#define GGPO_SPECTATOR_INPUT_INTERVAL     4
 
  // TODO: Share with main program / put this with defs elsewhere....
   const static size_t MAX_GGPO_DATA_SIZE = 128;	 // 128 characters is probably enough.
@@ -53,9 +50,9 @@ extern "C" {
   static const uint8_t PLAYER_NOT_SET = 0xFF;
 
   typedef enum {
-    GGPO_PLAYERTYPE_LOCAL,
-    GGPO_PLAYERTYPE_REMOTE,
-    GGPO_PLAYERTYPE_SPECTATOR,
+    GGPO_ENDPOINT_TYPE_LOCAL,
+    GGPO_ENDPOINT_TYPE_REMOTE,
+    GGPO_ENDPOINT_TYPE_REPLAY_APPLIANCE,
   } GGPOPlayerType;
 
   /*
@@ -70,7 +67,7 @@ extern "C" {
    *
    * player_index: The index of the player.  This is zero based, so player 1 = 0, player 2 = 1, etc.
    *
-   * If type == GGPO_PLAYERTYPE_REMOTE:
+   * If type == GGPO_ENDPOINT_TYPE_REMOTE:
    *
    * u.remote.ip_address:  The ip address of the ggpo session which will host this
    *       player.
@@ -81,8 +78,9 @@ extern "C" {
    *
    */
 
+   // REFACTOR: -> 'GGPOEndpoint'
   typedef struct GGPOPlayer {
-    int               size;
+    // int               size;
     GGPOPlayerType    type;
     uint8_t            player_index;
     union {
@@ -366,7 +364,8 @@ extern "C" {
     char* playerName,
     uint32_t clientVersion,
     char* replayIp,
-    uint16_t replayPort);
+    uint16_t replayPort,
+    uint64_t sessionId);
 
   /*
    * ggpo_add_player --
@@ -481,7 +480,7 @@ extern "C" {
    *
    * Used to notify GGPO.net of inputs that should be trasmitted to remote
    * players.  ggpo_add_local_input must be called once every frame for
-   * all player of type GGPO_PLAYERTYPE_LOCAL.
+   * all player of type GGPO_ENDPOINT_TYPE_LOCAL.
    *
    * player - The player handle returned for this player when you called
    * ggpo_add_local_player.

@@ -348,6 +348,7 @@ void UdpProtocol::SendSyncRequest()
   _state.sync.random = rand() & 0xFFFF;
   UdpMsg* msg = new UdpMsg(UdpMsg::SyncRequest);
   msg->u.sync_request.random_request = _state.sync.random;
+  msg->u.sync_request.session_id = _sessionId;
   SendMsg(msg);
 }
 
@@ -493,6 +494,9 @@ bool UdpProtocol::OnSyncRequest(UdpMsg* msg, int len)
   UdpMsg* reply = new UdpMsg(UdpMsg::SyncReply);
   reply->u.sync_reply.random_reply = msg->u.sync_request.random_request;
   reply->u.sync_reply.client_version = _client_version;
+
+  // TODO: I need to send the delay + runahead here (in main)
+  // So... if we are sending whatever data in the sync replies, should we include replay id here too?
 
   strcpy_s(reply->u.sync_reply.playerName, _playerName);
 

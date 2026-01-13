@@ -1050,6 +1050,7 @@ int ProcessCommandLine(LPSTR lpCmdLine)
   directConnect->add_option("-n,--name", directOps.playerName, "Your name")->required();
   directConnect->add_option("-d,--delay", directOps.frameDelay, "Frame delay.  1 is default");
   directConnect->add_option("-s,--replay", directOps.replayAddr, "Replay appliance address");
+  directConnect->add_option("-i,--replay-id", directOps.replayId, "Session ID for the replay.");
 
   std::string loadPath = "";
   auto load = app.add_subcommand("load", "Load a game state (.fs), or replay file (.fr)");

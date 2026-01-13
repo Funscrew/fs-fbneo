@@ -1308,8 +1308,8 @@ void VidOverlayRender(const RECT& dest, int gameWidth, int gameHeight, int scan_
 //------------------------------------------------------------------------------------------------------------------------------
 // overlay API
 //------------------------------------------------------------------------------------------------------------------------------
-// REFACTOR:  This function needs to be updated to take actual parameters, and not whatever bullshit transcoded into a string.
-// Just pass in two structs FFS!  No point in formatting strings, to pass them to a function only so they can be unparsed,
+// REFACTOR:  This function needs to be updated to take actual parameters, not transcoded args in a string.
+// Just pass in two structs!  No point in formatting strings, to pass them to a function only so they can be unparsed,
 // or worse yet, nothing happens if you don't get it right.
 void VidOverlaySetGameInfo(const wchar_t* name1, const wchar_t* name2, int spectator, int ranked, uint8_t playerIndex)
 {
