@@ -671,7 +671,7 @@ int InitDirectConnection(DirectConnectionOptions& ops, GGPOLogOptions& logOps)
 
   ggpo = ggpo_start_session(&cb, ops.romName.data(), localPort, remoteHost, remotePort, _playerIndex, ops.playerName.data(), FS_VERSION, useReplayIp, replayPort, useSessionId);
 
-  ggpo_set_frame_delay(ggpo, ops.frameDelay);
+  ggpo_set_frame_delay(ggpo, ops.frameDelay, nVidRunahead);
   VidOverlaySetSystemMessage(_T("Connecting..."));
 
   return 0;

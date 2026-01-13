@@ -779,7 +779,6 @@ struct Text
   void Render(float x, float y, float alpha, float scale, unsigned int mode);
   void SetActive(bool isActive_) { isActive = isActive_; }
   void AddWarning(uint32_t amount);
-  void Update();    // NOTE: This is a game-loop type of update....
 };
 
 Text::Text()
@@ -802,6 +801,8 @@ void Text::Copy(const Text& from)
 //------------------------------------------------------------------------------------------------------------------------------
 void Text::Render(float x, float y, float alpha, float scale, unsigned int mode)
 {
+  if (warningAmount > 0) { warningAmount--; }
+
   if (str[0] && isActive) {
     fontWrite(str, x, y, color, alpha, scale, mode);
   }
@@ -814,15 +815,6 @@ void Text::AddWarning(uint32_t amount)
   warningAmount = MIN(WARNING_MAX, warningAmount += amount);
   warningAmount = MAX(0, warningAmount);
 }
-
-//------------------------------------------------------------------------------------------------------------------------------
-void Text::Update() {
-  warningAmount = MAX(0, warningAmount - 1);
-
-  // set the color now....
-
-}
-
 
 
 // ========================================================================================================================

@@ -19,3 +19,6 @@ gitlog.txt
 ggpo_legacy/
 console-log.txt
 dev-notes.*
+
+*.orig
+*.bak

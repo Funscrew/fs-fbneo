@@ -39,7 +39,10 @@ public:
    virtual GGPOErrorCode DisconnectPlayer(uint8_t playerIndex);
    virtual void DisconnectEx();
    virtual bool GetNetworkStats(GGPONetworkStats *stats, uint8_t playerIndex);
-   virtual void SetFrameDelay(int delay);
+
+   // HACK: I am just stuffing the runahead data here for the sake of convenience.
+   // Future iterations will put it somewhere else that is more appropriate.
+   virtual void SetFrameDelay(int delay, int runahead);
    virtual GGPOErrorCode SetDisconnectTimeout(int timeout);
    virtual GGPOErrorCode SetDisconnectNotifyStart(int timeout);
 
@@ -48,6 +51,8 @@ public:
 
 public:
    virtual void OnMsg(sockaddr_in &from, UdpMsg *msg, int len);
+
+   uint8_t Runahead() { return _runahead; }
 
 protected:
    void DisconnectPlayer(uint8_t playerIndex, int syncto);
@@ -88,6 +93,8 @@ protected:
    UdpMsg::connect_status _local_connect_status[UDP_MSG_MAX_PLAYERS];
 
    uint64_t                 _sessionId;
+   uint8_t _runahead = 0;
+   uint8_t _delay = 0;
 };
 
 #endif

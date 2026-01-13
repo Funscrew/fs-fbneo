@@ -195,13 +195,14 @@ void Peer2PeerBackend::AddRemotePlayer(GGPOPlayer* player, uint64_t sessionId) /
 
   // Start the state machine (xxx: no)
   _synchronizing = true;
-
+  
   _endpoints[playerIndex].Init(&_udp, _pollMgr, playerIndex, player->u.remote.ip_address, player->u.remote.port, _local_connect_status, _client_version);
   _endpoints[playerIndex].SetDisconnectTimeout(_disconnect_timeout);
   _endpoints[playerIndex].SetDisconnectNotifyStart(_disconnect_notify_start);
   _endpoints[playerIndex].Synchronize();
   _endpoints[playerIndex].SetPlayerName(_PlayerNames[_playerIndex]);
   _endpoints[playerIndex].SetSessionId(sessionId);
+
 }
 
 // ----------------------------------------------------------------------------------------------------------
@@ -623,8 +624,10 @@ bool Peer2PeerBackend::GetNetworkStats(GGPONetworkStats* stats, uint8_t playerIn
 }
 
 // --------------------------------------------------------------------------------------------------------------
-void Peer2PeerBackend::SetFrameDelay(int delay) {
+void Peer2PeerBackend::SetFrameDelay(int delay, int runahead) {
   _sync.SetFrameDelay(_playerIndex, delay);
+  _runahead = (uint8_t)runahead;
+  _delay = (uint8_t)delay;
 }
 
 // --------------------------------------------------------------------------------------------------------------
