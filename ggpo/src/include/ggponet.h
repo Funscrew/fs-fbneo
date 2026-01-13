@@ -461,7 +461,7 @@ extern "C" {
    * Change the amount of frames ggpo will delay local input.  Must be called
    * before the first call to ggpo_synchronize_input.
    */
-  GGPO_API void __cdecl ggpo_set_frame_delay(GGPOSession*, int frame_delay);
+  GGPO_API void __cdecl ggpo_set_frame_delay(GGPOSession*, int frame_delay, int runahead);
 
   /*
    * ggpo_idle --

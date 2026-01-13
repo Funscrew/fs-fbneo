@@ -79,8 +79,8 @@ ggpo_start_synctest(GGPOSession** ggpo,
   return GGPO_ERRORCODE_UNSUPPORTED;
 }
 
-void ggpo_set_frame_delay(GGPOSession* ggpo, int frame_delay) {
-  ggpo->SetFrameDelay(frame_delay);
+void ggpo_set_frame_delay(GGPOSession* ggpo, int frame_delay, int runahead) {
+  ggpo->SetFrameDelay(frame_delay, runahead);
 }
 
 // ----------------------------------------------------------------------------------------------------------------

@@ -85,7 +85,7 @@ public:
   UdpProtocol();
   virtual ~UdpProtocol();
 
-  void Init(Udp* udp, PollManager& p, int queue, char* ip, u_short port, UdpMsg::connect_status* status, uint32_t clientVersion);
+  void Init(Udp* udp, PollManager& p, int queue, char* ip, u_short port, UdpMsg::connect_status* status, uint32_t clientVersion, uint8_t delay_, uint8_t runahead_);
 
   void Synchronize();
   bool GetPeerConnectStatus(int id, int* frame);
@@ -192,6 +192,8 @@ protected:
   UdpMsg::connect_status* _local_connect_status;
   UdpMsg::connect_status _peer_connect_status[UDP_MSG_MAX_PLAYERS];
   uint32_t _client_version = 0;
+  uint8_t _delay = 0;
+  uint8_t _runahead = 0;
 
   // TODO: This doesn't need to be a union.  We don't need to save 8 bytes of space
   // for this level of extra work.

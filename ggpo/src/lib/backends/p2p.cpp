@@ -167,7 +167,7 @@ void Peer2PeerBackend::AddRemotePlayer(char* ip, uint16 port, int queue)
    */
   _synchronizing = true;
 
-  _endpoints[queue].Init(&_udp, _pollMgr, queue, ip, port, _local_connect_status, _client_version);
+  _endpoints[queue].Init(&_udp, _pollMgr, queue, ip, port, _local_connect_status, _client_version, _delay, _runahead);
   _endpoints[queue].SetDisconnectTimeout(_disconnect_timeout);
   _endpoints[queue].SetDisconnectNotifyStart(_disconnect_notify_start);
   _endpoints[queue].Synchronize();
@@ -597,8 +597,10 @@ bool Peer2PeerBackend::GetNetworkStats(GGPONetworkStats* stats, uint8_t playerIn
 }
 
 // --------------------------------------------------------------------------------------------------------------
-void Peer2PeerBackend::SetFrameDelay(int delay) {
+void Peer2PeerBackend::SetFrameDelay(int delay, int runahead) {
   _sync.SetFrameDelay(_playerIndex, delay);
+  _runahead = (uint8_t)runahead;
+  _delay = (uint8_t)delay;
 }
 
 // --------------------------------------------------------------------------------------------------------------

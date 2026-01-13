@@ -77,12 +77,16 @@ void UdpProtocol::Init(Udp* udp,
   char* ip,
   u_short port,
   UdpMsg::connect_status* status,
-  uint32_t clientVersion)
+  uint32_t clientVersion,
+  uint8_t delay_,
+  uint8_t runahead_)
 {
   _udp = udp;
   _queue = queue;
   _local_connect_status = status;
   _client_version = clientVersion;
+  _delay = delay_;
+  _runahead = runahead_;
 
   _peer_addr.sin_family = AF_INET;
   _peer_addr.sin_port = htons(port);
@@ -326,7 +330,7 @@ void UdpProtocol::DisconnectEx(int onFrame)
 
     *(int*)msg->u.datagram.data = onFrame;
     msg->u.datagram.dataSize = sizeof(int);
-    
+
     SendMsg(msg);
   }
 
@@ -491,6 +495,8 @@ bool UdpProtocol::OnSyncRequest(UdpMsg* msg, int len)
   UdpMsg* reply = new UdpMsg(UdpMsg::SyncReply);
   reply->u.sync_reply.random_reply = msg->u.sync_request.random_request;
   reply->u.sync_reply.client_version = _client_version;
+  reply->u.sync_reply.delay = _delay;
+  reply->u.sync_reply.runahead = _runahead;
 
   strcpy_s(reply->u.sync_reply.playerName, _playerName);
 
