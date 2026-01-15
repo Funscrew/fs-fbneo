@@ -52,6 +52,7 @@ struct UdpMsg
   union {
     struct {
       uint32      random_request;  /* please reply back with this random data */
+      uint8_t     player_index;
       uint64_t    session_id;      // Used for replay ids.  This is the form of a unix timestamp in milliseconds!  For p2p connections, this can be zero, but is ignored.
 
       //uint16      remote_magic;

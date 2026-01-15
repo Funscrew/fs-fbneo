@@ -23,7 +23,7 @@ static const int MAX_SEQ_DISTANCE = (1 << 15);
 UdpProtocol::UdpProtocol() :
   _local_frame_advantage(0),
   _remote_frame_advantage(0),
-  _queue(-1),
+  _playerIndex(0),
   _magic_number(0),
   _remote_magic_number(0),
   _packets_sent(0),
@@ -73,7 +73,7 @@ UdpProtocol::~UdpProtocol()
 // ----------------------------------------------------------------------------------------------------------
 void UdpProtocol::Init(Udp* udp,
   PollManager& poll,
-  int queue,
+  uint8_t playerIndex_,
   char* ip,
   u_short port,
   UdpMsg::connect_status* status,
@@ -82,7 +82,7 @@ void UdpProtocol::Init(Udp* udp,
   uint8_t runahead_)
 {
   _udp = udp;
-  _queue = queue;
+  _playerIndex = playerIndex_;
   _local_connect_status = status;
   _client_version = clientVersion;
   _delay = delay_;
@@ -352,6 +352,7 @@ void UdpProtocol::SendSyncRequest()
   _state.sync.random = rand() & 0xFFFF;
   UdpMsg* msg = new UdpMsg(UdpMsg::SyncRequest);
   msg->u.sync_request.random_request = _state.sync.random;
+  msg->u.sync_request.player_index = _playerIndex;
   msg->u.sync_request.session_id = _sessionId;
   SendMsg(msg);
 }

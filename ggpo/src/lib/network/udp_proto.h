@@ -86,7 +86,7 @@ public:
   UdpProtocol();
   virtual ~UdpProtocol();
 
-  void Init(Udp* udp, PollManager& p, int queue, char* ip, u_short port, UdpMsg::connect_status* status, uint32_t clientVersion, uint8_t delay_, uint8_t runahead_);
+  void Init(Udp* udp, PollManager& p, uint8_t playerIndex_, char* ip, u_short port, UdpMsg::connect_status* status, uint32_t clientVersion, uint8_t delay_, uint8_t runahead_);
 
   void Synchronize();
   bool GetPeerConnectStatus(int id, int* frame);
@@ -166,7 +166,7 @@ protected:
   Udp* _udp;
   sockaddr_in    _peer_addr;
   uint16         _magic_number;
-  int            _queue;
+  uint8_t        _playerIndex;
   uint16         _remote_magic_number;
   bool           _connected;
   int            _send_latency;

@@ -125,7 +125,7 @@ Peer2PeerBackend::Peer2PeerBackend(GGPOSessionCallbacks* cb,
     memcpy(&ipa, replayIp, (std::min)(ARRAYSIZE(ipa), strlen(replayIp) + 1));
     p.u.remote.port = replayPort;
 
-    p.player_index = _num_players;
+    p.player_index = _playerIndex;
 
     AddPlayer(&p);
   }
@@ -196,7 +196,7 @@ void Peer2PeerBackend::AddRemotePlayer(GGPOPlayer* player, uint64_t sessionId) /
   // Start the state machine (xxx: no)
   _synchronizing = true;
   
-  _endpoints[playerIndex].Init(&_udp, _pollMgr, playerIndex, player->u.remote.ip_address, player->u.remote.port, _local_connect_status, _client_version);
+  _endpoints[playerIndex].Init(&_udp, _pollMgr, playerIndex, player->u.remote.ip_address, player->u.remote.port, _local_connect_status, _client_version, _delay, _runahead);
   _endpoints[playerIndex].SetDisconnectTimeout(_disconnect_timeout);
   _endpoints[playerIndex].SetDisconnectNotifyStart(_disconnect_notify_start);
   _endpoints[playerIndex].Synchronize();
