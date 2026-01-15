@@ -485,7 +485,7 @@ void Peer2PeerBackend::OnUdpProtocolEvent(UdpEvent& evt, uint8_t playerIndex)
   switch (evt.type) {
   case UdpEvent::Connected:
     info.event_code = GGPO_EVENTCODE_CONNECTED_TO_PEER;
-    info.player_index = playerIndex;
+    info.player_index = evt.u.connected.player_index; 
 
     // info.u.connected.delay = evt.Synchronized.
     strcpy_s(_PlayerNames[playerIndex], evt.u.connected.playerName);

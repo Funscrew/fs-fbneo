@@ -168,6 +168,13 @@ bool __cdecl ggpo_on_event_callback(GGPOEvent* info)
   switch (info->event_code) {
   case GGPO_EVENTCODE_CONNECTED_TO_PEER:
   {
+    // TODO: Use a const here:
+    if (info->player_index == 255) { 
+      // We have connected to a replay appliance.  We don't need to mess with the overlay, unless we want to indicate that we are
+      // connected (maybe via icon or something in debug mode?....)
+      return true;
+    }
+
     VidOverlaySetSystemMessage(_T("Connected to Peer"));
     VidSSetSystemMessage(_T("Connected to Peer"));
 
@@ -175,6 +182,7 @@ bool __cdecl ggpo_on_event_callback(GGPOEvent* info)
     char* p1 = ggpo_get_playerName(ggpo, 0);
     char* p2 = ggpo_get_playerName(ggpo, 1);
 
+    // BUG: If the player name that is sent in the sync reply is too big, the stack will be corrupted!
     char p1Final[16 * 2];   // NOTE: NAME_MAX * 2 for formatting chars....
     char p2Final[16 * 2];   // NOTE: NAME_MAX * 2 for formatting chars....
 

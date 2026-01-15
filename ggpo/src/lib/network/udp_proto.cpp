@@ -499,6 +499,7 @@ bool UdpProtocol::OnSyncRequest(UdpMsg* msg, int len)
   UdpMsg* reply = new UdpMsg(UdpMsg::SyncReply);
   reply->u.sync_reply.random_reply = msg->u.sync_request.random_request;
   reply->u.sync_reply.client_version = _client_version;
+  reply->u.sync_reply.player_index = _playerIndex;
   reply->u.sync_reply.delay = _delay;
   reply->u.sync_reply.runahead = _runahead;
 
@@ -528,6 +529,7 @@ bool UdpProtocol::OnSyncReply(UdpMsg* msg, int len)
     auto evt = UdpEvent(UdpEvent::Connected);
     strcpy_s(evt.u.connected.playerName, msg->u.sync_reply.playerName);
 
+    evt.u.connected.player_index = msg->u.sync_reply.player_index;
     evt.u.connected.delay = msg->u.sync_reply.delay;
     evt.u.connected.runahead = msg->u.sync_reply.runahead;
 

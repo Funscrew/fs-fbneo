@@ -45,6 +45,7 @@ struct UdpEvent {
 
     struct {
       char playerName[MAX_NAME_SIZE];
+      uint8_t player_index;
       uint8_t delay;
       uint8_t runahead;
     } connected;
