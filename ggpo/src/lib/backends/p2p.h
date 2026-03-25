@@ -88,7 +88,7 @@ protected:
    int                   _disconnect_notify_start;
    uint32_t              _client_version;
    uint8_t               _endpointCount;
-   bool                  _sendsReplayData = false;
+   // bool                  _sendsReplayData = false;
 
    UdpMsg::connect_status _local_connect_status[UDP_MSG_MAX_PLAYERS];
 

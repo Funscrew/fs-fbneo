@@ -660,7 +660,7 @@ int InitDirectConnection(DirectConnectionOptions& ops, GGPOLogOptions& logOps)
   bDirect = true;
   iRanked = 0;
   _playerIndex = ops.playerNumber - 1;
-  _otherPlayerIndex = _playerIndex == 0 ? 1 : 0;
+  _otherPlayerIndex = _playerIndex == 0 ? 1 : 0;  // TODO: This is passed along in the sync request (or reply) now.
 
   iDelay = ops.frameDelay;
   iSeed = 0;

@@ -51,7 +51,6 @@ Peer2PeerBackend::Peer2PeerBackend(GGPOSessionCallbacks* cb,
 
 
   if (replayIp != nullptr) {
-    _sendsReplayData = true;
     inet_pton(AF_INET, replayIp, &_ReplayAddr);
     _ReplayPort = htons(replayPort);
   }
@@ -73,7 +72,8 @@ Peer2PeerBackend::Peer2PeerBackend(GGPOSessionCallbacks* cb,
   _udp.Init(localport, &_pollMgr, this);
 
   // Add one extra endpoint slot for replay appliance.  It will always use the last endpoint index.
-  _endpointCount = _num_players + (_sendsReplayData ? 1 : 0);
+  // TODO: This isn't going to work.  Trying to use regular old endpoints is not the way, need a specific one for the replay client.
+  _endpointCount = _num_players;
 
   _endpoints = new UdpProtocol[_endpointCount];
   memset(_local_connect_status, 0, sizeof(_local_connect_status));
@@ -195,7 +195,7 @@ void Peer2PeerBackend::AddRemotePlayer(GGPOPlayer* player, uint64_t sessionId) /
 
   // Start the state machine (xxx: no)
   _synchronizing = true;
-  
+
   _endpoints[playerIndex].Init(&_udp, _pollMgr, playerIndex, player->u.remote.ip_address, player->u.remote.port, _local_connect_status, _client_version, _delay, _runahead);
   _endpoints[playerIndex].SetDisconnectTimeout(_disconnect_timeout);
   _endpoints[playerIndex].SetDisconnectNotifyStart(_disconnect_notify_start);
@@ -481,11 +481,12 @@ void Peer2PeerBackend::OnUdpProtocolPeerEvent(UdpEvent& evt, uint8_t playerIndex
 void Peer2PeerBackend::OnUdpProtocolEvent(UdpEvent& evt, uint8_t playerIndex)
 {
   GGPOEvent info;
+  // info.player_index  = evt.u.connected.player_index;
 
   switch (evt.type) {
   case UdpEvent::Connected:
     info.event_code = GGPO_EVENTCODE_CONNECTED_TO_PEER;
-    info.player_index = evt.u.connected.player_index; 
+    info.player_index = evt.u.connected.player_index;
 
     // info.u.connected.delay = evt.Synchronized.
     strcpy_s(_PlayerNames[playerIndex], evt.u.connected.playerName);
@@ -589,28 +590,29 @@ void Peer2PeerBackend::DisconnectEx() {
 // NOTE: This code / function is never called.  It may be replaced in the future...
 void Peer2PeerBackend::DisconnectPlayer(uint8_t playerIndex, int syncto)
 {
-  GGPOEvent info;
-  int framecount = _sync.GetFrameCount();
+  return;
+  //GGPOEvent info;
+  //int framecount = _sync.GetFrameCount();
 
-  _endpoints[playerIndex].Disconnect();
+  //_endpoints[playerIndex].Disconnect();
 
-  Utils::LogIt(CATEGORY_ENDPOINT, "Changing player: %d local connect status for last frame from %d to %d on disconnect request (current: %d).",
-    playerIndex, _local_connect_status[playerIndex].last_frame, syncto, framecount);
+  //Utils::LogIt(CATEGORY_ENDPOINT, "Changing player: %d local connect status for last frame from %d to %d on disconnect request (current: %d).",
+  //  playerIndex, _local_connect_status[playerIndex].last_frame, syncto, framecount);
 
-  _local_connect_status[playerIndex].disconnected = 1;
-  _local_connect_status[playerIndex].last_frame = syncto;
+  //_local_connect_status[playerIndex].disconnected = 1;
+  //_local_connect_status[playerIndex].last_frame = syncto;
 
-  if (syncto < framecount) {
-    Utils::LogIt(CATEGORY_ENDPOINT, "adjusting simulation to account for the fact that %d disconnected @ %d.", playerIndex, syncto);
-    _sync.AdjustSimulation(syncto);
-    Utils::LogIt(CATEGORY_ENDPOINT, "finished adjusting simulation.");
-  }
+  //if (syncto < framecount) {
+  //  Utils::LogIt(CATEGORY_ENDPOINT, "adjusting simulation to account for the fact that %d disconnected @ %d.", playerIndex, syncto);
+  //  _sync.AdjustSimulation(syncto);
+  //  Utils::LogIt(CATEGORY_ENDPOINT, "finished adjusting simulation.");
+  //}
 
-  info.event_code = GGPO_EVENTCODE_DISCONNECTED_FROM_PEER;
-  info.player_index = playerIndex;
-  _callbacks.on_event(&info);
+  //info.event_code = GGPO_EVENTCODE_DISCONNECTED_FROM_PEER;
+  //info.player_index = playerIndex;
+  //_callbacks.on_event(&info);
 
-  CheckInitialSync();
+  //CheckInitialSync();
 }
 
 
@@ -676,6 +678,7 @@ void Peer2PeerBackend::CheckInitialSync()
     // go ahead and tell the client that we're ok to accept input.
     for (i = 0; i < _endpointCount; i++) {
       // xxx: IsInitialized() must go... we're actually using it as a proxy for "represents the local player"
+      // NOTE IsInitialized() returns false when it is the local player.
       if (_endpoints[i].IsInitialized() && !_endpoints[i].IsSynchronized() && !_local_connect_status[i].disconnected) {
         return;
       }

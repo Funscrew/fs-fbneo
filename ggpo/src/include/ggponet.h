@@ -179,9 +179,10 @@ extern "C" {
    * explanation of each event.
    */
   typedef struct {
-    // REFACTOR: 'player_index' can be a first class member of this struct, it is used so many times...
     GGPOEventCode event_code;
     uint8_t  player_index;
+    bool isReplayEndpoint;
+
     union {
       struct {
         int               count;

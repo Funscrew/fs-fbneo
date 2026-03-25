@@ -376,6 +376,7 @@ void UdpProtocol::SendMsg(UdpMsg* msg)
 // ------------------------------------------------------------------------------------------------
 bool UdpProtocol::HandlesMsg(sockaddr_in& from, UdpMsg* msg)
 {
+  // NOTE: Local player doesn't have _udp set.
   if (!_udp) {
     return false;
   }
@@ -394,7 +395,7 @@ void UdpProtocol::OnMsg(UdpMsg* msg, int len)
   // NOTE:  A table of function pointers is used so that the values from UdpMsg::MsgType
   // can be used to index into this.
   static const DispatchFn msgHandlers[] = {
-     &UdpProtocol::OnInvalid,             /* Invalid */
+     &UdpProtocol::OnInvalid,             /* Invalid */ 
      &UdpProtocol::OnSyncRequest,         /* SyncRequest */
      &UdpProtocol::OnSyncReply,           /* SyncReply */
      &UdpProtocol::OnInput,               /* Input */
@@ -604,6 +605,7 @@ bool UdpProtocol::OnInput(UdpMsg* msg, int len)
 
     _last_received_input.size = msg->u.input.input_size;
     if (_last_received_input.frame < 0) {
+      // Prime the expected input frame when receiving the first input (*.frame == -1 in IF condition)
       _last_received_input.frame = msg->u.input.start_frame - 1;
     }
     while (offset < numBits) {
@@ -666,9 +668,7 @@ bool UdpProtocol::OnInput(UdpMsg* msg, int len)
 
   ASSERT(_last_received_input.frame >= last_received_frame_number);
 
-  /*
-   * Get rid of our buffered input
-   */
+  // Remove all output frames that have been ACKed by other side.
   while (_pending_output.size() && _pending_output.front().frame < msg->u.input.ack_frame) {
     Utils::LogIt(CATEGORY_INPUT, "Nixed output:%d", _pending_output.front().frame);
     _last_acked_input = _pending_output.front();
@@ -679,7 +679,7 @@ bool UdpProtocol::OnInput(UdpMsg* msg, int len)
 
 
 // ----------------------------------------------------------------------------------------------------------
-// NOTE: This comes from the spectator listener...
+// NOTE: This comes from the spectator client...
 bool UdpProtocol::OnInputAck(UdpMsg* msg, int len)
 {
   // Get rid of our buffered input

@@ -53,6 +53,7 @@ struct UdpMsg
     struct {
       uint32      random_request;  /* please reply back with this random data */
       uint8_t     player_index;
+      uint8_t     isReplayEndpoint;
       uint64_t    session_id;      // Used for replay ids.  This is the form of a unix timestamp in milliseconds!  For p2p connections, this can be zero, but is ignored.
 
       //uint16      remote_magic;
@@ -63,6 +64,7 @@ struct UdpMsg
       uint32      random_reply;           /* OK, here's your random data back */
       uint32      client_version;       // Version of this client, in 8 byte chunks: MAJOR - MINOR - REVISION - GGPO (protocol version)
       uint8_t player_index;             // Index of the remote player.  Should match what we expect / not be our index!
+      uint8_t isReplayEndpoint;
       uint8_t delay;                    // current delay setting.
       uint8_t runahead;                 // current runahead setting.
       char playerName[MAX_NAME_SIZE];   /* The name of the player we synced to: */
