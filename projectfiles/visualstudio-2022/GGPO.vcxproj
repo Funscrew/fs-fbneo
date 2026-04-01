@@ -271,9 +271,10 @@
     <ClInclude Include="..\..\ggpo\src\lib\game_input.h" />
     <ClInclude Include="..\..\ggpo\src\lib\input_queue.h" />
     <ClInclude Include="..\..\ggpo\src\lib\log.h" />
+    <ClInclude Include="..\..\ggpo\src\lib\network\ReplayEndpoint.h" />
     <ClInclude Include="..\..\ggpo\src\lib\network\udp.h" />
     <ClInclude Include="..\..\ggpo\src\lib\network\udp_msg.h" />
-    <ClInclude Include="..\..\ggpo\src\lib\network\udp_proto.h" />
+    <ClInclude Include="..\..\ggpo\src\lib\network\GGPOEndpoint.h" />
     <ClInclude Include="..\..\ggpo\src\lib\platform_windows.h" />
     <ClInclude Include="..\..\ggpo\src\lib\poll.h" />
     <ClInclude Include="..\..\ggpo\src\lib\ring_buffer.h" />
@@ -290,8 +291,9 @@
     <ClCompile Include="..\..\ggpo\src\lib\input_queue.cpp" />
     <ClCompile Include="..\..\ggpo\src\lib\log.cpp" />
     <ClCompile Include="..\..\ggpo\src\lib\main.cpp" />
+    <ClCompile Include="..\..\ggpo\src\lib\network\ReplayEndpoint.cpp" />
     <ClCompile Include="..\..\ggpo\src\lib\network\udp.cpp" />
-    <ClCompile Include="..\..\ggpo\src\lib\network\udp_proto.cpp" />
+    <ClCompile Include="..\..\ggpo\src\lib\network\GGPOEndpoint.cpp" />
     <ClCompile Include="..\..\ggpo\src\lib\platform_windows.cpp" />
     <ClCompile Include="..\..\ggpo\src\lib\poll.cpp" />
     <ClCompile Include="..\..\ggpo\src\lib\sync.cpp" />

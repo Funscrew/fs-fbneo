@@ -5,7 +5,7 @@
  * in the LICENSE file.
  */
 
-#include "network/udp_proto.h"
+#include "network/GGPOEndpoint.h"
 
 static GGPOLogOptions _logOps;
 static bool _isLogActive = false;

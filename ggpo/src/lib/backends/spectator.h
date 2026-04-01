@@ -13,7 +13,7 @@
 #include "sync.h"
 #include "GGPOSession.h"
 #include "timesync.h"
-#include "network/udp_proto.h"
+#include "network/GGPOEndpoint.h"
 
 #define SPECTATOR_FRAME_BUFFER_SIZE    64
 
@@ -48,7 +48,7 @@ protected:
    GGPOSessionCallbacks  _callbacks;
    PollManager                  _pollMgr;
    Udp                   _udp;
-   UdpProtocol           _host;
+   GGPOEndpoint           _host;
    bool                  _synchronizing;
    int                   _input_size;
    int                   _num_players;

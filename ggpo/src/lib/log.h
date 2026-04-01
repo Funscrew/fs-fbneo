@@ -6,11 +6,11 @@
  */
 
 #include <string>
- // #include "network/udp_proto.h"
+ // #include "network/GGPOEndpoint.h"
 
- //struct UdpProtocol::Event;
- //class UdpProtocol;
- //struct UdpProtocol::Event;
+ //struct GGPOEndpoint::Event;
+ //class GGPOEndpoint;
+ //struct GGPOEndpoint::Event;
 
 struct UdpEvent;
 struct UdpMsg;

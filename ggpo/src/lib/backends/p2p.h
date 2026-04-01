@@ -13,7 +13,7 @@
 #include "sync.h"
 #include "GGPOSession.h"
 #include "timesync.h"
-#include "network/udp_proto.h"
+#include "network/GGPOEndpoint.h"
 #include <string>
 
  // TEMP:  Using assumed player and input sizes for now.
@@ -22,6 +22,8 @@ static const uint16 PLAYER_COUNT = 2;
 // NOTE: This is the input size that 3s uses.  We should not have a hard-coded way of doing this,
 // or we should actually probably just change the way we do the asserts....
 static const uint16 INPUT_SIZE = 5;
+
+class ReplayEndpoint;
 
 // ==========================================================================================================
 class Peer2PeerBackend : public GGPOSession, IPollSink, Udp::Callbacks {
@@ -32,7 +34,8 @@ public:
 
 public:
    virtual GGPOErrorCode DoPoll(int timeout);
-   virtual GGPOErrorCode AddPlayer(GGPOPlayer *player);
+   virtual GGPOErrorCode AddPlayer(GGPOPlayer* player);
+   virtual ReplayEndpoint* AddReplayAppliance(GGPOPlayer* player, int replayTimeout);
    virtual GGPOErrorCode AddLocalInput(uint8_t playerIndex, void *values, int totalSize);
    virtual GGPOErrorCode SyncInput(void *values, int totalSize, int playerCount);
    virtual GGPOErrorCode IncrementFrame(void);
@@ -49,7 +52,6 @@ public:
    virtual bool SendChat(char* text);
    virtual bool SendData(UINT8 command, void* data, UINT8 dataSize);
 
-public:
    virtual void OnMsg(sockaddr_in &from, UdpMsg *msg, int len);
 
    uint8_t Runahead() { return _runahead; }
@@ -71,12 +73,15 @@ protected:
    void PollSyncEvents(void);
    virtual void OnSyncEvent(Sync::Event& e) {}
 
+   GGPOEndpoint* LocalPlayer = nullptr;
+
 protected:
    GGPOSessionCallbacks  _callbacks;
    PollManager           _pollMgr;
    Sync                  _sync;
    Udp                   _udp;
-   UdpProtocol           *_endpoints;
+   GGPOEndpoint**        _endpoints;
+   uint8_t               _endpointCount = 0;
 
    int                   _input_size;
 
@@ -87,8 +92,6 @@ protected:
    int                   _disconnect_timeout;
    int                   _disconnect_notify_start;
    uint32_t              _client_version;
-   uint8_t               _endpointCount;
-   // bool                  _sendsReplayData = false;
 
    UdpMsg::connect_status _local_connect_status[UDP_MSG_MAX_PLAYERS];
 

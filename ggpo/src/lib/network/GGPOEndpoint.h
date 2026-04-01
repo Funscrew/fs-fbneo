@@ -67,7 +67,7 @@ struct UdpEvent {
 
 
 // REFACTOR: -> GGPOEndpoint
-class UdpProtocol : public IPollSink
+class GGPOEndpoint : public IPollSink
 {
 public:
   struct Stats {
@@ -84,8 +84,8 @@ public:
   void SetSessionId(int64_t value) { _sessionId = value; }
 
 public:
-  UdpProtocol();
-  virtual ~UdpProtocol();
+  GGPOEndpoint();
+  virtual ~GGPOEndpoint();
 
   void Init(Udp* udp, PollManager& p, uint8_t playerIndex_, char* ip, u_short port, UdpMsg::connect_status* status, uint32_t clientVersion, uint8_t delay_, uint8_t runahead_);
 
@@ -115,6 +115,8 @@ public:
   void SetDisconnectNotifyStart(int timeout);
 
   void SetPlayerName(char* playerName_);
+
+  inline uint8_t PlayerIndex() { return _playerIndex; }
 
 protected:
 
@@ -151,7 +153,7 @@ protected:
   bool OnInvalid(UdpMsg* msg, int len);
   bool OnSyncRequest(UdpMsg* msg, int len);
   bool OnSyncReply(UdpMsg* msg, int len);
-  bool OnInput(UdpMsg* msg, int len);
+  virtual bool OnInput(UdpMsg* msg, int len);
   bool OnInputAck(UdpMsg* msg, int len);
   bool OnQualityReport(UdpMsg* msg, int len);
   bool OnQualityReply(UdpMsg* msg, int len);

@@ -13,7 +13,7 @@
     <ClCompile Include="..\..\ggpo\src\lib\network\udp.cpp">
       <Filter>Network</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ggpo\src\lib\network\udp_proto.cpp">
+    <ClCompile Include="..\..\ggpo\src\lib\network\GGPOEndpoint.cpp">
       <Filter>Network</Filter>
     </ClCompile>
     <ClCompile Include="..\..\ggpo\src\lib\backends\p2p.cpp">
@@ -24,6 +24,9 @@
     </ClCompile>
     <ClCompile Include="..\..\ggpo\src\lib\backends\synctest.cpp">
       <Filter>Backends</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\ggpo\src\lib\network\ReplayEndpoint.cpp">
+      <Filter>Network</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -45,7 +48,7 @@
     <ClInclude Include="..\..\ggpo\src\lib\network\udp_msg.h">
       <Filter>Network</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\ggpo\src\lib\network\udp_proto.h">
+    <ClInclude Include="..\..\ggpo\src\lib\network\GGPOEndpoint.h">
       <Filter>Network</Filter>
     </ClInclude>
     <ClInclude Include="..\..\ggpo\src\lib\backends\GGPOSession.h">
@@ -62,6 +65,9 @@
     </ClInclude>
     <ClInclude Include="..\..\ggpo\src\include\ggponet.h">
       <Filter>Public</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\ggpo\src\lib\network\ReplayEndpoint.h">
+      <Filter>Network</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
