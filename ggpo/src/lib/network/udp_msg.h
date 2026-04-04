@@ -55,9 +55,6 @@ struct UdpMsg
       uint8_t     player_index;
       uint8_t     isReplayEndpoint;
       uint64_t    session_id;      // Used for replay ids.  This is the form of a unix timestamp in milliseconds!  For p2p connections, this can be zero, but is ignored.
-
-      //uint16      remote_magic;
-      //uint8       remote_endpoint;
     } sync_request;
 
     struct {
@@ -94,7 +91,8 @@ struct UdpMsg
     } input;
 
     struct {
-      int               ack_frame : 31;
+      int32_t           start_frame;      // What is the starting frame of the ACK?
+      uint16            frame_count;      // How many total frames were ACKed?
     } input_ack;
 
     struct {

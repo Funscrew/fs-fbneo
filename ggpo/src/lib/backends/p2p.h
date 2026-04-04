@@ -35,7 +35,7 @@ public:
 public:
    virtual GGPOErrorCode DoPoll(int timeout);
    virtual GGPOErrorCode AddPlayer(GGPOPlayer* player);
-   virtual ReplayEndpoint* AddReplayAppliance(GGPOPlayer* player, int replayTimeout);
+   virtual GGPOEndpoint* AddReplayAppliance(GGPOPlayer* player, int replayTimeout, uint64_t sessionId);
    virtual GGPOErrorCode AddLocalInput(uint8_t playerIndex, void *values, int totalSize);
    virtual GGPOErrorCode SyncInput(void *values, int totalSize, int playerCount);
    virtual GGPOErrorCode IncrementFrame(void);

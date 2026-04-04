@@ -51,7 +51,7 @@ Peer2PeerBackend::Peer2PeerBackend(GGPOSessionCallbacks* cb,
 
 
   inet_pton(AF_INET, remoteIp, &_RemoteAddr);
-  _RemotePort = htons(remotePort);
+  _RemotePort = htons(remotePort); 
 
 
   if (replayIp != nullptr) {
@@ -343,7 +343,7 @@ int Peer2PeerBackend::PollNPlayers(int current_frame)
 }
 
 // -------------------------------------------------------------------------------------------------------------------
-ReplayEndpoint* Peer2PeerBackend::AddReplayAppliance(GGPOPlayer* player, int replayTimeout) {
+GGPOEndpoint* Peer2PeerBackend::AddReplayAppliance(GGPOPlayer* player, int replayTimeout, uint64_t sessionId) {
 
   if (LocalPlayer == nullptr)
   {
@@ -361,11 +361,17 @@ ReplayEndpoint* Peer2PeerBackend::AddReplayAppliance(GGPOPlayer* player, int rep
   //  SessionId = this.SessionId,
   //};
 
-  auto replayClient = new ReplayEndpoint(&_udp, _pollMgr, LocalPlayer->PlayerIndex(), player->u.remote.ip_address, player->u.remote.port, _local_connect_status, _client_version);
+  auto replayEp = new GGPOEndpoint(); // = new ReplayEndpoint(&_udp, _pollMgr, LocalPlayer->PlayerIndex(), player->u.remote.ip_address, player->u.remote.port, _local_connect_status, _client_version);
+  replayEp->Init(&_udp, _pollMgr, LocalPlayer->PlayerIndex(), player->u.remote.ip_address, player->u.remote.port, _local_connect_status, _client_version, 0, 0);
+  replayEp->SetDisconnectTimeout(_disconnect_timeout);
+  replayEp->SetDisconnectNotifyStart(_disconnect_notify_start);
+  replayEp->SetPlayerName(_PlayerNames[_playerIndex]);
+  replayEp->SetSessionId(sessionId);
+  replayEp->Synchronize();
 
   // (this, epOps, this._local_connect_status);
   // this._endpoints.Add(replayClient);
-  return replayClient;
+  return replayEp;
 }
 
 
@@ -382,9 +388,9 @@ void Peer2PeerBackend::AddRemotePlayer(GGPOPlayer* player, uint64_t sessionId) /
   _endpoints[playerIndex]->Init(&_udp, _pollMgr, playerIndex, player->u.remote.ip_address, player->u.remote.port, _local_connect_status, _client_version, _delay, _runahead);
   _endpoints[playerIndex]->SetDisconnectTimeout(_disconnect_timeout);
   _endpoints[playerIndex]->SetDisconnectNotifyStart(_disconnect_notify_start);
-  _endpoints[playerIndex]->Synchronize();
   _endpoints[playerIndex]->SetPlayerName(_PlayerNames[_playerIndex]);
   _endpoints[playerIndex]->SetSessionId(sessionId);
+  _endpoints[playerIndex]->Synchronize();
 
   ++_endpointCount;
 }
@@ -409,7 +415,7 @@ GGPOErrorCode Peer2PeerBackend::AddPlayer(GGPOPlayer* player)
   }
   else if (player->type == GGPO_ENDPOINT_TYPE_REPLAY_APPLIANCE) {
     // OPTIONS
-    AddReplayAppliance(player, 5000);
+    AddReplayAppliance(player, 5000, _sessionId);
   }
 
   return GGPO_OK;

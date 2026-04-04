@@ -219,9 +219,10 @@ void GGPOEndpoint::SendPendingOutput()
 // ----------------------------------------------------------------------------------------------------------
 void GGPOEndpoint::SendInputAck()
 {
-  UdpMsg* msg = new UdpMsg(UdpMsg::InputAck);
-  msg->u.input_ack.ack_frame = _last_received_input.frame;
-  SendMsg(msg);
+  throw std::exception("This is not supported!");
+  //UdpMsg* msg = new UdpMsg(UdpMsg::InputAck);
+  //msg->u.input_ack.ack_frame = _last_received_input.frame;
+  //SendMsg(msg);
 }
 
 // ----------------------------------------------------------------------------------------------------------
@@ -506,6 +507,7 @@ bool GGPOEndpoint::OnSyncRequest(UdpMsg* msg, int len)
 
   // TODO: I need to send the delay + runahead here (in main)
   // So... if we are sending whatever data in the sync replies, should we include replay id here too?
+  // --> We should include whatever extra client/game specific data is needed for the specific game.
 
   strcpy_s(reply->u.sync_reply.playerName, _playerName);
 
@@ -679,12 +681,13 @@ bool GGPOEndpoint::OnInput(UdpMsg* msg, int len)
 
 
 // ----------------------------------------------------------------------------------------------------------
-// NOTE: This comes from the spectator client...
+// NOTE: This comes from the ReplayAppliance
 bool GGPOEndpoint::OnInputAck(UdpMsg* msg, int len)
 {
   // Get rid of our buffered input
+  int maxFrame = msg->u.input_ack.start_frame + (msg->u.input_ack.frame_count - 1);
   while (_pending_output.size() &&
-    _pending_output.front().frame < msg->u.input_ack.ack_frame) {
+    _pending_output.front().frame < maxFrame) {
     Utils::LogIt(CATEGORY_INPUT, "ACK: Throwing away pending output frame %d", _pending_output.front().frame);
     _last_acked_input = _pending_output.front();
     _pending_output.pop();

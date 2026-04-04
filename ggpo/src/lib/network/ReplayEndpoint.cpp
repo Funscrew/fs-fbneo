@@ -51,26 +51,28 @@ bool ReplayEndpoint::OnInput(UdpMsg* msg, int msgLen)
 // ----------------------------------------------------------------------------------------------------------
 void ReplayEndpoint::SendPendingAcks()
 {
+  return;
+  // int x = 10;
 
-  // GameInput last;
-  // NEW:
-  // We will collect all of the pending acks and send a message for each:
-  // In the future we can combine them all into a single message to ACK mulitple inputs.
-  if (_PendingAcks.size() > 0)
-  {
-    auto last = _last_acked_input;
-    auto front = _PendingAcks.front();
-    ASSERT(last.frame == -1 || last.frame + 1 == front.frame);
+  //// GameInput last;
+  //// NEW:
+  //// We will collect all of the pending acks and send a message for each:
+  //// In the future we can combine them all into a single message to ACK mulitple inputs.
+  //if (_PendingAcks.size() > 0)
+  //{
+  //  auto last = _last_acked_input;
+  //  auto front = _PendingAcks.front();
+  //  ASSERT(last.frame == -1 || last.frame + 1 == front.frame);
 
-    for (int i = 0; i < _PendingAcks.size(); i++)
-    {
-      auto ack = _PendingAcks.item(i);
+  //  for (int i = 0; i < _PendingAcks.size(); i++)
+  //  {
+  //    auto ack = _PendingAcks.item(i);
 
-      auto msg = new UdpMsg(UdpMsg::MsgType::InputAck);
-      msg->u.input_ack.ack_frame = ack.frame;
+  //    auto msg = new UdpMsg(UdpMsg::MsgType::InputAck);
+  //    msg->u.input_ack.ack_frame = ack.frame;
 
-      SendMsg(msg);
-    }
-  }
+  //    SendMsg(msg);
+  //  }
+  //}
 
 }

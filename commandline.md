@@ -17,7 +17,15 @@ fsfbneo.exe --rom sfiii3nr1 direct -l localhost:7000 -r 1.2.3.4:7001 --player 1 
 fsfbneo.exe --rom sfiii3nr1 direct -l localhost:7001 -r 5.6.7.8:7000 --player 1 --name "My Name" --delay 1
 ```
 
+### With Replay Appliance
+ReplayAppliance can be used to send game replay data to a remote server for playback later.
+Use --s <ip:port> to specify the address/port of the replay appliance.
+Use --i <replayid> to specify the replay id.  Each replay id should be unique.
 
+Here is an example command line of connecting to a ReplayAppliance:
+```
+--rom sfiii3nr1 direct -l 127.0.0.1:7000 -r 127.0.0.1:7001 --player 2 --name "Screwie" --delay 0 -s 127.0.0.1:7002 -i 12345
+```
 
 
 ## Debugging - Quickstart
