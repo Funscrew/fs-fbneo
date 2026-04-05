@@ -36,6 +36,7 @@ struct GGPOSession {
 
   char* GetPlayerName(UINT16 index) { return _PlayerNames[index]; }
 
+
   // Additions:
 protected:
   IN_ADDR _RemoteAddr;

@@ -71,7 +71,7 @@ GGPOEndpoint::~GGPOEndpoint()
 }
 
 // ----------------------------------------------------------------------------------------------------------
-void GGPOEndpoint::Init(Udp* udp,
+void GGPOEndpoint::Init(GGPOSession* client_, Udp* udp,
   PollManager& poll,
   uint8_t playerIndex_,
   char* ip,
@@ -81,6 +81,7 @@ void GGPOEndpoint::Init(Udp* udp,
   uint8_t delay_,
   uint8_t runahead_)
 {
+  _Client = client_;
   _udp = udp;
   _playerIndex = playerIndex_;
   _local_connect_status = status;
@@ -505,6 +506,8 @@ bool GGPOEndpoint::OnSyncRequest(UdpMsg* msg, int len)
   reply->u.sync_reply.delay = _delay;
   reply->u.sync_reply.runahead = _runahead;
 
+  reply->u.sync_reply.is_ready = this->_Client->IsReplayApplianceReady();
+
   // TODO: I need to send the delay + runahead here (in main)
   // So... if we are sending whatever data in the sync replies, should we include replay id here too?
   // --> We should include whatever extra client/game specific data is needed for the specific game.
@@ -757,6 +760,7 @@ int GGPOEndpoint::RecommendFrameDelay()
   // XXX: require idle input should be a configuration parameter
   return _timesync.recommend_frame_wait_duration(false);
 }
+
 
 
 // ----------------------------------------------------------------------------------------------------------

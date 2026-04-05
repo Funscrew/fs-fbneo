@@ -64,6 +64,8 @@ struct UdpMsg
       uint8_t isReplayEndpoint;
       uint8_t delay;                    // current delay setting.
       uint8_t runahead;                 // current runahead setting.
+      uint8_t is_ready;                 // readiness flag.  This is used when we are also trying to sync to a replay endpoint.
+
       char playerName[MAX_NAME_SIZE];   /* The name of the player we synced to: */
     } sync_reply;
 

@@ -19,9 +19,6 @@
     <ClCompile Include="..\..\ggpo\src\lib\backends\p2p.cpp">
       <Filter>Backends</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ggpo\src\lib\backends\spectator.cpp">
-      <Filter>Backends</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\ggpo\src\lib\backends\synctest.cpp">
       <Filter>Backends</Filter>
     </ClCompile>
@@ -55,9 +52,6 @@
       <Filter>Backends</Filter>
     </ClInclude>
     <ClInclude Include="..\..\ggpo\src\lib\backends\p2p.h">
-      <Filter>Backends</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\ggpo\src\lib\backends\spectator.h">
       <Filter>Backends</Filter>
     </ClInclude>
     <ClInclude Include="..\..\ggpo\src\lib\backends\synctest.h">

@@ -2,10 +2,10 @@
 
 
 // --------------------------------------------------------------------------------------------------------------------------  
-ReplayEndpoint::ReplayEndpoint(Udp* udp, PollManager& p, uint8_t playerIndex_, char* ip, u_short port, UdpMsg::connect_status* status, uint32_t clientVersion)
+ReplayEndpoint::ReplayEndpoint(GGPOSession* client_, Udp* udp, PollManager& p, uint8_t playerIndex_, char* ip, u_short port, UdpMsg::connect_status* status, uint32_t clientVersion)
   : GGPOEndpoint()
 {
-  Init(udp, p, playerIndex_, ip, port, status, clientVersion, 0, 0);
+  Init(client_, udp, p, playerIndex_, ip, port, status, clientVersion, 0, 0);
   // this.Appliance = this.Client as ReplayAppliance;
 }
 

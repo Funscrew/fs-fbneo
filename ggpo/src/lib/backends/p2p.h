@@ -56,6 +56,9 @@ public:
 
    uint8_t Runahead() { return _runahead; }
 
+   // This is used to help with syncing clients and making sure that everything is ready to go!
+   virtual bool IsReplayApplianceReady();
+
 protected:
    void DisconnectPlayer(uint8_t playerIndex, int syncto);
    void PollUdpProtocolEvents(void);

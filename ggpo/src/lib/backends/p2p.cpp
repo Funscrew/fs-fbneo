@@ -362,7 +362,7 @@ GGPOEndpoint* Peer2PeerBackend::AddReplayAppliance(GGPOPlayer* player, int repla
   //};
 
   auto replayEp = new GGPOEndpoint(); // = new ReplayEndpoint(&_udp, _pollMgr, LocalPlayer->PlayerIndex(), player->u.remote.ip_address, player->u.remote.port, _local_connect_status, _client_version);
-  replayEp->Init(&_udp, _pollMgr, LocalPlayer->PlayerIndex(), player->u.remote.ip_address, player->u.remote.port, _local_connect_status, _client_version, 0, 0);
+  replayEp->Init(this, &_udp, _pollMgr, LocalPlayer->PlayerIndex(), player->u.remote.ip_address, player->u.remote.port, _local_connect_status, _client_version, 0, 0);
   replayEp->SetDisconnectTimeout(_disconnect_timeout);
   replayEp->SetDisconnectNotifyStart(_disconnect_notify_start);
   replayEp->SetPlayerName(_PlayerNames[_playerIndex]);
@@ -385,7 +385,7 @@ void Peer2PeerBackend::AddRemotePlayer(GGPOPlayer* player, uint64_t sessionId) /
   _synchronizing = true;
 
   _endpoints[playerIndex] = new GGPOEndpoint();
-  _endpoints[playerIndex]->Init(&_udp, _pollMgr, playerIndex, player->u.remote.ip_address, player->u.remote.port, _local_connect_status, _client_version, _delay, _runahead);
+  _endpoints[playerIndex]->Init(this, &_udp, _pollMgr, playerIndex, player->u.remote.ip_address, player->u.remote.port, _local_connect_status, _client_version, _delay, _runahead);
   _endpoints[playerIndex]->SetDisconnectTimeout(_disconnect_timeout);
   _endpoints[playerIndex]->SetDisconnectNotifyStart(_disconnect_notify_start);
   _endpoints[playerIndex]->SetPlayerName(_PlayerNames[_playerIndex]);
@@ -473,6 +473,18 @@ GGPOErrorCode Peer2PeerBackend::SyncInput(void* values, int isize, int playerCou
   _sync.SynchronizeInputs(values, isize * playerCount);
 
   return GGPO_OK;
+}
+
+// ----------------------------------------------------------------------------------------------------------
+bool Peer2PeerBackend::IsReplayApplianceReady()
+{
+  // If we are NOT in a replay session, or if that connection failed, then we will indicate that
+  // everything is all good.
+  if (_sessionId == 0) { return true; }
+
+  // return _ReplayApplianceSynced
+
+  return false;
 }
 
 // ----------------------------------------------------------------------------------------------------------

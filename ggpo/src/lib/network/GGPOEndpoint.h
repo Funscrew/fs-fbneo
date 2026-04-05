@@ -87,7 +87,7 @@ public:
   GGPOEndpoint();
   virtual ~GGPOEndpoint();
 
-  void Init(Udp* udp, PollManager& p, uint8_t playerIndex_, char* ip, u_short port, UdpMsg::connect_status* status, uint32_t clientVersion, uint8_t delay_, uint8_t runahead_);
+  void Init(GGPOSession* client_, Udp* udp, PollManager& p, uint8_t playerIndex_, char* ip, u_short port, UdpMsg::connect_status* status, uint32_t clientVersion, uint8_t delay_, uint8_t runahead_);
 
   void Synchronize();
   bool GetPeerConnectStatus(int id, int* frame);
@@ -119,6 +119,8 @@ public:
   inline uint8_t PlayerIndex() { return _playerIndex; }
 
 protected:
+
+  GGPOSession* _Client = nullptr;
 
   enum State {
     Syncing,
