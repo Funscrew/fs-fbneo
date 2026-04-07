@@ -82,6 +82,8 @@ void Udp::SendTo(char* buffer, int len, int flags, struct sockaddr* dst, int des
   Utils::LogIt(CATEGORY_UDP, "sent %d to %s:%d", len, inet_ntop(AF_INET, (void*)&to->sin_addr, dst_ip, ARRAY_SIZE(dst_ip)), ntohs(to->sin_port), res);
 }
 
+int pollCount = 0;
+
 // ----------------------------------------------------------------------------------------------------------
 bool Udp::OnLoopPoll(void* cookie)
 {
@@ -107,6 +109,7 @@ bool Udp::OnLoopPoll(void* cookie)
       Utils::LogIt(CATEGORY_UDP, "recvfrom returned (len:%d  from:%s:%d).", len, inet_ntop(AF_INET, (void*)&recv_addr.sin_addr, src_ip, ARRAY_SIZE(src_ip)), ntohs(recv_addr.sin_port));
       UdpMsg* msg = (UdpMsg*)recv_buf;
       _callbacks->OnMsg(recv_addr, msg, len);
+      ++pollCount;
     }
   }
   return true;

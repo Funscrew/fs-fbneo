@@ -109,7 +109,8 @@ bool PollManager::Pump(int timeout)
 		finished = !cb.sink->OnMsgPoll(cb.cookie) || finished;
 	}
 
-	for (i = 0; i < _loop_sinks.size(); i++) {
+  int count = _loop_sinks.size();
+	for (i = 0; i < count; i++) {
 		PollSinkCallback& cb = _loop_sinks[i];
 		finished = !cb.sink->OnLoopPoll(cb.cookie) || finished;
 	}

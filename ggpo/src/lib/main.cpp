@@ -7,8 +7,6 @@
 
 #include "types.h"
 #include "backends/p2p.h"
-#include "backends/synctest.h"
-#include "backends/spectator.h"
 #include "ggponet.h"
 
 BOOL WINAPI

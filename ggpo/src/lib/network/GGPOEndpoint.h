@@ -79,9 +79,14 @@ public:
   };
 
 
+  private:
+  bool _IsReplayClient = false;
+
 public:
   virtual bool OnLoopPoll(void* cookie);
   void SetSessionId(int64_t value) { _sessionId = value; }
+  void SetIsReplayClient(bool value) { _IsReplayClient = value; }
+  inline bool IsReplayClient() { return _IsReplayClient; }
 
 public:
   GGPOEndpoint();
@@ -117,6 +122,7 @@ public:
   void SetPlayerName(char* playerName_);
 
   inline uint8_t PlayerIndex() { return _playerIndex; }
+  inline void PlayerIndex(uint8_t value) { _playerIndex = value; }
 
 protected:
 

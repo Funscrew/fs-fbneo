@@ -19,9 +19,6 @@
     <ClCompile Include="..\..\ggpo\src\lib\backends\p2p.cpp">
       <Filter>Backends</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ggpo\src\lib\backends\synctest.cpp">
-      <Filter>Backends</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\ggpo\src\lib\network\ReplayEndpoint.cpp">
       <Filter>Network</Filter>
     </ClCompile>
@@ -52,9 +49,6 @@
       <Filter>Backends</Filter>
     </ClInclude>
     <ClInclude Include="..\..\ggpo\src\lib\backends\p2p.h">
-      <Filter>Backends</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\ggpo\src\lib\backends\synctest.h">
       <Filter>Backends</Filter>
     </ClInclude>
     <ClInclude Include="..\..\ggpo\src\include\ggponet.h">

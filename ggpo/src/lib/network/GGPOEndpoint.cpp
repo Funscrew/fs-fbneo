@@ -506,7 +506,7 @@ bool GGPOEndpoint::OnSyncRequest(UdpMsg* msg, int len)
   reply->u.sync_reply.delay = _delay;
   reply->u.sync_reply.runahead = _runahead;
 
-  reply->u.sync_reply.is_ready = this->_Client->IsReplayApplianceReady();
+  // reply->u.sync_reply.is_ready = this->_Client->IsReplayApplianceReady();
 
   // TODO: I need to send the delay + runahead here (in main)
   // So... if we are sending whatever data in the sync replies, should we include replay id here too?
@@ -688,14 +688,31 @@ bool GGPOEndpoint::OnInput(UdpMsg* msg, int len)
 bool GGPOEndpoint::OnInputAck(UdpMsg* msg, int len)
 {
   // Get rid of our buffered input
-  int maxFrame = msg->u.input_ack.start_frame + (msg->u.input_ack.frame_count - 1);
-  while (_pending_output.size() &&
-    _pending_output.front().frame < maxFrame) {
+  int start = msg->u.input_ack.start_frame;
+  int count = msg->u.input_ack.frame_count;
+  int max_frame = start + (count - 1);
+  while (_pending_output.size() != 0 && _pending_output.front().frame < max_frame)
+  {
     Utils::LogIt(CATEGORY_INPUT, "ACK: Throwing away pending output frame %d", _pending_output.front().frame);
     _last_acked_input = _pending_output.front();
+    _last_received_input = _pending_output.front();
+
     _pending_output.pop();
   }
   return true;
+
+
+
+  //// LEGACY:
+  //// Get rid of our buffered input
+  //int maxFrame = msg->u.input_ack.start_frame + (msg->u.input_ack.frame_count - 1);
+  //while (_pending_output.size() &&
+  //  _pending_output.front().frame < maxFrame) {
+  //  Utils::LogIt(CATEGORY_INPUT, "ACK: Throwing away pending output frame %d", _pending_output.front().frame);
+  //  _last_acked_input = _pending_output.front();
+  //  _pending_output.pop();
+  //}
+  //return true;
 }
 
 // ----------------------------------------------------------------------------------------------------------

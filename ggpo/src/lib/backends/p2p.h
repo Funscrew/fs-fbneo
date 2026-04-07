@@ -16,6 +16,8 @@
 #include "network/GGPOEndpoint.h"
 #include <string>
 
+static const int MAX_EP = 4;
+
  // TEMP:  Using assumed player and input sizes for now.
 static const uint16 PLAYER_COUNT = 2;
 
@@ -56,9 +58,6 @@ public:
 
    uint8_t Runahead() { return _runahead; }
 
-   // This is used to help with syncing clients and making sure that everything is ready to go!
-   virtual bool IsReplayApplianceReady();
-
 protected:
    void DisconnectPlayer(uint8_t playerIndex, int syncto);
    void PollUdpProtocolEvents(void);
@@ -76,20 +75,25 @@ protected:
    void PollSyncEvents(void);
    virtual void OnSyncEvent(Sync::Event& e) {}
 
+   GGPOEndpoint* _Players[GGPO_MAX_PLAYERS];
+   int _PlayerCount = 0;
+
    GGPOEndpoint* LocalPlayer = nullptr;
+   //GGPOEndpoint* ReplayAppliance = nullptr;
+   //GGPOEndpoint* RemotePlayer = nullptr;
 
 protected:
    GGPOSessionCallbacks  _callbacks;
    PollManager           _pollMgr;
    Sync                  _sync;
    Udp                   _udp;
-   GGPOEndpoint**        _endpoints;
+   GGPOEndpoint*         _endpoints[MAX_EP];
    uint8_t               _endpointCount = 0;
 
    int                   _input_size;
 
    bool                  _synchronizing;
-   uint8_t               _num_players;
+   uint8_t               _num_players;          // OBSOLETE: This will be removed.
    int                   _next_recommended_sleep;
 
    int                   _disconnect_timeout;
