@@ -56,6 +56,7 @@ struct UdpEvent {
 
     struct {
       uint8_t code;
+      int frame;
       uint8_t dataSize;
       char		data[MAX_GGPO_DATA_SIZE];
     } chat;   // REFACTOR: Rename to 'data' or something like that...

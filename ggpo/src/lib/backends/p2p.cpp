@@ -754,3 +754,8 @@ void Peer2PeerBackend::CheckInitialSync()
     _synchronizing = false;
   }
 }
+
+// ----------------------------------------------------------------------------------------------------------
+int Peer2PeerBackend::CurrentFrame() {
+  return _sync.GetFrameCount();
+}

@@ -8,6 +8,7 @@
 #include "types.h"
 #include "GGPOEndpoint.h"
 #include "bitvector.h"
+#include "backends/GGPOSession.h"
 
  // OPTIONS: These should all be configurable at some point....
 static const int SYNC_PACKETS_COUNT = 5;
@@ -106,6 +107,7 @@ void GGPOEndpoint::SendData(uint8_t code, void* data, uint8_t dataSize) {
     UdpMsg* msg = new UdpMsg(UdpMsg::Datagram);
 
     msg->u.datagram.code = code;
+    msg->u.datagram.frame = _Client->CurrentFrame();
     msg->u.datagram.dataSize = dataSize;
     if (data != nullptr) {
       memcpy_s(msg->u.datagram.data, MAX_GGPO_DATA_SIZE, data, dataSize);
@@ -331,9 +333,7 @@ void GGPOEndpoint::DisconnectEx(int onFrame)
   {
     UdpMsg* msg = new UdpMsg(UdpMsg::MsgType::Datagram);
     msg->u.datagram.code = DATAGRAM_CODE_DISCONNECT;
-
-    *(int*)msg->u.datagram.data = onFrame;
-    msg->u.datagram.dataSize = sizeof(int);
+    msg->u.datagram.frame = onFrame;
 
     SendMsg(msg);
   }
@@ -569,6 +569,7 @@ bool GGPOEndpoint::OnData(UdpMsg* msg, int dataSize)
   auto dataLen = (uint8_t)(dataSize - sizeof(UdpMsg::header));
 
   evt.u.chat.code = msg->u.datagram.code;
+  evt.u.chat.frame = _Client->CurrentFrame();
   evt.u.chat.dataSize = msg->u.datagram.dataSize;
   memcpy_s(evt.u.chat.data, MAX_GGPO_DATA_SIZE, msg->u.datagram.data, dataLen);
 
@@ -756,7 +757,7 @@ void GGPOEndpoint::GetNetworkStats(struct GGPONetworkStats* s)
 void GGPOEndpoint::SetLocalFrameNumber(int localFrame)
 {
   /*
-   * Estimate which frame the other guy is one by looking at the
+   * Estimate which frame the other guy is on by looking at the
    * last frame they gave us plus some delta for the one-way packet
    * trip time.
    */

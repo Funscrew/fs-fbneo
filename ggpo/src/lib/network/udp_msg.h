@@ -99,6 +99,7 @@ struct UdpMsg
 
     struct {
       uint8_t code;
+      int frame;                          // The frame # when the data was sent.  Useful for playbacks or whatever....
       uint8_t dataSize;
       char data[MAX_GGPO_DATA_SIZE];
     } datagram;

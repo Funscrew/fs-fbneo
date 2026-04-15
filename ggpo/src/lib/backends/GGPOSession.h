@@ -36,6 +36,8 @@ struct GGPOSession {
 
   char* GetPlayerName(UINT16 index) { return _PlayerNames[index]; }
 
+  virtual int CurrentFrame() { return -1; }
+
 
   // Additions:
 protected:

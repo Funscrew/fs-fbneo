@@ -206,6 +206,7 @@ extern "C" {
       // NOTE: I expect to change this definition at some point....
       struct {
         uint8_t code;
+        int frame;
         uint8_t dataSize;
         char data[MAX_GGPO_DATA_SIZE];
       } datagram;

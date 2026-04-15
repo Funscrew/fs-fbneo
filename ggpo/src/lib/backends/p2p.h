@@ -18,7 +18,7 @@
 
 static const int MAX_EP = 4;
 
- // TEMP:  Using assumed player and input sizes for now.
+// TEMP:  Using assumed player and input sizes for now.
 static const uint16 PLAYER_COUNT = 2;
 
 // NOTE: This is the input size that 3s uses.  We should not have a hard-coded way of doing this,
@@ -30,81 +30,82 @@ class ReplayEndpoint;
 // ==========================================================================================================
 class Peer2PeerBackend : public GGPOSession, IPollSink, Udp::Callbacks {
 public:
-   Peer2PeerBackend(GGPOSessionCallbacks *cb, const char *gamename, uint16 localport, char* remoteIp, uint16 remotePort, uint8_t playerIndex, std::string playerName, uint32_t client_version, char* replayIp, uint16 replayPort, uint64_t sessionId_);
-   virtual ~Peer2PeerBackend();
+  Peer2PeerBackend(GGPOSessionCallbacks* cb, const char* gamename, uint16 localport, char* remoteIp, uint16 remotePort, uint8_t playerIndex, std::string playerName, uint32_t client_version, char* replayIp, uint16 replayPort, uint64_t sessionId_);
+  virtual ~Peer2PeerBackend();
 
 
 public:
-   virtual GGPOErrorCode DoPoll(int timeout);
-   virtual GGPOErrorCode AddPlayer(GGPOPlayer* player);
-   virtual GGPOEndpoint* AddReplayAppliance(GGPOPlayer* player, int replayTimeout, uint64_t sessionId);
-   virtual GGPOErrorCode AddLocalInput(uint8_t playerIndex, void *values, int totalSize);
-   virtual GGPOErrorCode SyncInput(void *values, int totalSize, int playerCount);
-   virtual GGPOErrorCode IncrementFrame(void);
-   virtual GGPOErrorCode DisconnectPlayer(uint8_t playerIndex);
-   virtual void DisconnectEx();
-   virtual bool GetNetworkStats(GGPONetworkStats *stats, uint8_t playerIndex);
+  virtual GGPOErrorCode DoPoll(int timeout);
+  virtual GGPOErrorCode AddPlayer(GGPOPlayer* player);
+  virtual GGPOEndpoint* AddReplayAppliance(GGPOPlayer* player, int replayTimeout, uint64_t sessionId);
+  virtual GGPOErrorCode AddLocalInput(uint8_t playerIndex, void* values, int totalSize);
+  virtual GGPOErrorCode SyncInput(void* values, int totalSize, int playerCount);
+  virtual GGPOErrorCode IncrementFrame(void);
+  virtual GGPOErrorCode DisconnectPlayer(uint8_t playerIndex);
+  virtual void DisconnectEx();
+  virtual bool GetNetworkStats(GGPONetworkStats* stats, uint8_t playerIndex);
 
-   // HACK: I am just stuffing the runahead data here for the sake of convenience.
-   // Future iterations will put it somewhere else that is more appropriate.
-   virtual void SetFrameDelay(int delay, int runahead);
-   virtual GGPOErrorCode SetDisconnectTimeout(int timeout);
-   virtual GGPOErrorCode SetDisconnectNotifyStart(int timeout);
+  // HACK: I am just stuffing the runahead data here for the sake of convenience.
+  // Future iterations will put it somewhere else that is more appropriate.
+  virtual void SetFrameDelay(int delay, int runahead);
+  virtual GGPOErrorCode SetDisconnectTimeout(int timeout);
+  virtual GGPOErrorCode SetDisconnectNotifyStart(int timeout);
 
-   virtual bool SendChat(char* text);
-   virtual bool SendData(UINT8 command, void* data, UINT8 dataSize);
+  virtual bool SendChat(char* text);
+  virtual bool SendData(UINT8 command, void* data, UINT8 dataSize);
 
-   virtual void OnMsg(sockaddr_in &from, UdpMsg *msg, int len);
+  virtual void OnMsg(sockaddr_in& from, UdpMsg* msg, int len);
+  uint8_t Runahead() { return _runahead; }
 
-   uint8_t Runahead() { return _runahead; }
-
-protected:
-   void DisconnectPlayer(uint8_t playerIndex, int syncto);
-   void PollUdpProtocolEvents(void);
-   void CheckInitialSync(void);
-   int Poll2Players(int current_frame);
-   int PollNPlayers(int current_frame);
-   
-   // void AddReplayEndpoint(char* remoteIp, uint16 remotePort);
-   // REFACTOR: -> 'AddRemoteEndpoint'
-   void AddRemotePlayer( GGPOPlayer* player, uint64_t sessionId);
-   virtual void OnUdpProtocolEvent(UdpEvent &e, uint8_t playerIndex);
-   virtual void OnUdpProtocolPeerEvent(UdpEvent &e, uint8_t playerIndex);
-
-   // OBSOLETE:  These functions don't actually do anything....
-   void PollSyncEvents(void);
-   virtual void OnSyncEvent(Sync::Event& e) {}
-
-   GGPOEndpoint* _Players[GGPO_MAX_PLAYERS];
-   int _PlayerCount = 0;
-
-   GGPOEndpoint* LocalPlayer = nullptr;
-   //GGPOEndpoint* ReplayAppliance = nullptr;
-   //GGPOEndpoint* RemotePlayer = nullptr;
+  virtual int CurrentFrame() override;
 
 protected:
-   GGPOSessionCallbacks  _callbacks;
-   PollManager           _pollMgr;
-   Sync                  _sync;
-   Udp                   _udp;
-   GGPOEndpoint*         _endpoints[MAX_EP];
-   uint8_t               _endpointCount = 0;
+  void DisconnectPlayer(uint8_t playerIndex, int syncto);
+  void PollUdpProtocolEvents(void);
+  void CheckInitialSync(void);
+  int Poll2Players(int current_frame);
+  int PollNPlayers(int current_frame);
 
-   int                   _input_size;
+  // void AddReplayEndpoint(char* remoteIp, uint16 remotePort);
+  // REFACTOR: -> 'AddRemoteEndpoint'
+  void AddRemotePlayer(GGPOPlayer* player, uint64_t sessionId);
+  virtual void OnUdpProtocolEvent(UdpEvent& e, uint8_t playerIndex);
+  virtual void OnUdpProtocolPeerEvent(UdpEvent& e, uint8_t playerIndex);
 
-   bool                  _synchronizing;
-   uint8_t               _num_players;          // OBSOLETE: This will be removed.
-   int                   _next_recommended_sleep;
+  // OBSOLETE:  These functions don't actually do anything....
+  void PollSyncEvents(void);
+  virtual void OnSyncEvent(Sync::Event& e) {}
 
-   int                   _disconnect_timeout;
-   int                   _disconnect_notify_start;
-   uint32_t              _client_version;
+  GGPOEndpoint* _Players[GGPO_MAX_PLAYERS];
+  int _PlayerCount = 0;
 
-   UdpMsg::connect_status _local_connect_status[UDP_MSG_MAX_PLAYERS];
+  GGPOEndpoint* LocalPlayer = nullptr;
+  //GGPOEndpoint* ReplayAppliance = nullptr;
+  //GGPOEndpoint* RemotePlayer = nullptr;
 
-   uint64_t                 _sessionId;
-   uint8_t _runahead = 0;
-   uint8_t _delay = 0;
+protected:
+  GGPOSessionCallbacks  _callbacks;
+  PollManager           _pollMgr;
+  Sync                  _sync;
+  Udp                   _udp;
+  GGPOEndpoint* _endpoints[MAX_EP];
+  uint8_t               _endpointCount = 0;
+
+  int                   _input_size;
+
+  bool                  _synchronizing;
+  uint8_t               _num_players;          // OBSOLETE: This will be removed.
+  int                   _next_recommended_sleep;
+
+  int                   _disconnect_timeout;
+  int                   _disconnect_notify_start;
+  uint32_t              _client_version;
+
+  UdpMsg::connect_status _local_connect_status[UDP_MSG_MAX_PLAYERS];
+
+  uint64_t                 _sessionId;
+  uint8_t _runahead = 0;
+  uint8_t _delay = 0;
 };
 
 #endif
