@@ -59,7 +59,7 @@ struct UdpEvent {
       int frame;
       uint8_t dataSize;
       char		data[MAX_GGPO_DATA_SIZE];
-    } chat;   // REFACTOR: Rename to 'data' or something like that...
+    } datagram;   // REFACTOR: Rename to 'data' or something like that...
 
   } u;			// REFACTOR: Rename this to something descriptive.
 
@@ -80,14 +80,14 @@ public:
   };
 
 
-  private:
+private:
   bool _IsReplayClient = false;
 
 public:
   virtual bool OnLoopPoll(void* cookie);
   void SetSessionId(int64_t value) { _sessionId = value; }
   void SetIsReplayClient(bool value) { _IsReplayClient = value; }
-  inline bool IsReplayClient() { return _IsReplayClient; }
+  inline bool IsReplayClient() const { return _IsReplayClient; }
 
 public:
   GGPOEndpoint();
@@ -109,7 +109,7 @@ public:
 
   // [OBSOLETE]  --> This functionality will be replaced with 'DisconnectEx' in the future.
   void Disconnect();
-  void DisconnectEx(int onFrame);
+  void DisconnectEx(int onFrame, bool sendDisconnectMessage);
 
   void GetNetworkStats(struct GGPONetworkStats* stats);
   bool GetEvent(UdpEvent& e);
@@ -122,10 +122,11 @@ public:
 
   void SetPlayerName(char* playerName_);
 
-  inline uint8_t PlayerIndex() { return _playerIndex; }
+  inline uint8_t PlayerIndex() const { return _playerIndex; }
   inline void PlayerIndex(uint8_t value) { _playerIndex = value; }
 
 protected:
+  
 
   GGPOSession* _Client = nullptr;
 

@@ -99,8 +99,8 @@ struct UdpMsg
 
     struct {
       uint8_t code;
-      int frame;                          // The frame # when the data was sent.  Useful for playbacks or whatever....
       uint8_t dataSize;
+      int frame;                          // The frame # when the data was sent.  Useful for playbacks or whatever....
       char data[MAX_GGPO_DATA_SIZE];
     } datagram;
 
@@ -147,6 +147,7 @@ public:
 
     case Datagram:
       size = sizeof(uint8_t) * 2;     // code + dataSize
+      size += sizeof(int);            // frame
       size += u.datagram.dataSize;
 
       // size = strnlen_s(u.chat.data, MAX_GGPO_DATA_SIZE) + 1;

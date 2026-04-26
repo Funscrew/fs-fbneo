@@ -69,8 +69,8 @@ protected:
   // void AddReplayEndpoint(char* remoteIp, uint16 remotePort);
   // REFACTOR: -> 'AddRemoteEndpoint'
   void AddRemotePlayer(GGPOPlayer* player, uint64_t sessionId);
-  virtual void OnUdpProtocolEvent(UdpEvent& e, uint8_t playerIndex);
-  virtual void OnUdpProtocolPeerEvent(UdpEvent& e, uint8_t playerIndex);
+  virtual void OnUdpProtocolEvent(UdpEvent& e, const GGPOEndpoint* endpoint);
+  virtual void OnUdpProtocolPeerEvent(UdpEvent& e, GGPOEndpoint* endpoint);
 
   // OBSOLETE:  These functions don't actually do anything....
   void PollSyncEvents(void);

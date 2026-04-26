@@ -496,19 +496,24 @@ void Peer2PeerBackend::PollUdpProtocolEvents(void)
 {
   UdpEvent evt;
   for (uint8_t i = 0; i < _endpointCount; i++) {
+    auto ep = _endpoints[i];
     while (_endpoints[i]->GetEvent(evt)) {
-      OnUdpProtocolPeerEvent(evt, i);
+      OnUdpProtocolPeerEvent(evt, ep);
     }
   }
 }
 
 // ----------------------------------------------------------------------------------------------------------
-void Peer2PeerBackend::OnUdpProtocolPeerEvent(UdpEvent& evt, uint8_t playerIndex)
+void Peer2PeerBackend::OnUdpProtocolPeerEvent(UdpEvent& evt,  GGPOEndpoint* endpoint)
 {
-  OnUdpProtocolEvent(evt, playerIndex);
+  // TODO: Handle disconnect datagrams.
+  // --> NOTE: We will support a real disconnect type message in a future version of the protocol.
+  auto playerIndex = endpoint->PlayerIndex();
+
+  OnUdpProtocolEvent(evt, endpoint);
   switch (evt.type) {
   case UdpEvent::Input:
-    if (_endpoints[playerIndex]->IsReplayClient()) {
+    if (endpoint->IsReplayClient()) {
       break;
     }
 
@@ -527,6 +532,18 @@ void Peer2PeerBackend::OnUdpProtocolPeerEvent(UdpEvent& evt, uint8_t playerIndex
     }
     break;
 
+    case UdpEvent::Datagram:
+      if (evt.u.datagram.code == DATAGRAM_CODE_DISCONNECT) { 
+        // The given endpoint is indicating that it wants to disconnect.
+        // For now, I think that we will only care about the case where it is a replay appliance...
+        if (endpoint->IsReplayClient()) { 
+
+          // Effectively disconnect the endpoint so it no longer sends / receives data...
+          endpoint->DisconnectEx(0, false);
+        }
+      }
+      break;
+
   case UdpEvent::Disconnected:
     DisconnectPlayer(playerIndex);
     break;
@@ -535,14 +552,14 @@ void Peer2PeerBackend::OnUdpProtocolPeerEvent(UdpEvent& evt, uint8_t playerIndex
 }
 
 // ----------------------------------------------------------------------------------------------------------
-void Peer2PeerBackend::OnUdpProtocolEvent(UdpEvent& evt, uint8_t playerIndex)
+void Peer2PeerBackend::OnUdpProtocolEvent(UdpEvent& evt, const GGPOEndpoint* endpoint)
 {
   GGPOEvent info;
-  // info.player_index  = evt.u.connected.player_index;
+  auto playerIndex = endpoint->PlayerIndex();
 
   switch (evt.type) {
   case UdpEvent::Connected:
-    if (_endpoints[playerIndex]->IsReplayClient()) {
+    if (endpoint->IsReplayClient()) {
       break;
     }
 
@@ -595,7 +612,7 @@ void Peer2PeerBackend::OnUdpProtocolEvent(UdpEvent& evt, uint8_t playerIndex)
 
     info.event_code = GGPO_EVENTCODE_DATAGRAM;
     info.player_index = (uint8_t)playerIndex;
-    memcpy_s(info.u.datagram.data, MAX_GGPO_DATA_SIZE, evt.u.chat.data, evt.u.chat.dataSize);
+    memcpy_s(info.u.datagram.data, MAX_GGPO_DATA_SIZE, evt.u.datagram.data, evt.u.datagram.dataSize);
 
     break;
 
@@ -644,7 +661,7 @@ void Peer2PeerBackend::DisconnectEx() {
   for (size_t i = 0; i < _endpointCount; i++)
   {
     if (i == _playerIndex) { continue; }
-    _endpoints[i]->DisconnectEx(curFrame);
+    _endpoints[i]->DisconnectEx(curFrame, true);
   }
 }
 

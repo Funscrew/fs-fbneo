@@ -323,29 +323,41 @@ bool GGPOEndpoint::OnLoopPoll(void* cookie)
 }
 
 // ------------------------------------------------------------------------------------------------
-void GGPOEndpoint::DisconnectEx(int onFrame)
+void GGPOEndpoint::DisconnectEx(int onFrame, bool sendDisconnectMessage = true)
 {
   if (!_udp) { return; }
 
   // We send out duplicate message packets in case of packet loss.
-  const int MSG_COUNT = 3;
-  for (size_t i = 0; i < MSG_COUNT; i++)
-  {
-    UdpMsg* msg = new UdpMsg(UdpMsg::MsgType::Datagram);
-    msg->u.datagram.code = DATAGRAM_CODE_DISCONNECT;
-    msg->u.datagram.frame = onFrame;
+  if (sendDisconnectMessage) {
+    const int MSG_COUNT = 3;
+    for (size_t i = 0; i < MSG_COUNT; i++)
+    {
+      UdpMsg* msg = new UdpMsg(UdpMsg::MsgType::Datagram);
+      msg->u.datagram.code = DATAGRAM_CODE_DISCONNECT;
+      msg->u.datagram.frame = onFrame;
+      msg->u.datagram.dataSize = 0;
 
-    SendMsg(msg);
+      SendMsg(msg);
+    }
   }
 
   _current_state = Disconnected;
   _shutdown_timeout = Platform::GetCurrentTimeMS() + UDP_SHUTDOWN_TIMER;
+
+  // Drop the udp pointer so that we don't update this endpoint anymore....
+  _udp = nullptr;
+
+  // CompleteDisconnect();
 }
+
+//// ------------------------------------------------------------------------------------------------
+//void GGPOEndpoint::CompleteDisconnect() { 
+//}
 
 // ------------------------------------------------------------------------------------------------
 void GGPOEndpoint::Disconnect()
 {
-  throw std::exception("OBSOLETE!");
+  throw std::exception("OBSOLETE!  Use DisconnectEX!");
 }
 
 // ------------------------------------------------------------------------------------------------
@@ -397,7 +409,7 @@ void GGPOEndpoint::OnMsg(UdpMsg* msg, int len)
   // NOTE:  A table of function pointers is used so that the values from UdpMsg::MsgType
   // can be used to index into this.
   static const DispatchFn msgHandlers[] = {
-     &GGPOEndpoint::OnInvalid,             /* Invalid */ 
+     &GGPOEndpoint::OnInvalid,             /* Invalid */
      &GGPOEndpoint::OnSyncRequest,         /* SyncRequest */
      &GGPOEndpoint::OnSyncReply,           /* SyncReply */
      &GGPOEndpoint::OnInput,               /* Input */
@@ -568,10 +580,10 @@ bool GGPOEndpoint::OnData(UdpMsg* msg, int dataSize)
   UdpEvent evt(UdpEvent::Datagram);
   auto dataLen = (uint8_t)(dataSize - sizeof(UdpMsg::header));
 
-  evt.u.chat.code = msg->u.datagram.code;
-  evt.u.chat.frame = _Client->CurrentFrame();
-  evt.u.chat.dataSize = msg->u.datagram.dataSize;
-  memcpy_s(evt.u.chat.data, MAX_GGPO_DATA_SIZE, msg->u.datagram.data, dataLen);
+  evt.u.datagram.code = msg->u.datagram.code;
+  evt.u.datagram.frame = _Client->CurrentFrame();
+  evt.u.datagram.dataSize = msg->u.datagram.dataSize;
+  memcpy_s(evt.u.datagram.data, MAX_GGPO_DATA_SIZE, msg->u.datagram.data, dataLen);
 
   QueueEvent(evt);
 
