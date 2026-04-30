@@ -266,6 +266,8 @@
     <ClInclude Include="..\..\ggpo\src\lib\backends\GGPOSession.h" />
     <ClInclude Include="..\..\ggpo\src\lib\backends\p2p.h" />
     <ClInclude Include="..\..\ggpo\src\lib\bitvector.h" />
+    <ClInclude Include="..\..\ggpo\src\lib\EZQ.h" />
+    <ClInclude Include="..\..\ggpo\src\lib\GameRecorder.h" />
     <ClInclude Include="..\..\ggpo\src\lib\game_input.h" />
     <ClInclude Include="..\..\ggpo\src\lib\input_queue.h" />
     <ClInclude Include="..\..\ggpo\src\lib\log.h" />
@@ -283,6 +285,7 @@
     <ClInclude Include="..\..\ggpo\src\lib\zlib.h" />
     <ClCompile Include="..\..\ggpo\src\lib\backends\p2p.cpp" />
     <ClCompile Include="..\..\ggpo\src\lib\bitvector.cpp" />
+    <ClCompile Include="..\..\ggpo\src\lib\GameRecorder.cpp" />
     <ClCompile Include="..\..\ggpo\src\lib\game_input.cpp" />
     <ClCompile Include="..\..\ggpo\src\lib\input_queue.cpp" />
     <ClCompile Include="..\..\ggpo\src\lib\log.cpp" />

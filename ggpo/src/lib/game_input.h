@@ -7,14 +7,15 @@
 
 #ifndef _GAMEINPUT_H
 #define _GAMEINPUT_H
+
 #include <stdio.h>
 #include <memory.h>
 
  // GAMEINPUT_MAX_BYTES * GAMEINPUT_MAX_PLAYERS * 8 must be less than
  // 2^BITVECTOR_NIBBLE_SIZE (see bitvector.h)
 
-static const uint16 GAMEINPUT_MAX_BYTES = 7;
-static const uint16 GAMEINPUT_MAX_PLAYERS = 4;		// NOTE: This probably need to be 2?
+static const uint8_t GAMEINPUT_MAX_BYTES = 7;
+static const uint8_t  GAMEINPUT_MAX_PLAYERS = 4;		// NOTE: This probably need to be 2?
 
 struct GameInput {
   enum Constants {
@@ -22,6 +23,8 @@ struct GameInput {
   };
   int      frame;
   int      size; /* size in bytes of the entire input for all players */
+
+  // REFACTOR: Rename to 'data'
   char     bits[GAMEINPUT_MAX_BYTES * GAMEINPUT_MAX_PLAYERS];
 
   bool is_null() { return frame == NullFrame; }
