@@ -245,7 +245,7 @@ static void InpsUpdateControl(int nCode)
 	SetWindowText(GetDlgItem(hInpsDlg, IDC_INPS_CONTROL_NAME), szString);
 }
 
-int InpsUpdate()
+int UpdateInputSetDialog()
 {
 	TCHAR szTemp[MAX_PATH] = _T("");
 	int nButtonState;

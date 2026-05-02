@@ -44,6 +44,7 @@ void BurnSoundClear();
 
 extern "C" INT16 Precalc[];
 
+// NOTE: Not all of these are used.....
 #define INTERPOLATE4PS_8BIT(fp, sN, s0, s1, s2)      (((INT32)((sN) * Precalc[(INT32)(fp) * 4 + 0]) + (INT32)((s0) * Precalc[(INT32)(fp) * 4 + 1]) + (INT32)((s1) * Precalc[(INT32)(fp) * 4 + 2]) + (INT32)((s2) * Precalc[(INT32)(fp) * 4 + 3])) / 64)
 #define INTERPOLATE4PS_16BIT(fp, sN, s0, s1, s2)     (((INT32)((sN) * Precalc[(INT32)(fp) * 4 + 0]) + (INT32)((s0) * Precalc[(INT32)(fp) * 4 + 1]) + (INT32)((s1) * Precalc[(INT32)(fp) * 4 + 2]) + (INT32)((s2) * Precalc[(INT32)(fp) * 4 + 3])) / 16384)
 #define INTERPOLATE4PS_CUSTOM(fp, sN, s0, s1, s2, v) (((INT32)((sN) * Precalc[(INT32)(fp) * 4 + 0]) + (INT32)((s0) * Precalc[(INT32)(fp) * 4 + 1]) + (INT32)((s1) * Precalc[(INT32)(fp) * 4 + 2]) + (INT32)((s2) * Precalc[(INT32)(fp) * 4 + 3])) / (INT32)(v))

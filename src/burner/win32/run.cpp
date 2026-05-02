@@ -16,10 +16,10 @@ static int nOldAudVolume;
 
 // TODO: At this point we can assume that the net version is going to be 14, and never change.
 int kNetVersion = NET_VERSION;			// Network version
-int kNetGame = 0;						// Non-zero if network is being used
-int kNetSpectator = 0;					// Non-zero if network replay is active
-int kNetLua = 1;						// Allow lua in network game
-char kNetQuarkId[128] = {};				// Network quark id
+int kNetGame = 0;						        // Non-zero if network is being used
+int kNetSpectator = 0;					    // Non-zero if network replay is active
+int kNetLua = 1;						        // Allow lua in network game
+char kNetQuarkId[128] = {};			  	// Network quark id
 
 #ifdef FBNEO_DEBUG
 int counter;								// General purpose variable used when debugging
@@ -74,7 +74,9 @@ std::vector<lua_hotkey_handler> hotkey_debounces = {
   { &macroSystemLuaHotkey9, macroSystemLuaHotkey9, 0 },
 };
 
-static void CheckSystemMacros() // These are the Pause / FFWD macros added to the input dialog
+// ------------------------------------------------------------------------------------------------------------
+// These are the Pause / FFWD macros added to the input dialog
+static void CheckSystemMacros()
 {
   // Pause
   if (macroSystemPause && macroSystemPause != prevPause && timeGetTime() > prevPause_debounce + 90) {
@@ -136,6 +138,10 @@ static void CheckSystemMacros() // These are the Pause / FFWD macros added to th
   prevUState = macroSystemUNDOState;
 }
 
+// ------------------------------------------------------------------------------------------------------------
+// This will pull inputs from hardware, and optionally copy their values to 'GameInp', which is the data
+// structure that contains all of the current inputs that will get sent off to the game.
+// This function also updates data in the input / set input dialogs.
 static int GetInput(bool bCopy)
 {
   // get input
@@ -150,24 +156,25 @@ static int GetInput(bool bCopy)
   }
 
   if (!kNetGame || kNetSpectator) {
+    // PAUSE and or FFWD support.
     CheckSystemMacros();
   }
 
   // Update Input dialog every 3rd frame
   static unsigned int i = 0;
   if ((i % 2) == 0) {
-    InpdUpdate();
+    UpdateInputDialog();
   }
   i++;
 
   // Update Input Set dialog
-  InpsUpdate();
+  UpdateInputSetDialog();
   return 0;
 }
 
+// ------------------------------------------------------------------------------------------------
 static LONGLONG lastTime;
 static unsigned int nPreviousFrames;
-
 static void InitOverlay()
 {
   nDoFPS = 0;
@@ -299,6 +306,70 @@ int RunFrame(int bDraw, int bPause, bool updateNetInputs)
     return 1;
   }
 
+  UpdateInputs(bPause, updateNetInputs);
+
+  // Render frame with video or audio
+  if (bDraw) {
+    if (nVidRunahead > 0 && nVidRunahead <= 3 && !kNetSpectator) {
+      // Runahead frames, first frame is audio only
+      pBurnDraw = NULL;
+      pBurnSoundOut = nAudNextSound;
+      BurnDrvFrame();
+      // Save state
+      RunaheadSaveState();
+      // Intermediate frames don't have audio or video
+      for (int i = 0; i < (nVidRunahead - 1); i++) {
+        pBurnDraw = NULL;
+        pBurnSoundOut = NULL;
+        BurnDrvFrame();
+      }
+      // Last frame is video only
+      pBurnSoundOut = NULL;
+      VidFrame();
+      // Restore state
+      RunaheadLoadState();
+    }
+    else {
+      // Render video and audio
+      pBurnSoundOut = nAudNextSound;
+      VidFrame();
+    }
+    // add audio from last frame
+    AudSoundFrame();
+  }
+  else {
+    pBurnDraw = NULL;
+    pBurnSoundOut = nAudNextSound;
+    BurnDrvFrame();
+  }
+
+  if (kNetGame) {
+    QuarkIncrementFrame();
+  }
+
+  DetectorUpdate();
+
+  if (kNetLua) {
+    FBA_LuaFrameBoundary();
+    CallRegisteredLuaFunctions(LUACALL_AFTEREMULATION); // TODO: find proper place
+  }
+
+#ifdef INCLUDE_AVI_RECORDING
+  if (nAviStatus) {
+    if (AviRecordFrame(bDraw)) {
+      AviStop();
+    }
+  }
+#endif
+
+
+  return 0;
+}
+
+// ------------------------------------------------------------------------------------------------------------------------------------
+bool UpdateInputs(int bPause, bool updateNetInputs)
+{
+
   if (bPause && !bAppDoFast) {
     GetInput(false);						// Update burner inputs, but not game inputs
   }
@@ -356,63 +427,7 @@ int RunFrame(int bDraw, int bPause, bool updateNetInputs)
     if (nReplayStatus == 1) {
       RecordInput();					  	// Write input to file
     }
-
-    // Render frame with video or audio
-    if (bDraw) {
-      if (nVidRunahead > 0 && nVidRunahead <= 3 && !kNetSpectator) {
-        // Runahead frames, first frame is audio only
-        pBurnDraw = NULL;
-        pBurnSoundOut = nAudNextSound;
-        BurnDrvFrame();
-        // Save state
-        RunaheadSaveState();
-        // Intermediate frames don't have audio or video
-        for (int i = 0; i < (nVidRunahead - 1); i++) {
-          pBurnDraw = NULL;
-          pBurnSoundOut = NULL;
-          BurnDrvFrame();
-        }
-        // Last frame is video only
-        pBurnSoundOut = NULL;
-        VidFrame();
-        // Restore state
-        RunaheadLoadState();
-      }
-      else {
-        // Render video and audio
-        pBurnSoundOut = nAudNextSound;
-        VidFrame();
-      }
-      // add audio from last frame
-      AudSoundFrame();
-    }
-    else {
-      pBurnDraw = NULL;
-      pBurnSoundOut = nAudNextSound;
-      BurnDrvFrame();
-    }
-
-    if (kNetGame) {
-      QuarkIncrementFrame();
-    }
-
-    DetectorUpdate();
-
-    if (kNetLua) {
-      FBA_LuaFrameBoundary();
-      CallRegisteredLuaFunctions(LUACALL_AFTEREMULATION); // TODO: find proper place
-    }
-
-#ifdef INCLUDE_AVI_RECORDING
-    if (nAviStatus) {
-      if (AviRecordFrame(bDraw)) {
-        AviStop();
-      }
-    }
-#endif
   }
-
-  return 0;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------
@@ -893,7 +908,7 @@ int RunMessageLoop()
                 }
               }
               else if (!bEditActive) { // Backspace: toggles FPS
-                showStatsMode = (showStatsMode + 1) % (kNetGame ? SHOWSTATS_MAX: 2);
+                showStatsMode = (showStatsMode + 1) % (kNetGame ? SHOWSTATS_MAX : 2);
                 VidOverlayClearWarnings();
                 UpdateOverlay();
                 MenuUpdate();

@@ -5,6 +5,10 @@
  * in the LICENSE file.
  */
 
+
+#ifndef _LOG_H
+#define _LOG_H
+
 #include <string>
  // #include "network/GGPOEndpoint.h"
 
@@ -14,9 +18,6 @@
 
 struct UdpEvent;
 struct UdpMsg;
-
-#ifndef _LOG_H
-#define _LOG_H
 
 static const char* CATEGORY_GENERAL = "NA";
 static const char* CATEGORY_MESSAGE = "MSG";

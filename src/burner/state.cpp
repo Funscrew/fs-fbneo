@@ -296,6 +296,7 @@ INT32 BurnStateLoad(TCHAR* filename, INT32 bAll, INT32(*pLoadGame)())
 	}
 }
 
+// ------------------------------------------------------------------------------------------------------------
 // Write a savestate as a chunk of an "FB1 " file
 // nOffset is the absolute offset from the beginning of the file
 // -1: Append at current position
@@ -389,6 +390,7 @@ INT32 BurnStateSaveEmbed(FILE* fp, INT32 nOffset, INT32 bAll)
 	return nDefLen;
 }
 
+// ------------------------------------------------------------------------------------------------------------
 #ifdef BUILD_WIN32
 INT32 FileExists(const TCHAR* fileName)
 {
@@ -399,6 +401,8 @@ INT32 FileExists(const TCHAR* fileName)
 #endif
 
 #define MAX_STATEBACKUPS 10
+
+// ------------------------------------------------------------------------------------------------------------
 // SaveState Undo - restores the last savestate backup file. Windows-only at the moment.
 INT32 BurnStateUNDO(TCHAR* szName)
 {

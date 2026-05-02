@@ -67,7 +67,7 @@ static int InpdUseUpdate()
 	return 0;
 }
 
-int InpdUpdate()
+int UpdateInputDialog()
 {
 	unsigned int i, j = 0;
 	struct GameInp* pgi = NULL;

@@ -33,7 +33,7 @@ struct giSlider {
 };
 
 struct giInput {
-	union {								// Destination for the Input Value
+	union {								// Destination for the Input Value (this is the value that the game will use)
 		UINT8* pVal;
 		UINT16* pShortVal;
 	};
@@ -87,6 +87,7 @@ struct giMacro {
 #define GIT_MACRO_AUTO		(0x80)
 #define GIT_MACRO_CUSTOM	(0x81)
 
+// REFACTOR: Give this a better / real name.
 struct GameInp {
 	UINT8 nInput;				// PC side: see above
 	UINT8 nType;				// game side: see burn.h

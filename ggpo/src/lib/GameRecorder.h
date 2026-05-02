@@ -59,8 +59,7 @@ public:
   int PlayerCount = 0;
   int TotalInputSize = 0;
 
-  static constexpr uint16_t DataSize =
-    MAX_GAME_NAME_SIZE + MAX_VERSION_SIZE + sizeof(int) + sizeof(int);
+  static constexpr uint16_t DataSize = MAX_GAME_NAME_SIZE + MAX_VERSION_SIZE + sizeof(int) + sizeof(int);
 };
 
 class EZWriterEx {
@@ -100,7 +99,7 @@ private:
 
   array<uint8_t, 0x800> WriteBuffer = {};
 
-  void Init(const CGameData& gameData, const filesystem::path& toPath, bool overwriteExisting);
+  void Init(const filesystem::path& toPath, bool overwriteExisting);
 
 public:
   string FilePath;

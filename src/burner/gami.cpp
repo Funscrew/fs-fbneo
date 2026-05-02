@@ -18,6 +18,8 @@ INT32 nFireButtons = 0;
 bool bStreetFighterLayout = false;
 bool bLeftAltkeyMapped = false;
 
+// ======================= BEGIN SOCD RELATED STUFF =========================================================
+
 enum {
 	UP,
 	DOWN,
@@ -27,17 +29,17 @@ enum {
 };
 
 static INT32 InpDirections[2][COUNT] = {};
-static INT32 InpDataPrev[2][COUNT] = {};
-static INT32 InpDataNext[2][COUNT] = {};
+static INT32 InpDirectionsPrev[2][COUNT] = {};
+static INT32 InpDirectionsNext[2][COUNT] = {};
 static INT32 bInpIsLocked[2] = { 0 }; //necessary for 4 way joystick mode
 static bool bClearOpposites = false;
 
-static int GetInpFrame(INT32 player, INT32 dir)
+static int GetDirection(INT32 player, INT32 dir)
 {
 	return GameInp[InpDirections[player][dir]].Input.nVal;
 }
 
-static void SetInpFrame(INT32 player, INT32 dir, INT32 val, BOOL bCopy)
+static void SetDirection(INT32 player, INT32 dir, INT32 val, BOOL bCopy)
 {
 	GameInp[InpDirections[player][dir]].Input.nVal = val;
 	if (bCopy) {
@@ -45,25 +47,27 @@ static void SetInpFrame(INT32 player, INT32 dir, INT32 val, BOOL bCopy)
 	}
 }
 
-static int GetInpPrev(INT32 player, INT32 dir)
+static int GetPrevDirection(INT32 player, INT32 dir)
 {
-	return InpDataPrev[player][dir];
+	return InpDirectionsPrev[player][dir];
 }
 
-static void SetInpPrev(INT32 player, INT32 dir, INT32 val)
+static void SetPrevDirection(INT32 player, INT32 dir, INT32 val)
 {
-	InpDataPrev[player][dir] = val;
+	InpDirectionsPrev[player][dir] = val;
 }
 
-static int GetInpNext(INT32 player, INT32 dir)
+static int GetNextDirection(INT32 player, INT32 dir)
 {
-	return InpDataNext[player][dir];
+	return InpDirectionsNext[player][dir];
 }
 
-static void SetInpNext(INT32 player, INT32 dir, INT32 val)
+static void SetNextDirection(INT32 player, INT32 dir, INT32 val)
 {
-	InpDataNext[player][dir] = val;
+	InpDirectionsNext[player][dir] = val;
 }
+
+// ======================= END SOCD RELATED STUFF =========================================================
 
 // These are mappable global macros for mapping Pause/FFWD etc to controls in the input mapping dialogue. -dink
 UINT8 macroSystemPause = 0;
@@ -185,7 +189,6 @@ void GameInpCheckMouse()
 #endif
 
 // ---------------------------------------------------------------------------
-
 INT32 GameInpBlank(INT32 bDipSwitch)
 {
 	UINT32 i = 0;
@@ -2011,7 +2014,7 @@ void GameInpUpdatePrev(bool bCopy)
 	// Set prev data
 	for (INT32 i = 0; i < 2; i++) {
 		for (INT32 j = 0; j < 4; j++) {
-			SetInpPrev(i, j, GetInpFrame(i, j));
+			SetPrevDirection(i, j, GetDirection(i, j));
 		}
 	}
 }
@@ -2022,10 +2025,10 @@ void GameInpUpdateNext(bool bCopy)
 	// Fix from next frame
 	for (INT32 i = 0; i < 2; i++) {
 		for (INT32 j = 0; j < 4; j++) {
-			if (GetInpNext(i, j)) {
-				SetInpFrame(i, j, 1, bCopy);
+			if (GetNextDirection(i, j)) {
+				SetDirection(i, j, 1, bCopy);
 			}
-			SetInpNext(i, j, 0);
+			SetNextDirection(i, j, 0);
 		}
 	}
 }
@@ -2038,67 +2041,67 @@ void GameInpClearOpposites(bool bCopy)
 				//4 way direction forced, "last wins", for tetris
 				// first we need neutral socd cleaning
 			fourway:
-				if (GetInpFrame(i, UP) && GetInpFrame(i, DOWN)) {
-					SetInpFrame(i, UP, 0, bCopy);
-					SetInpFrame(i, DOWN, 0, bCopy);
+				if (GetDirection(i, UP) && GetDirection(i, DOWN)) {
+					SetDirection(i, UP, 0, bCopy);
+					SetDirection(i, DOWN, 0, bCopy);
 				}
 
-				if (GetInpFrame(i, LEFT) && GetInpFrame(i, RIGHT)) {
-					SetInpFrame(i, LEFT, 0, bCopy);
-					SetInpFrame(i, RIGHT, 0, bCopy);
+				if (GetDirection(i, LEFT) && GetDirection(i, RIGHT)) {
+					SetDirection(i, LEFT, 0, bCopy);
+					SetDirection(i, RIGHT, 0, bCopy);
 				}
 				//on unlocked input, perform last wins cleaning between axes
 				if (!bInpIsLocked[i]) {
-					if (GetInpFrame(i, DOWN) && GetInpFrame(i, LEFT)) { //D+L
-						if (GetInpPrev(i, DOWN) || GetInpPrev(i, RIGHT)) {
-							SetInpFrame(i, DOWN, 0, bCopy);
+					if (GetDirection(i, DOWN) && GetDirection(i, LEFT)) { //D+L
+						if (GetPrevDirection(i, DOWN) || GetPrevDirection(i, RIGHT)) {
+							SetDirection(i, DOWN, 0, bCopy);
 							bInpIsLocked[i] = 1; //lock inputs to prevent oscillating
 						} else {
-							SetInpFrame(i, LEFT, 0, bCopy);
+							SetDirection(i, LEFT, 0, bCopy);
 							bInpIsLocked[i] = 1; //same deal
 						}
 					}
 
-					if (GetInpFrame(i, UP) && GetInpFrame(i, LEFT)) { //U+L
-						if (GetInpPrev(i, UP) || GetInpPrev(i, RIGHT)) {
-							SetInpFrame(i, UP, 0, bCopy);
+					if (GetDirection(i, UP) && GetDirection(i, LEFT)) { //U+L
+						if (GetPrevDirection(i, UP) || GetPrevDirection(i, RIGHT)) {
+							SetDirection(i, UP, 0, bCopy);
 							bInpIsLocked[i] = 1;
 						} else {
-							SetInpFrame(i, LEFT, 0, bCopy);
+							SetDirection(i, LEFT, 0, bCopy);
 							bInpIsLocked[i] = 1;
 						}
 					}
 
-					if (GetInpFrame(i, DOWN) && GetInpFrame(i, RIGHT)) { //D+R
-						if (GetInpPrev(i, DOWN) || GetInpPrev(i, LEFT)) {
-							SetInpFrame(i, DOWN, 0, bCopy);
+					if (GetDirection(i, DOWN) && GetDirection(i, RIGHT)) { //D+R
+						if (GetPrevDirection(i, DOWN) || GetPrevDirection(i, LEFT)) {
+							SetDirection(i, DOWN, 0, bCopy);
 							bInpIsLocked[i] = 1;
 						} else {
-							SetInpFrame(i, RIGHT, 0, bCopy);
+							SetDirection(i, RIGHT, 0, bCopy);
 							bInpIsLocked[i] = 1;
 						}
 					}
 
-					if (GetInpFrame(i, UP) && GetInpFrame(i, RIGHT)) { //U+R
-						if (GetInpPrev(i, UP) || GetInpPrev(i, LEFT)) {
-							SetInpFrame(i, UP, 0, bCopy);
+					if (GetDirection(i, UP) && GetDirection(i, RIGHT)) { //U+R
+						if (GetPrevDirection(i, UP) || GetPrevDirection(i, LEFT)) {
+							SetDirection(i, UP, 0, bCopy);
 							bInpIsLocked[i] = 1;
 						} else {
-							SetInpFrame(i, RIGHT, 0, bCopy);
+							SetDirection(i, RIGHT, 0, bCopy);
 							bInpIsLocked[i] = 1;
 						}
 					}
 
 					//when locked:
 				} else {
-					if ((GetInpFrame(i, UP) + GetInpFrame(i, DOWN) + GetInpFrame(i, LEFT) + GetInpFrame(i, RIGHT)) <= 1) {
+					if ((GetDirection(i, UP) + GetDirection(i, DOWN) + GetDirection(i, LEFT) + GetDirection(i, RIGHT)) <= 1) {
 						bInpIsLocked[i] = 0; //unlock if there's zero or one directions pressed: the situation must be correct without cleaning
-					} else if (((GetInpPrev(i, UP) + GetInpFrame(i, DOWN)) >= 2) || ((GetInpFrame(i, UP) + GetInpPrev(i, DOWN)) >= 2) || ((GetInpPrev(i, LEFT) + GetInpFrame(i, RIGHT)) >= 2) || ((GetInpFrame(i, LEFT) + GetInpPrev(i, RIGHT)) >= 2)) {
+					} else if (((GetPrevDirection(i, UP) + GetDirection(i, DOWN)) >= 2) || ((GetDirection(i, UP) + GetPrevDirection(i, DOWN)) >= 2) || ((GetPrevDirection(i, LEFT) + GetDirection(i, RIGHT)) >= 2) || ((GetDirection(i, LEFT) + GetPrevDirection(i, RIGHT)) >= 2)) {
 						bInpIsLocked[i] = 0; //something changed, but still 2 directions held down => unlock and clean
 						goto	 fourway;
 					} else {
 						for (INT32 j = 0; j < COUNT; j++) {
-							SetInpFrame(i, j, GetInpPrev(i, j), bCopy);//else the situation must be the same as before so copy the input
+							SetDirection(i, j, GetPrevDirection(i, j), bCopy);//else the situation must be the same as before so copy the input
 						}
 					}
 				}
@@ -2109,27 +2112,27 @@ void GameInpClearOpposites(bool bCopy)
 			// Hitbox SOCD cleaner
 			for (INT32 i = 0; i < 2; i++) {
 				// D + U = U || (no matter the state of L and R)
-				if (GetInpFrame(i, UP) && GetInpFrame(i, DOWN)) {
-					SetInpFrame(i, DOWN, 0, bCopy);
+				if (GetDirection(i, UP) && GetDirection(i, DOWN)) {
+					SetDirection(i, DOWN, 0, bCopy);
 				}
 				// L + R = neutral
-				if (GetInpFrame(i, LEFT) && GetInpFrame(i, RIGHT)) {
-					SetInpFrame(i, LEFT, 0, bCopy);
-					SetInpFrame(i, RIGHT, 0, bCopy);
+				if (GetDirection(i, LEFT) && GetDirection(i, RIGHT)) {
+					SetDirection(i, LEFT, 0, bCopy);
+					SetDirection(i, RIGHT, 0, bCopy);
 				}
 			}
 		} else {
 			// Regular SOCD cleaner
 			for (INT32 i = 0; i < 2; i++) {
 				// D + U = neutral
-				if (GetInpFrame(i, UP) && GetInpFrame(i, DOWN)) {
-					SetInpFrame(i, UP, 0, bCopy);
-					SetInpFrame(i, DOWN, 0, bCopy);
+				if (GetDirection(i, UP) && GetDirection(i, DOWN)) {
+					SetDirection(i, UP, 0, bCopy);
+					SetDirection(i, DOWN, 0, bCopy);
 				}
 				// L + R = neutral
-				if (GetInpFrame(i, LEFT) && GetInpFrame(i, RIGHT)) {
-					SetInpFrame(i, LEFT, 0, bCopy);
-					SetInpFrame(i, RIGHT, 0, bCopy);
+				if (GetDirection(i, LEFT) && GetDirection(i, RIGHT)) {
+					SetDirection(i, LEFT, 0, bCopy);
+					SetDirection(i, RIGHT, 0, bCopy);
 				}
 			}
 		}
@@ -2141,65 +2144,65 @@ void GameInpFixDiagonals(bool bCopy)
 	if (kNetVersion >= NET_VERSION_FIX_DIAGONALS && bFixDiagonals) {
 		for (INT32 i = 0; i < 2; i++) {
 			// D + L
-			if (GetInpFrame(i, DOWN) && GetInpFrame(i, LEFT)) {
+			if (GetDirection(i, DOWN) && GetDirection(i, LEFT)) {
 
-				if (GetInpPrev(i, DOWN) && GetInpPrev(i, RIGHT)) {
-					SetInpFrame(i, LEFT, 0, bCopy);
-					SetInpNext(i, DOWN, 1);
-					SetInpNext(i, LEFT, 1);
+				if (GetPrevDirection(i, DOWN) && GetPrevDirection(i, RIGHT)) {
+					SetDirection(i, LEFT, 0, bCopy);
+					SetNextDirection(i, DOWN, 1);
+					SetNextDirection(i, LEFT, 1);
 					//VidOverlayAddChatLine(_T("System"), _T("DR -> (D) -> DL"));
 				}
-				else if (GetInpPrev(i, UP) && GetInpPrev(i, LEFT)) {
-					SetInpFrame(i, DOWN, 0, bCopy);
-					SetInpNext(i, LEFT, 1);
-					SetInpNext(i, DOWN, 1);
+				else if (GetPrevDirection(i, UP) && GetPrevDirection(i, LEFT)) {
+					SetDirection(i, DOWN, 0, bCopy);
+					SetNextDirection(i, LEFT, 1);
+					SetNextDirection(i, DOWN, 1);
 					//VidOverlayAddChatLine(_T("System"), _T("UL -> (L) -> DL"));
 				}
 
 			}
 			// D + R
-			else if (GetInpFrame(i, DOWN) && GetInpFrame(i, RIGHT)) {
-				if (GetInpPrev(i, DOWN) && GetInpPrev(i, LEFT)) {
-					SetInpFrame(i, RIGHT, 0, bCopy);
-					SetInpNext(i, DOWN, 1);
-					SetInpNext(i, RIGHT, 1);
+			else if (GetDirection(i, DOWN) && GetDirection(i, RIGHT)) {
+				if (GetPrevDirection(i, DOWN) && GetPrevDirection(i, LEFT)) {
+					SetDirection(i, RIGHT, 0, bCopy);
+					SetNextDirection(i, DOWN, 1);
+					SetNextDirection(i, RIGHT, 1);
 					//VidOverlayAddChatLine(_T("System"), _T("DL -> (D) -> DR"));
 				}
-				else if (GetInpPrev(i, UP) && GetInpPrev(i, RIGHT)) {
-					SetInpFrame(i, DOWN, 0, bCopy);
-					SetInpNext(i, RIGHT, 1);
-					SetInpNext(i, DOWN, 1);
+				else if (GetPrevDirection(i, UP) && GetPrevDirection(i, RIGHT)) {
+					SetDirection(i, DOWN, 0, bCopy);
+					SetNextDirection(i, RIGHT, 1);
+					SetNextDirection(i, DOWN, 1);
 					//VidOverlayAddChatLine(_T("System"), _T("UR -> (R) -> DR"));
 				}
 
 			}
 			// U + L
-			else if (GetInpFrame(i, UP) && GetInpFrame(i, LEFT)) {
-				if (GetInpPrev(i, UP) && GetInpPrev(i, RIGHT)) {
-					SetInpFrame(i, LEFT, 0, bCopy);
-					SetInpNext(i, UP, 1);
-					SetInpNext(i, LEFT, 1);
+			else if (GetDirection(i, UP) && GetDirection(i, LEFT)) {
+				if (GetPrevDirection(i, UP) && GetPrevDirection(i, RIGHT)) {
+					SetDirection(i, LEFT, 0, bCopy);
+					SetNextDirection(i, UP, 1);
+					SetNextDirection(i, LEFT, 1);
 					//VidOverlayAddChatLine(_T("System"), _T("UR -> (U) -> UL"));
 				}
-				else if (GetInpPrev(i, DOWN) && GetInpPrev(i, LEFT)) {
-					SetInpFrame(i, UP, 0, bCopy);
-					SetInpNext(i, LEFT, 1);
-					SetInpNext(i, UP, 1);
+				else if (GetPrevDirection(i, DOWN) && GetPrevDirection(i, LEFT)) {
+					SetDirection(i, UP, 0, bCopy);
+					SetNextDirection(i, LEFT, 1);
+					SetNextDirection(i, UP, 1);
 					//VidOverlayAddChatLine(_T("System"), _T("DL -> (L) -> UL"));
 				}
 			}
 			// D + R
-			else if (GetInpFrame(i, UP) && GetInpFrame(i, RIGHT)) {
-				if (GetInpPrev(i, UP) && GetInpPrev(i, LEFT)) {
-					SetInpFrame(i, RIGHT, 0, bCopy);
-					SetInpNext(i, UP, 1);
-					SetInpNext(i, RIGHT, 1);
+			else if (GetDirection(i, UP) && GetDirection(i, RIGHT)) {
+				if (GetPrevDirection(i, UP) && GetPrevDirection(i, LEFT)) {
+					SetDirection(i, RIGHT, 0, bCopy);
+					SetNextDirection(i, UP, 1);
+					SetNextDirection(i, RIGHT, 1);
 					//VidOverlayAddChatLine(_T("System"), _T("UL -> (U) -> UR"));
 				}
-				else if (GetInpPrev(i, DOWN) && GetInpPrev(i, RIGHT)) {
-					SetInpFrame(i, UP, 0, bCopy);
-					SetInpNext(i, RIGHT, 1);
-					SetInpNext(i, UP, 1);
+				else if (GetPrevDirection(i, DOWN) && GetPrevDirection(i, RIGHT)) {
+					SetDirection(i, UP, 0, bCopy);
+					SetNextDirection(i, RIGHT, 1);
+					SetNextDirection(i, UP, 1);
 					//VidOverlayAddChatLine(_T("System"), _T("DR -> (R) -> UR"));
 				}
 			}

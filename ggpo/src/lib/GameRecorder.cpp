@@ -92,14 +92,14 @@ GameRecorder::GameRecorder(const CGameData& gameData_, const string& dataDir, ui
 
   filesystem::path path = filesystem::path(dataDir) / (to_string(sessionId) + ".replay");
 
-  Init(gameData_, path, overwriteExisting);
+  Init(path, overwriteExisting);
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------
 GameRecorder::GameRecorder(const CGameData& gameData_, const string& toPath, bool overwriteExisting)
 {
   GameData = gameData_;
-  Init(gameData_, toPath, overwriteExisting);
+  Init(toPath, overwriteExisting);
 }
 
 // ----------------------------------------------------------------------------------------------------------
@@ -109,12 +109,16 @@ GameRecorder::~GameRecorder()
 }
 
 // ----------------------------------------------------------------------------------------------------------
-void GameRecorder::Init(const CGameData& gameData, const filesystem::path& toPath, bool overwriteExisting)
+void GameRecorder::Init(const filesystem::path& toPath, bool overwriteExisting)
 {
   if (filesystem::exists(toPath) && !overwriteExisting)
   {
     throw runtime_error("Data file for session id already exists!");
   }
+
+  
+  // int x = gameData.DataSize;
+
   CreateStream(toPath.string());
   FilePath = toPath.string();
   BaseFrames.fill(-1);
@@ -137,11 +141,7 @@ void GameRecorder::Flush()
 }
 
 // ----------------------------------------------------------------------------------------------------------
-void GameRecorder::CompleteReplay(
-  int frame,
-  ECompletionReason reason,
-  EErrorReason errReason,
-  const string& message)
+void GameRecorder::CompleteReplay(  int frame,  ECompletionReason reason,  EErrorReason errReason,  const string& message)
 {
   CheckComplete();
 

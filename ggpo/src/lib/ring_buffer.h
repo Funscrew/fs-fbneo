@@ -5,56 +5,64 @@
  * in the LICENSE file.
  */
 
+
 #ifndef _RING_BUFFER_H
 #define _RING_BUFFER_H
 
-#include <types.h>
+#include <stdexcept>
+
+
+//void ASSERT_EX(bool condition) { 
+//  if (!condition) { throw std::runtime_error("assert failed!"); }
+//}
+
+#define ASSERT_EX(condition) { if (condition != true) { throw std::runtime_error("assert failed!"); } }
 
 template<class T, int N> class RingBuffer
 {
 public:
-   RingBuffer<T, N>() : 
-      _head(0),
-      _tail(0),
-      _size(0) {
-  } 
+  RingBuffer<T, N>() :
+    _head(0),
+    _tail(0),
+    _size(0) {
+  }
 
-   T &front() {
-      ASSERT(_size != N);
-      return _elements[_tail];
-   }
-   
-   T &item(int i) {
-      ASSERT(i < _size);
-      return _elements[(_tail + i) % N];
-   }
+  T& front() {
+    ASSERT_EX(_size != N);
+    return _elements[_tail];
+  }
 
-   void pop() {
-      ASSERT(_size != N);
-      _tail = (_tail + 1) % N;
-      _size--;
-   }
+  T& item(int i) {
+    ASSERT_EX(i < _size);
+    return _elements[(_tail + i) % N];
+  }
 
-   void push(const T &t) {
-      ASSERT(_size != (N-1));
-      _elements[_head] = t;
-      _head = (_head + 1) % N;
-      _size++;
-   }
+  void pop() {
+    ASSERT_EX(_size != N);
+    _tail = (_tail + 1) % N;
+    _size--;
+  }
 
-   int size() {
-      return _size;
-   }
+  void push(const T& t) {
+    ASSERT_EX(_size != (N - 1));
+    _elements[_head] = t;
+    _head = (_head + 1) % N;
+    _size++;
+  }
 
-   bool empty() {
-      return _size == 0;
-   }
+  int size() {
+    return _size;
+  }
+
+  bool empty() {
+    return _size == 0;
+  }
 
 protected:
-   T        _elements[N];
-   int      _head;
-   int      _tail;
-   int      _size;
+  T        _elements[N];
+  int      _head;
+  int      _tail;
+  int      _size;
 };
 
 #endif

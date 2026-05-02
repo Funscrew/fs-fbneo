@@ -61,6 +61,8 @@ bool bFixDiagonals = false;
 int nEnableSOCD = 0;
 
 // Used for the load/save dialog in commdlg.h (savestates, input replay, wave logging)
+// REFACTOR / HACK:
+// Don't use the same variable for filenames all over the system!  BAD DESIGN!
 TCHAR szChoice[MAX_PATH] = _T("");
 OPENFILENAME ofn;
 
@@ -875,6 +877,7 @@ int AppMessage(MSG* pMsg)
   return 1; // Didn't process this message
 }
 
+// REFACTOR:  This is a misleading name.
 bool AppProcessKeyboardInput()
 {
   if (bEditActive) {

@@ -76,6 +76,7 @@ inline INT32 CinpMouseAxis(const INT32 i, const INT32 nAxis)
 }
 
 // Do one frames worth of keyboard input sliders
+// REFACTOR:  This is also a misleading name....
 static INT32 InputTick()
 {
 	struct GameInp *pgi;
@@ -201,8 +202,10 @@ static inline INT32 AutofirePick() {
 static INT32 nCurrentFrameMerge = 0;
 static INT32 nCurrentFrameInput = 0;
 
+// REFACTOR: convert this to an inline function please.
 #define INPUT_MERGE(x) (x != 0 ? x : pgi->Input.nVal * nCurrentFrameMerge)
 
+// ------------------------------------------------------------------------------------------------
 // This will process all PC-side inputs and optionally update the emulated game side.
 INT32 InputMake(bool bCopy)
 {
@@ -419,6 +422,7 @@ INT32 InputMake(bool bCopy)
 	return 0;
 }
 
+// --------------------------------------------------------------------------------------------------------------------
 // Use this function as follows:
 //  - First call with nFlags =  2
 //  -  Then call with nFlags =  4 until all controls are released

@@ -15,6 +15,7 @@ static int nDIPOffset;
 const int INPUTSIZE = 8 * (4 + 8);				// We are assuming a max of eight bytes of input for up to 12 players.
 static unsigned char nControls[INPUTSIZE];
 
+// ---------------------------------------------------------------------------------------------------------------------
 // Inputs are assumed to be in the following order:
 // All player 1 controls
 // All player 2 controls (if any)
@@ -22,7 +23,6 @@ static unsigned char nControls[INPUTSIZE];
 // All player 4 controls (if any)
 // All common controls
 // All DIP switches
-
 int NetworkInitInput()
 {
 	if (nGameInpCount == 0) {
@@ -81,6 +81,7 @@ int NetworkInitInput()
 	return 0;
 }
 
+// ---------------------------------------------------------------------------------------------------------------------
 int NetworkGetInput()
 {
 	int i, j;

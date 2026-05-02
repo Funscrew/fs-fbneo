@@ -268,6 +268,7 @@ int RunIdle();
 
 // updateNetInputs: If we are running a net game, set this to true to get local inputs before network sync.
 int RunFrame(int bDraw, int bPause, bool updateNetInputs);
+bool UpdateInputs(int bPause, bool updateNetInputs);
 int RunMessageLoop();
 int RunInit();
 int RunReset();
@@ -392,7 +393,7 @@ int WaveLogStop();
 // inpd.cpp
 extern HWND hInpdDlg;								// Handle to the Input Dialog
 
-int InpdUpdate();
+int UpdateInputDialog();
 int InpdCreate();
 int InpdListMake(int bBuild);
 
@@ -416,7 +417,7 @@ int InpMacroCreate(int nInput);
 extern HWND hInpsDlg;								// Handle to the Input Set Dialog
 extern unsigned int nInpsInput;						// The input number we are redefining
 int InpsCreate();
-int InpsUpdate();
+int UpdateInputSetDialog();
 
 // inpc.cpp
 extern HWND hInpcDlg;								// Handle to the Input Constant Dialog
@@ -497,7 +498,7 @@ extern int nReplayStatus;
 extern bool bReplayReadOnly;
 extern bool bReplayFrameCounterDisplay;
 extern INT32 movieFlags;
-int RecordInput();
+void RecordInput();
 int ReplayInput();
 int StartRecord();
 int StartReplay(const TCHAR* szFileName = NULL);
