@@ -200,7 +200,7 @@ int DrvInit(int nDrvNum, bool bRestore)
 		ConfigGameLoadHardwareDefaults();
 	}
 	InputMake(true);
-	GameInpDefault();
+	SetGameDefaultInputs();
 
 	if (kNetGame) {
 		nBurnCPUSpeedAdjust = 0x0100;
@@ -243,10 +243,14 @@ int DrvInit(int nDrvNum, bool bRestore)
 		nVidHeight = nVidHorHeight;
 	}
 
+  // NOTE: We call this b/c we need the data that it provides so we can 'pack inputs' for
+  // replays and whatnot.
+  NetworkInitInput();
+
 	bSaveRAM = false;
 	if (kNetGame) {
-		NetworkInitInput();
-		NetworkGetInput();
+		// NetworkInitInput();
+		NetworkGetInput(-1);
 	}
 	else {
 		if (bRestore) {

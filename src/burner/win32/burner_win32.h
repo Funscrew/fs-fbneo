@@ -460,8 +460,14 @@ int ResCreate(int);
 
 // fba_network.cpp
 int NetworkInitInput();
-int NetworkGetInputSize();
-int NetworkGetInput();
+int NetworkGetInput(int size);
+
+// Pack all game inputs into a byte array (nControls) which can be sent across the network
+// later, or used for replays, etc.
+// Returns the number of bytes that were used to pack the inputs.
+// @@AAR: 5.2.2026 : This is part of the efforts to make the input system more streamlined and less redundant.
+// NOTE: This will pack inputs for all players.
+int PackGameInputs();
 
 // fbn_ggpo.cpp
 int InitDirectConnection(DirectConnectionOptions& ops, GGPOLogOptions& logOps);
@@ -471,7 +477,7 @@ void QuarkInit(TCHAR* connect);
 void QuarkEnd();
 void QuarkTogglePerfMon();
 void QuarkRunIdle(int ms);
-bool QuarkGetInput(void* values, int isize, int playerCount);
+bool QuarkSyncInput(void* values, int isize, int playerCount);
 bool QuarkIncrementFrame();
 void QuarkSendChat(char* text);
 
@@ -494,11 +500,11 @@ void QuarkFinishReplay();
 void QuarkDisconnect();
 
 // replay.cpp
-extern int nReplayStatus;
+extern EReplayStatus nReplayStatus;
 extern bool bReplayReadOnly;
 extern bool bReplayFrameCounterDisplay;
 extern INT32 movieFlags;
-void RecordInput();
+void RecordInput(int packedInputSize);
 int ReplayInput();
 int StartRecord();
 int StartReplay(const TCHAR* szFileName = NULL);

@@ -1852,8 +1852,9 @@ INT32 ConfigGameLoadHardwareDefaults()
 	return 0;
 }
 
+// ---------------------------------------------------------------------------
 // Auto-configure any undefined inputs to defaults
-INT32 GameInpDefault()
+INT32 SetGameDefaultInputs()
 {
 	struct GameInp* pgi;
 	struct BurnInputInfo bii;

@@ -73,15 +73,15 @@ int StatedLoad(int nSlot)
 
 	// if rewinding during playback, and readonly is not set,
 	// then transition from decoding to encoding (recording)
-	if(!bReplayReadOnly && nReplayStatus == 2)
+	if(!bReplayReadOnly && nReplayStatus == REPLAY_STATUS_REPLAY)
 	{
-		nReplayStatus = 1;
+		nReplayStatus = REPLAY_STATUS_RECORD;
 	}
-	if(bReplayReadOnly && nReplayStatus == 1)
+	if(bReplayReadOnly && nReplayStatus == REPLAY_STATUS_RECORD)
 	{
 		bReplayDontClose = 1;
 		StopReplay();
-		nReplayStatus = 2;
+		nReplayStatus = REPLAY_STATUS_REPLAY;
 	}
 
 	if (nSlot) {

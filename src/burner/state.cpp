@@ -12,7 +12,7 @@ INT32 UnfreezeEncode(const UINT8* buffer, INT32 size);
 INT32 FreezeInput(UINT8** buf, int* size);
 INT32 UnfreezeInput(const UINT8* buf, INT32 size);
 
-extern INT32 nReplayStatus;
+extern EReplayStatus nReplayStatus;
 extern bool bReplayReadOnly;
 extern INT32 nReplayUndoCount;
 extern UINT32 nReplayCurrentFrame;

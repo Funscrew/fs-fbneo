@@ -24,6 +24,12 @@
 
 #include <time.h>
 
+enum EReplayStatus {
+  REPLAY_STATUS_NONE = 0,
+  REPLAY_STATUS_RECORD = 1,
+  REPLAY_STATUS_REPLAY = 2
+};
+
 extern TCHAR szAppHiscorePath[MAX_PATH];
 extern TCHAR szAppSamplesPath[MAX_PATH];
 extern TCHAR szAppHDDPath[MAX_PATH];
@@ -391,6 +397,7 @@ void IpsApplyPatches(UINT8* base, char* rom_name);
 // ---------------------------------------------------------------------------
 // Flags used with the Burndriver structure
 
+// REFACTOR: Replace with consts plz.
 // Flags for the flags member
 // BDF = 'Burn Driver Flags'
 #define BDF_GAME_NOT_WORKING							(0)

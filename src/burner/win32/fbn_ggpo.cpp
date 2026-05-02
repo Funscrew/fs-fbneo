@@ -882,7 +882,7 @@ void QuarkDisconnect()
 }
 
 // -------------------------------------------------------------------------------------------------------------------
-bool QuarkGetInput(void* values, int isize, int playerIndex)
+bool QuarkSyncInput(void* values, int isize, int playerIndex)
 {
   // NOTE: This call is handling both the addition of the local inputs, and the sync call....
   bool res = ggpo_synchronize_input(ggpo, values, isize, GGPO_MAX_PLAYERS) == GGPO_OK;

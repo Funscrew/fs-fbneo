@@ -14,11 +14,13 @@ GameRecorder* _GameRecorder = nullptr;
 #endif
 
 #define MAX_METADATA 1024
+
 wchar_t wszMetadata[MAX_METADATA];
 wchar_t wszStartupGame[MAX_PATH];
 wchar_t wszAuthorInfo[MAX_METADATA - 64];
 
-INT32 nReplayStatus = 0; // 1 record, 2 replay, 0 nothing
+
+EReplayStatus nReplayStatus = REPLAY_STATUS_NONE; // 1 record, 2 replay, 0 nothing
 bool bReplayReadOnly = false;
 bool bReplayShowMovement = false;
 bool bReplayDontClose = false;
@@ -64,8 +66,10 @@ static INT32 ReplayDialog();
 static INT32 RecordDialog();
 
 // -------------------------------------------------------------------------------------------------------------------------
-void RecordInput()
+void RecordInput(int packedInputSize)
 {
+  // TEMP: Return
+
   struct BurnInputInfo bii;
   memset(&bii, 0, sizeof(bii));
 
@@ -638,7 +642,7 @@ static void CloseReplay()
 void StopReplay()
 {
   if (nReplayStatus) {
-    if (nReplayStatus == 1) {
+    if (nReplayStatus == REPLAY_STATUS_RECORD) {
 
 #ifdef FBNEO_DEBUG
       debugPrintf(_T(" ** Recording stopped, recorded %d frames.\n"), GetCurrentFrame() - nStartFrame);
@@ -655,7 +659,7 @@ void StopReplay()
 
       CloseReplay();
     }
-    nReplayStatus = 0;
+    nReplayStatus = REPLAY_STATUS_NONE;
     nStartFrame = 0;
     memset(&MovieInfo, 0, sizeof(MovieInfo));
     CheckRedraw();

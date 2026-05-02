@@ -374,14 +374,18 @@ bool UpdateInputs(int bPause, bool updateNetInputs)
     GetInput(false);						// Update burner inputs, but not game inputs
   }
   else {
+    // NOTE: These counters should not be updated as part of the input system!
     nFramesEmulated++;
     nCurrentFrame++;
+
+    // int packedInputSize = -1;
+    int packedInputSize = PackGameInputs();
 
     if (kNetGame) {
       if (updateNetInputs) {
         GetInput(true);						// Update inputs
         VidDisplayInputs(0, 0);
-        if (NetworkGetInput()) {	// Synchronize input with Network
+        if (NetworkGetInput(packedInputSize)) {	// Synchronize input with Network
           VidDisplayInputs(1, 1);
           DetectFreeze();
           return 1;
@@ -391,7 +395,7 @@ bool UpdateInputs(int bPause, bool updateNetInputs)
       }
       else {
         VidDisplayInputs(0, 3);
-        if (NetworkGetInput()) {
+        if (NetworkGetInput(packedInputSize)) {
           VidDisplayInputs(1, 1);
           DetectFreeze();
           return 1;
@@ -400,7 +404,7 @@ bool UpdateInputs(int bPause, bool updateNetInputs)
       }
     }
     else {
-      if (nReplayStatus == 2) {
+      if (nReplayStatus == REPLAY_STATUS_REPLAY) {
         GetInput(false);					// Update burner inputs, but not game inputs
         if (ReplayInput()) {		  // Read input from file
           SetPauseMode(1);        // Replay has finished
@@ -424,8 +428,8 @@ bool UpdateInputs(int bPause, bool updateNetInputs)
       }
     }
 
-    if (nReplayStatus == 1) {
-      RecordInput();					  	// Write input to file
+    if (nReplayStatus == REPLAY_STATUS_RECORD) {
+      RecordInput(packedInputSize);     // Write input to file
     }
   }
 }
