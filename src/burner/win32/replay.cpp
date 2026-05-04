@@ -65,49 +65,61 @@ struct MovieExtInfo MovieInfo = { 0, 0, 0, 0, 0, 0 };
 static INT32 ReplayDialog();
 static INT32 RecordDialog();
 
+// burner_win32.h
+unsigned char nControls[INPUTSIZE];
+
 // -------------------------------------------------------------------------------------------------------------------------
 void RecordInput(int packedInputSize)
 {
   // TEMP: Return
 
-  struct BurnInputInfo bii;
-  memset(&bii, 0, sizeof(bii));
+  // We shouldn't be here w/o an instance!
+  if (!_GameRecorder) { return; }
 
-  for (UINT32 i = 0; i < nGameInpCount; i++) {
-    BurnDrvGetInputInfo(&bii, i);
-    if (bii.pVal) {
-      if (bii.nType & BIT_GROUP_ANALOG) {
-        if (*bii.pShortVal != nPrevInputs[i]) {
-          EncodeBuffer(i);
-          EncodeBuffer(*bii.pShortVal >> 8);
-          EncodeBuffer(*bii.pShortVal & 0xFF);
-          nPrevInputs[i] = *bii.pShortVal;
-        }
-      }
-      else {
-        if (*bii.pVal != nPrevInputs[i]) {
-          EncodeBuffer(i);
-          EncodeBuffer(*bii.pVal);
-          nPrevInputs[i] = *bii.pVal;
-        }
-      }
-    }
-  }
-  EncodeBuffer(0xFF);
+  auto frame = GetCurrentFrame();
+  _GameRecorder->AddInputs(frame, (uint8_t*)(&nControls), packedInputSize);
 
-  if (nReplayExternalDataCount && ReplayExternalData) {
-    for (INT32 i = 0; i < nReplayExternalDataCount; i++) {
-      EncodeBuffer(ReplayExternalData[i]);
-    }
-  }
+  return; 
 
-  if (bReplayFrameCounterDisplay) {
-    wchar_t framestring[15];
-    swprintf(framestring, L"%d", GetCurrentFrame() - nStartFrame);
-    VidSNewTinyMsg(framestring);
-  }
+  // LEGACY:
+  //struct BurnInputInfo bii;
+  //memset(&bii, 0, sizeof(bii));
 
-  // return 0;
+  //for (UINT32 i = 0; i < nGameInpCount; i++) {
+  //  BurnDrvGetInputInfo(&bii, i);
+  //  if (bii.pVal) {
+  //    if (bii.nType & BIT_GROUP_ANALOG) {
+  //      if (*bii.pShortVal != nPrevInputs[i]) {
+  //        EncodeBuffer(i);
+  //        EncodeBuffer(*bii.pShortVal >> 8);
+  //        EncodeBuffer(*bii.pShortVal & 0xFF);
+  //        nPrevInputs[i] = *bii.pShortVal;
+  //      }
+  //    }
+  //    else {
+  //      if (*bii.pVal != nPrevInputs[i]) {
+  //        EncodeBuffer(i);
+  //        EncodeBuffer(*bii.pVal);
+  //        nPrevInputs[i] = *bii.pVal;
+  //      }
+  //    }
+  //  }
+  //}
+  //EncodeBuffer(0xFF);
+
+  //if (nReplayExternalDataCount && ReplayExternalData) {
+  //  for (INT32 i = 0; i < nReplayExternalDataCount; i++) {
+  //    EncodeBuffer(ReplayExternalData[i]);
+  //  }
+  //}
+
+  //if (bReplayFrameCounterDisplay) {
+  //  wchar_t framestring[15];
+  //  swprintf(framestring, L"%d", GetCurrentFrame() - nStartFrame);
+  //  VidSNewTinyMsg(framestring);
+  //}
+
+  //// return 0;
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
@@ -352,6 +364,7 @@ INT32 StartRecord()
   bReplayShowMovement = false;
 
   // We always reset the emulator to do a recording.  This is the way!
+  // Later on, I guess we could record inputs at some arbitrary point, but I don't really see the purpose....
   const bool RESET_FIRST = true;
   if (RESET_FIRST) {
     movieFlags |= MOVIE_FLAG_FROM_POWERON;
@@ -375,6 +388,11 @@ INT32 StartRecord()
     gd.GameVersion = "123";     // TODO: Emulator Version
     _GameRecorder = new GameRecorder(gd, usePath, true);
   }
+
+  nReplayCurrentFrame = GetCurrentFrame();
+  nReplayStatus = REPLAY_STATUS_RECORD;
+  nReplayUndoCount = 0;
+
 }
 
 // -------------------------------------------------------------------------------------------------------------------------

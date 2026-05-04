@@ -59,7 +59,7 @@ namespace EZWriter
 
   void Write(ostream& stream, const uint8_t data)
   {
-    stream.write(reinterpret_cast<const char*>(data), static_cast<streamsize>(1));
+    stream.write(reinterpret_cast<const char*>(&data), static_cast<streamsize>(1));
   }
 
   void Write(ostream& stream, const vector<uint8_t>& bytes)
@@ -116,7 +116,7 @@ void GameRecorder::Init(const filesystem::path& toPath, bool overwriteExisting)
     throw runtime_error("Data file for session id already exists!");
   }
 
-  
+
   // int x = gameData.DataSize;
 
   CreateStream(toPath.string());
@@ -141,7 +141,7 @@ void GameRecorder::Flush()
 }
 
 // ----------------------------------------------------------------------------------------------------------
-void GameRecorder::CompleteReplay(  int frame,  ECompletionReason reason,  EErrorReason errReason,  const string& message)
+void GameRecorder::CompleteReplay(int frame, ECompletionReason reason, EErrorReason errReason, const string& message)
 {
   CheckComplete();
 
@@ -212,6 +212,7 @@ void GameRecorder::AddChatSegment(ChatData& chat)
   DataStream.flush();
 }
 
+// ----------------------------------------------------------------------------------------------------------
 bool GameRecorder::AddInput(int playerIndex, GameInput& input)
 {
   // EZQ<GameInput>& buf = *PlayerBuffers[playerIndex];
@@ -239,6 +240,7 @@ bool GameRecorder::AddInput(int playerIndex, GameInput& input)
   startFrame++;
   BaseFrames[playerIndex] = startFrame;
 
+  // TODO: We don't need to use a const here!
   int len = MAX_PLAYERS; // static_cast<int>(PlayerBuffers.size());
 
   while (true)
@@ -248,7 +250,6 @@ bool GameRecorder::AddInput(int playerIndex, GameInput& input)
 
     for (int i = 0; i < len; i++)
     {
-      // EZQ<GameInput>& pBuf = *PlayerBuffers[i];
       auto& pBuf = PlayerBuffers[i];
 
       if (pBuf.Count() == 0)
@@ -443,6 +444,7 @@ int GameRecorder::CopyFixedString(const string& data, int maxSize, uint8_t* toBu
   return maxSize;
 }
 
+// ------------------------------------------------------------------------------------------------------
 void GameRecorder::OnError(EErrorReason errReason, const string& message)
 {
   ErrorReason = errReason;
@@ -451,6 +453,32 @@ void GameRecorder::OnError(EErrorReason errReason, const string& message)
   CompleteReplay(SyncedBaseFrame, ECompletionReason::Error, errReason, message);
 }
 
+
+// ----------------------------------------------------------------------------------------------------------
+bool GameRecorder::AddInputs(int frame, uint8_t* data, int dataSize) {
+
+  if (frame != SyncedBaseFrame + 1)  {
+    throw runtime_error("Unexpected frame number when adding inputs.");
+  }
+
+  GameInput merged;
+  merged.size = dataSize;
+  merged.frame = frame;
+  
+  // Copy the memory over.....
+  memcpy(merged.bits, data, dataSize);
+
+  WriteInputSegment(merged);
+
+  MergedInputs.push(merged);
+
+  SyncedBaseFrame = frame;
+
+  return true;
+  // throw std::runtime_error("complete me!");
+}
+
+// ------------------------------------------------------------------------------------------------------
 void GameRecorder::MergeInputs()
 {
   // PlayerBuffers.count() == MAX_PLAYERS
@@ -458,7 +486,7 @@ void GameRecorder::MergeInputs()
   int len = static_cast<int>(MAX_PLAYERS);
   int offset = GameData.TotalInputSize / len;
 
-  GameInput merged{};
+  GameInput merged;
   merged.size = GameData.TotalInputSize;
   merged.frame = MergeBuffer[0].frame;
 

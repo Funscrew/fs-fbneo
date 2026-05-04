@@ -12,8 +12,9 @@ static int nPlayerOffset[MAXPLAYER];
 static int nConstOffsets;
 static int nDIPOffset;
 
-const int INPUTSIZE = 8 * (4 + 8);				// We are assuming a max of eight bytes of input for up to 12 players.
-static unsigned char nControls[INPUTSIZE];
+//const int INPUTSIZE = 8 * (4 + 8);				// We are assuming a max of eight bytes of input for up to 12 players.
+//// REFACTOR: Use uint8_t....
+//static unsigned char nControls[INPUTSIZE];
 
 // ---------------------------------------------------------------------------------------------------------------------
 // Inputs are assumed to be in the following order:

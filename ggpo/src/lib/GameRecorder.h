@@ -132,6 +132,8 @@ public:
 
   void AddChatSegment(ChatData& chat);
 
+  // Add a complete set of inputs, no guessing.
+  bool AddInputs(int frame, uint8_t* data, int dataSize);
   bool AddInput(int playerIndex, GameInput& input);
 
 private:

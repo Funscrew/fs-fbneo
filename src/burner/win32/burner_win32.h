@@ -469,6 +469,10 @@ int NetworkGetInput(int size);
 // NOTE: This will pack inputs for all players.
 int PackGameInputs();
 
+const int INPUTSIZE = 8 * (4 + 8);				// We are assuming a max of eight bytes of input for up to 12 players.
+// REFACTOR: Use uint8_t....
+extern unsigned char nControls[INPUTSIZE];
+
 // fbn_ggpo.cpp
 int InitDirectConnection(DirectConnectionOptions& ops, GGPOLogOptions& logOps);
 
