@@ -134,6 +134,8 @@ public:
 
   // Add a complete set of inputs, no guessing.
   bool AddInputs(int frame, uint8_t* data, int dataSize);
+
+  // Add an input from a single player.
   bool AddInput(int playerIndex, GameInput& input);
 
 private:
