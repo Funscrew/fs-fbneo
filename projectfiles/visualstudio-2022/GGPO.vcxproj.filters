@@ -60,6 +60,7 @@
     </ClInclude>
     <ClInclude Include="..\..\ggpo\src\lib\GameRecorder.h" />
     <ClInclude Include="..\..\ggpo\src\lib\EZQ.h" />
+    <ClInclude Include="..\..\ggpo\src\lib\EZRing.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include=" ">

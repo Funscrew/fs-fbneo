@@ -470,7 +470,7 @@ bool GameRecorder::AddInputs(int frame, uint8_t* data, int dataSize) {
 
   WriteInputSegment(merged);
 
-  MergedInputs.push(merged);
+  MergedInputs.Push(merged);
 
   SyncedBaseFrame = frame;
 
@@ -506,5 +506,5 @@ void GameRecorder::MergeInputs()
 
   WriteInputSegment(merged);
 
-  MergedInputs.push(merged);
+  MergedInputs.Push(merged);
 }

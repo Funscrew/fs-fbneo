@@ -8,6 +8,7 @@
 #include "game_input.h"
 #include "ring_buffer.h"
 #include "EZQ.h"
+#include "EZRing.h"
 
 struct GameInput;
 using namespace std;
@@ -81,7 +82,7 @@ private:
   // uint64_t SessionId = 0;
   // string DataDir;
 
-  RingBuffer<GameInput, 64> MergedInputs;
+  EZRing<GameInput, 64> MergedInputs;
 
   static constexpr int PLAYER_INPUT_BUFFER_SIZE = 0x70;
   static constexpr int MAX_PLAYERS = 2;
