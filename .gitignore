@@ -22,3 +22,8 @@ dev-notes.*
 
 *.orig
 *.bak
+/src/burner/win32/RCa15624
+/src/burner/win32/RCa29680
+/src/burner/win32/RCb15624
+/src/burner/win32/RCc15624
+/src/dep/libs/lib7z/7zVersion.aps

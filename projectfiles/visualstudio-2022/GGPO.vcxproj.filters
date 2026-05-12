@@ -22,7 +22,8 @@
     <ClCompile Include="..\..\ggpo\src\lib\network\ReplayEndpoint.cpp">
       <Filter>Network</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\ggpo\src\lib\GameRecorder.cpp" />
+    <ClCompile Include="..\..\ggpo\src\lib\CGameRecorder.cpp" />
+    <ClCompile Include="..\..\ggpo\src\lib\CReplayFile.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\ggpo\src\lib\bitvector.h" />
@@ -58,9 +59,10 @@
     <ClInclude Include="..\..\ggpo\src\lib\network\ReplayEndpoint.h">
       <Filter>Network</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\ggpo\src\lib\GameRecorder.h" />
+    <ClInclude Include="..\..\ggpo\src\lib\CGameRecorder.h" />
     <ClInclude Include="..\..\ggpo\src\lib\EZQ.h" />
     <ClInclude Include="..\..\ggpo\src\lib\EZRing.h" />
+    <ClInclude Include="..\..\ggpo\src\lib\CReplayFile.h" />
   </ItemGroup>
   <ItemGroup>
     <Filter Include=" ">

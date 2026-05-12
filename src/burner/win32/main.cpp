@@ -124,6 +124,7 @@ CHAR* astring_from_utf8(const char* utf8string)
   int char_count;
   CHAR* result;
 
+  // FUTURE: We will make the application UTF-8 everywhere in the future.
   // convert MAME string (UTF-8) to UTF-16
   char_count = MultiByteToWideChar(CP_UTF8, 0, utf8string, -1, NULL, 0);
   wstring = (WCHAR*)malloc(char_count * sizeof(*wstring));

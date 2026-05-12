@@ -3,11 +3,12 @@
 #include "dynhuff.h"
 #include <commdlg.h>
 #include <io.h>
+#include <filesystem>
 
-#include "../../ggpo/src/lib/GameRecorder.h"
+#include "../../ggpo/src/lib/CGameRecorder.h"
 
-GameRecorder* _GameRecorder = nullptr;
-
+CGameRecorder* _GameRecorder = nullptr;
+CReplayFile* _ReplayFile = nullptr;
 
 #ifndef W_OK
 #define W_OK 4
@@ -386,7 +387,7 @@ INT32 StartRecord()
     CGameData gd;
     gd.GameName = "x";          // TODO: ROM NAME
     gd.GameVersion = "123";     // TODO: Emulator Version
-    _GameRecorder = new GameRecorder(gd, usePath, true);
+    _GameRecorder = new CGameRecorder(gd, usePath, true);
   }
 
   nReplayCurrentFrame = GetCurrentFrame();
@@ -399,36 +400,36 @@ INT32 StartRecord()
 INT32 StartReplay(const TCHAR* szFileName)					// const char* szFileName = NULL
 {
   // TEMP: This is currently disabled:
-  return 0;
+  // return 0;
 
   // LEGACY:
-//  INT32 nRet;
-//  INT32 bOldPause;
-//
-//  PrintInputsReset();
-//
-//  fp = NULL;
-//
-//  if (szFileName) {
-//    _tcscpy(szChoice, szFileName);
-//    if (!bReplayDontClose) {
-//      // if bStartFromReset, get file "wszStartupGame" from metadata!!
-//      DisplayReplayProperties(0, false);
-//    }
-//  }
-//  else {
-//    bOldPause = bRunPause;
-//    bRunPause = 1;
-//    nRet = ReplayDialog();
-//    bRunPause = bOldPause;
-//
-//    if (nRet == 0) {
-//      return 1;
-//    }
-//
-//  }
-//  _tcscpy(szCurrentMovieFilename, szChoice);
-//
+  INT32 nRet;
+  INT32 bOldPause;
+
+  PrintInputsReset();
+
+  fp = NULL;
+
+  if (szFileName) {
+    _tcscpy(szChoice, szFileName);
+    if (!bReplayDontClose) {
+      // if bStartFromReset, get file "wszStartupGame" from metadata!!
+      DisplayReplayProperties(0, false);
+    }
+  }
+  else {
+    bOldPause = bRunPause;
+    bRunPause = 1;
+    nRet = ReplayDialog();
+    bRunPause = bOldPause;
+
+    if (nRet == 0) {
+      return 1;
+    }
+
+  }
+  _tcscpy(szCurrentMovieFilename, szChoice);
+
 //  // init metadata
 //  wszMetadata[0] = L'\0';
 //  {
@@ -798,8 +799,22 @@ static void DisplayPropertiesError(HWND hDlg, INT32 nErrType)
   }
 }
 
+// -------------------------------------------------------------------------------------------------------------------------
 void DisplayReplayProperties(HWND hDlg, bool bClear)
 {
+  // Open the replay file:
+  if (_ReplayFile == nullptr) { 
+    GetRecordingPath(szChoice);
+
+    // TODO: We would convert this to a UTF-8 string correctly.
+    const UINT UTF8_SIZE = MAX_PATH * 2;
+    char utf8Path[UTF8_SIZE]; //   = WideCharToMultiByte
+    WideCharToMultiByte(CP_UTF8, 0,szChoice,-1, utf8Path, UTF8_SIZE, nullptr, nullptr);
+
+    auto path =  filesystem::path(utf8Path);
+    _ReplayFile = new CReplayFile(path);
+  }
+
   if (hDlg != 0) {
     // save status of read only checkbox
     static bool bReadOnlyStatus = true;
