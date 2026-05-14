@@ -3,7 +3,7 @@
 #include "CReplayFile.h"
 #include <sstream>
 
-namespace EZWriter
+namespace EZStream
 {
   template <typename T>
   void Write(ostream& stream, const T& value)
@@ -21,9 +21,32 @@ namespace EZWriter
     stream.write(reinterpret_cast<const char*>(bytes.data()), static_cast<streamsize>(bytes.size()));
   }
 
+  // ----------------------------------------------------------------------------------------------------
   void RawString(ostream& stream, const string& value)
   {
     stream.write(value.data(), static_cast<streamsize>(value.size()));
+  }
+
+  // ----------------------------------------------------------------------------------------------------
+  template <typename T>
+  void Read(istream& stream, T& value)
+  {
+    stream.read(reinterpret_cast<char*>(&value), sizeof(T));
+  }
+
+  // ----------------------------------------------------------------------------------------------------
+  void ReadBytes(istream& stream, uint8_t* buffer, int count) {
+    //if (stream.tellg() + count > stream.) {
+    //  throw new std::runtime_error("can't read past end of stream!");
+    //}
+    stream.read(reinterpret_cast<char*>(buffer), count);
+  }
+
+  // ----------------------------------------------------------------------------------------------------
+  uint8_t ReadUint8(istream& stream) {
+    uint8_t res = 0;
+    stream.read(reinterpret_cast<char*>(&res), 1);
+    return res;
   }
 }
 
@@ -108,20 +131,20 @@ void CReplayFile::CompleteReplay(int frame, ECompletionReason reason, EErrorReas
 
   stringstream ms(ios::in | ios::out | ios::binary);
 
-  EZWriter::Write(ms, static_cast<uint8_t>(reason));
-  EZWriter::Write(ms, static_cast<uint8_t>(errReason));
-  EZWriter::Write(ms, frame);
+  EZStream::Write(ms, static_cast<uint8_t>(reason));
+  EZStream::Write(ms, static_cast<uint8_t>(errReason));
+  EZStream::Write(ms, frame);
 
   CopyFixedString(message, COMPLETE_MSG_LEN, WriteBuffer, 0);
   ms.write(reinterpret_cast<const char*>(WriteBuffer), COMPLETE_MSG_LEN);
 
-  EZWriter::Write(ms, ReplayData::Footer);
+  EZStream::Write(ms, ReplayData::Footer);
 
   WriteSegmentData(EDataSegmentType::Complete, ms);
 
   int64_t finalSize = static_cast<int64_t>(DataStream.tellp()) + static_cast<int64_t>(sizeof(int64_t));
 
-  EZWriter::Write(DataStream, finalSize);
+  EZStream::Write(DataStream, finalSize);
 
   CloseStream();
 }
@@ -150,6 +173,30 @@ int CReplayFile::CopyFixedString(const string& data, int maxSize, uint8_t* toBuf
   return maxSize;
 }
 
+// ------------------------------------------------------------------------------------------------------
+// NOTE: This will probably choke on unicode stuff..  we do want it all to be utf8 tho.
+// Maybe something like this:
+// https://sourceforge.net/directory/internationalization-i18n/windows/
+void CGameData::SetGameName(std::string name) {
+  int len = name.length();
+  if (len > CGameData::MAX_GAME_NAME_SIZE) {
+    throw runtime_error("game name exceed 32 bytes!");
+  }
+  memset(GameName, 0, CGameData::MAX_GAME_NAME_SIZE);
+  memcpy(GameName, name.data(), len);
+}
+
+// ------------------------------------------------------------------------------------------------------
+// NOTE: This will probably choke on unicode stuff..  we do want it all to be utf8 tho.
+void CGameData::SetVersion(std::string version) {
+  int len = version.length();
+  if (len > CGameData::MAX_VERSION_SIZE) {
+    throw runtime_error("game name exceed 32 bytes!");
+  }
+  memset(GameVersion, 0, CGameData::MAX_VERSION_SIZE);
+  memcpy(GameVersion, version.data(), len);
+}
+
 
 // ------------------------------------------------------------------------------------------------------
 void CReplayFile::WriteSegmentData(EDataSegmentType segmentType, stringstream& data)
@@ -161,8 +208,8 @@ void CReplayFile::WriteSegmentData(EDataSegmentType segmentType, stringstream& d
   data.seekp(0, ios::end);
   int segmentSize = static_cast<int>(data.tellp());
 
-  EZWriter::Write(DataStream, static_cast<uint8_t>(segmentType));
-  EZWriter::Write(DataStream, static_cast<uint16_t>(segmentSize));
+  EZStream::Write(DataStream, static_cast<uint8_t>(segmentType));
+  EZStream::Write(DataStream, static_cast<uint16_t>(segmentSize));
 
   data.seekg(0, ios::beg);
   DataStream << data.rdbuf();
@@ -191,10 +238,68 @@ void CReplayFile::CloseStream()
 // ------------------------------------------------------------------------------------------------------------------------
 void CReplayFile::WriteHeader()
 {
-  EZWriter::Write(DataStream, ReplayData::Preamble);
-  EZWriter::Write(DataStream, vector<uint8_t> { 1 });
+  EZStream::Write(DataStream, ReplayData::Preamble);
+  EZStream::Write(DataStream, vector<uint8_t> { 1 });
 
   WriteGameData();
+  Flush();
+}
+
+
+// ------------------------------------------------------------------------------------------------------------------------
+void CReplayFile::ReadHeader()
+{
+  const int SIZE = 8;
+  uint8_t header[SIZE];
+  EZStream::ReadBytes(DataStream, header, SIZE);
+
+  if (memcmp(header, ReplayData::Preamble.data(), SIZE) != 0)
+  {
+    throw runtime_error("Invalid header for replay file!");
+  }
+
+  uint8_t version = EZStream::ReadUint8(DataStream);
+  if (version != 1) {
+    throw runtime_error("Unsupported file version!");
+  }
+
+  ReadGameData();
+
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+void CReplayFile::ReadGameData() {
+
+  // NOTE: We should put these in their own type!
+  uint8_t typeVal;
+  uint16_t dataSize;
+
+  // auto start = DataStream.tellp();
+
+  EZStream::Read(DataStream, typeVal);
+  auto segType = (EDataSegmentType)typeVal;
+  if (segType != EDataSegmentType::GameData) {
+    throw runtime_error("Invalid segment type for GameData!");
+  }
+
+  EZStream::Read(DataStream, dataSize);
+  if (dataSize != sizeof(CGameData)) {
+    throw runtime_error("Invalid data size for GameData!");
+  }
+
+  EZStream::Read<CGameData>(DataStream, GameData);
+
+  //auto end = DataStream.tellp();
+
+  //auto total = (end - start);
+  //if (total != 0) {
+  //  
+  //  GameData.PlayerCount = 1;
+  //  // throw runtime_error("SPLAT!");
+  //}
+
+  //// FAKE:
+  //GameData.PlayerCount = 1;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -203,23 +308,26 @@ void CReplayFile::WriteGameData() {
 
   streampos start = DataStream.tellp();
 
-  uint16_t segmentSize = CGameData::DataSize;
+  uint16_t segmentSize = sizeof(CGameData);
 
-  EZWriter::Write(DataStream, static_cast<uint8_t>(EDataSegmentType::GameData));
-  EZWriter::Write(DataStream, segmentSize);
+  EZStream::Write(DataStream, static_cast<uint8_t>(EDataSegmentType::GameData));
+  EZStream::Write(DataStream, segmentSize);
+  EZStream::Write<CGameData>(DataStream, GameData);
+  // GameData.Clear();
 
-  {
-    int size = CopyFixedString(GameData.GameName, CGameData::MAX_GAME_NAME_SIZE, WriteBuffer, 0);
-    DataStream.write(reinterpret_cast<const char*>(WriteBuffer), size);
-  }
 
-  {
-    int size = CopyFixedString(GameData.GameVersion, CGameData::MAX_VERSION_SIZE, WriteBuffer, 0);
-    DataStream.write(reinterpret_cast<const char*>(WriteBuffer), size);
-  }
+  //{
+  //  int size = CopyFixedString(GameData.GameName, CGameData::MAX_GAME_NAME_SIZE, WriteBuffer, 0);
+  //  DataStream.write(reinterpret_cast<const char*>(WriteBuffer), size);
+  //}
 
-  EZWriter::Write(DataStream, GameData.PlayerCount);
-  EZWriter::Write(DataStream, GameData.TotalInputSize);
+  //{
+  //  int size = CopyFixedString(GameData.GameVersion, CGameData::MAX_VERSION_SIZE, WriteBuffer, 0);
+  //  DataStream.write(reinterpret_cast<const char*>(WriteBuffer), size);
+  //}
+
+  //EZStream::Write(DataStream, GameData.PlayerCount);
+  //EZStream::Write(DataStream, GameData.TotalInputSize);
 
   streampos end = DataStream.tellp();
   int64_t total = static_cast<int64_t>(end - start);
@@ -247,11 +355,11 @@ void CReplayFile::AddChatSegment(ChatData& chat)
 
   streampos start = DataStream.tellp();
 
-  EZWriter::Write(DataStream, static_cast<uint8_t>(EDataSegmentType::ChatData));
-  EZWriter::Write(DataStream, static_cast<uint16_t>(segmentSize));
-  EZWriter::Write(DataStream, chat.FromPlayerIndex);
-  EZWriter::Write(DataStream, chat.ToPlayerIndex);
-  EZWriter::RawString(DataStream, chat.Message);
+  EZStream::Write(DataStream, static_cast<uint8_t>(EDataSegmentType::ChatData));
+  EZStream::Write(DataStream, static_cast<uint16_t>(segmentSize));
+  EZStream::Write(DataStream, chat.FromPlayerIndex);
+  EZStream::Write(DataStream, chat.ToPlayerIndex);
+  EZStream::RawString(DataStream, chat.Message);
 
   streampos end = DataStream.tellp();
   int64_t total = static_cast<int64_t>(end - start);
@@ -273,9 +381,9 @@ void CReplayFile::WriteInputSegment(const GameInput& input) {
   int inputSize = GameData.TotalInputSize;
   int segmentSize = inputSize + sizeof(int);
 
-  EZWriter::Write(DataStream, static_cast<uint8_t>(EDataSegmentType::InputData));
-  EZWriter::Write(DataStream, static_cast<uint16_t>(inputSize));
-  EZWriter::Write(DataStream, input.frame);
+  EZStream::Write(DataStream, static_cast<uint8_t>(EDataSegmentType::InputData));
+  EZStream::Write(DataStream, static_cast<uint16_t>(inputSize));
+  EZStream::Write(DataStream, input.frame);
 
   for (int i = 0; i < inputSize; i++)
   {
@@ -297,11 +405,6 @@ void CReplayFile::WriteInputSegment(const GameInput& input) {
 }
 
 
-// ------------------------------------------------------------------------------------------------------------------------
-void CReplayFile::ReadHeader()
-{
-  throw runtime_error("not implemented!");
-}
 
 // ----------------------------------------------------------------------------------------------------------
 void CReplayFile::Flush()

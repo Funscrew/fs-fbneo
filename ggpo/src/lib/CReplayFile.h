@@ -58,13 +58,17 @@ public:
   static constexpr int MAX_GAME_NAME_SIZE = 32;
   static constexpr int MAX_VERSION_SIZE = 16;
 
-  std::string GameName;
-  std::string GameVersion = "<n/a>";
+  char GameName[MAX_GAME_NAME_SIZE];
+  char GameVersion[MAX_VERSION_SIZE];
 
-  int PlayerCount = 0;
-  int TotalInputSize = 0;
+  uint16_t PlayerCount = 0;
+  uint16_t TotalInputSize = 0;
 
-  static constexpr uint16_t DataSize = MAX_GAME_NAME_SIZE + MAX_VERSION_SIZE + sizeof(int) + sizeof(int);
+  // static constexpr uint16_t DataSize = MAX_GAME_NAME_SIZE + MAX_VERSION_SIZE + sizeof(int) + sizeof(int);
+
+  void SetGameName(std::string name);
+  void SetVersion(std::string version);
+
 };
 
 // ========================================================================================================================
@@ -106,7 +110,7 @@ private:
   CGameData GameData;
 
   // REFACTOR: _Stream
-  std::ofstream DataStream;
+  std::fstream DataStream;
 
   void Init(const filesystem::path& path, EReplayFileMode mode_);
   void CheckComplete();
@@ -114,10 +118,12 @@ private:
   // Writing funcitons:
   void WriteHeader();
   void WriteGameData();
+
   void WriteSegmentData(EDataSegmentType segmentType, stringstream& data);
 
   // Reading functions:
   void ReadHeader();
+  void ReadGameData();
 
   void Flush();
 };

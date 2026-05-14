@@ -385,8 +385,11 @@ INT32 StartRecord()
     string usePath(converted);
 
     CGameData gd;
-    gd.GameName = "x";          // TODO: ROM NAME
-    gd.GameVersion = "123";     // TODO: Emulator Version
+    gd.SetGameName("x");                   // TODO: ROM NAME
+    gd.SetVersion("123");                  // TODO: Emulator Version
+    gd.PlayerCount = nMaxPlayers;   
+    gd.TotalInputSize = 10;                // TODO: Figure out what this is supposed to be....
+
     _GameRecorder = new CGameRecorder(gd, usePath, true);
   }
 

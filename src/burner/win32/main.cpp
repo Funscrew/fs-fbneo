@@ -1004,13 +1004,18 @@ int ProcessCommandLine(LPSTR lpCmdLine)
   app.add_option("--rom", romName, "Name of ROM to load");
   app.add_option("--lua", scriptName, "LUA script file to execute.");
 
-  // bool recordFlag = false;
   bool resFlag = false;
   bool screenFlag = false;
   // app.add_flag("--rec", recordFlag, "Record replay.");
   app.add_flag("-a", resFlag, "Use game resolution for fullscreen modes.");
   app.add_flag("-w", screenFlag, "Disable auto switch to fullscreen on loading driver.");
 
+  // record / replay options.
+  std::string recordPath;
+  std::string replayPath;
+  auto* recordOp = app.add_option("--record", recordPath, "Record inputs to file.");
+  auto* replayOp = app.add_option("--replay", replayPath, "Replay inputs from file.");
+  recordOp->excludes(replayOp);
 
   // Logging options for GGPO.  NOTE: This could be combined with the other logging facilities at some point.
   // TODO: Some kind of command line option to load all options from a single file.  This makes it easier
@@ -1090,11 +1095,6 @@ int ProcessCommandLine(LPSTR lpCmdLine)
   if (scriptName != "") {
     FBA_LoadLuaCode(scriptName.data());
   }
-
-  //// Apply flags.
-  //if (recordFlag) {
-  //  QuarkRecordAVIReplay();
-  //}
 
   if (screenFlag) {
     bVidAutoSwitchFullDisable = true;
