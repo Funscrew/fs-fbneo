@@ -1004,10 +1004,10 @@ int ProcessCommandLine(LPSTR lpCmdLine)
   app.add_option("--rom", romName, "Name of ROM to load");
   app.add_option("--lua", scriptName, "LUA script file to execute.");
 
-  bool recordFlag = false;
+  // bool recordFlag = false;
   bool resFlag = false;
   bool screenFlag = false;
-  app.add_flag("--rec", recordFlag, "Record replay.");
+  // app.add_flag("--rec", recordFlag, "Record replay.");
   app.add_flag("-a", resFlag, "Use game resolution for fullscreen modes.");
   app.add_flag("-w", screenFlag, "Disable auto switch to fullscreen on loading driver.");
 
@@ -1091,10 +1091,10 @@ int ProcessCommandLine(LPSTR lpCmdLine)
     FBA_LoadLuaCode(scriptName.data());
   }
 
-  // Apply flags.
-  if (recordFlag) {
-    QuarkRecordReplay();
-  }
+  //// Apply flags.
+  //if (recordFlag) {
+  //  QuarkRecordAVIReplay();
+  //}
 
   if (screenFlag) {
     bVidAutoSwitchFullDisable = true;

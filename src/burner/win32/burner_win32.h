@@ -499,7 +499,7 @@ void QuarkSendChatCmd(char* text, char code);
 void QuarkSendData(uint8_t code, void* data, UINT8 dataSize);
 
 void QuarkUpdateStats(double fps);
-void QuarkRecordReplay();
+void QuarkRecordAVIReplay();
 void QuarkFinishReplay();
 void QuarkDisconnect();
 

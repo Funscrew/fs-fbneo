@@ -2,7 +2,7 @@
 #include "burner.h"
 #include "ggpoclient.h"
 #include "ggpo_perfmon.h"
-// #include "GGPOSession.h";
+#include <stdexcept>
 
 extern "C" {
 #include "ggponet.h"
@@ -977,8 +977,9 @@ void QuarkUpdateStats(double fps)
 }
 
 // --------------------------------------------------------------------------------------------------------
-void QuarkRecordReplay()
+void QuarkRecordAVIReplay()
 {
+  throw std::runtime_error("avi recording is not supported at this time!");
   bReplayRecord = true;
   bReplayRecording = false;
 }

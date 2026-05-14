@@ -802,18 +802,6 @@ static void DisplayPropertiesError(HWND hDlg, INT32 nErrType)
 // -------------------------------------------------------------------------------------------------------------------------
 void DisplayReplayProperties(HWND hDlg, bool bClear)
 {
-  // Open the replay file:
-  if (_ReplayFile == nullptr) { 
-    GetRecordingPath(szChoice);
-
-    // TODO: We would convert this to a UTF-8 string correctly.
-    const UINT UTF8_SIZE = MAX_PATH * 2;
-    char utf8Path[UTF8_SIZE]; //   = WideCharToMultiByte
-    WideCharToMultiByte(CP_UTF8, 0,szChoice,-1, utf8Path, UTF8_SIZE, nullptr, nullptr);
-
-    auto path =  filesystem::path(utf8Path);
-    _ReplayFile = new CReplayFile(path);
-  }
 
   if (hDlg != 0) {
     // save status of read only checkbox
@@ -888,6 +876,20 @@ void DisplayReplayProperties(HWND hDlg, bool bClear)
 
   memset(&wszStartupGame, 0, sizeof(wszStartupGame));
   memset(&wszAuthorInfo, 0, sizeof(wszAuthorInfo));
+
+  // Open the replay file:
+  if (_ReplayFile == nullptr) {
+    // GetRecordingPath(szChoice);
+
+    // TODO: We would convert this to a UTF-8 string correctly.
+    const UINT UTF8_SIZE = MAX_PATH * 2;
+    char utf8Path[UTF8_SIZE]; //   = WideCharToMultiByte
+    WideCharToMultiByte(CP_UTF8, 0, szChoice, -1, utf8Path, UTF8_SIZE, nullptr, nullptr);
+
+    auto path = filesystem::path(utf8Path);
+    _ReplayFile = new CReplayFile(path);
+  }
+
 
   FILE* fd = _wfopen(szChoice, L"r+b");
   if (!fd) {
