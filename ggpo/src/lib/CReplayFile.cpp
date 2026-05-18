@@ -145,6 +145,12 @@ void CReplayFile::ReadSegmentHeader(CSegmentHeader& header) {
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
+void CReplayFile::WriteSegmentHeader(CSegmentHeader& header) {
+  EZStream::Write(DataStream, (uint8_t)header.Type);
+  EZStream::Write(DataStream, header.Size);
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
 void CReplayFile::ReadFooter()
 {
   // We will go to the end of the replay file first to check for the appropriate markers.
@@ -184,53 +190,6 @@ void CReplayFile::ReadFooter()
     throw new runtime_error("Invalid footer segment size!");
   }
 
-  ////int offset = sizeof(uint64_t) + ReplayData::FOOTER_STUB_SIZE;
-  ////DataStream.seekg(-offset, ios::end);
-
-  ////auto nPos = DataStream.tellg();
-
-  ////// Read the stub + total data size....
-  ////uint8_t stub[ReplayData::FOOTER_STUB_SIZE];
-  ////EZStream::ReadBytes(DataStream, stub, ReplayData::FOOTER_STUB_SIZE);
-
-  //////if (memcmp(stub, ReplayData::Footer.data(), ReplayData::FOOTER_STUB_SIZE) != 0)
-  //////{
-  //////  throw runtime_error("Invalid footer for replay file!");
-  //////}
-
-  ////uint64_t totalSize;
-  ////EZStream::Read(DataStream, totalSize);
-
-  ////if (fileSize != totalSize) {
-  ////  throw runtime_error("Incorrect size marker in replay file footer!");
-  ////}
-
-  ////// Now it's back to where we started so we can read inputs and whatever other events may be present.
-  ////DataStream.seekg(oldPos, ios::beg);
-
-  // NOW we can read in the rest of the footer data.....  
-  // const int COMPLETE_MSG_LEN = 64;
-
-  // stringstream ms(ios::in | ios::out | ios::binary);
-
-  //ECompletionReason reason = (ECompletionReason)EZStream::ReadUint8(DataStream);
-  //EErrorReason errReason = (EErrorReason)EZStream::ReadUint8(DataStream);
-
-
-  ////EZStream::Write(ms, static_cast<uint8_t>(reason));
-  ////EZStream::Write(ms, static_cast<uint8_t>(errReason));
-  ////EZStream::Write(ms, frame);
-
-  //CopyFixedString(message, COMPLETE_MSG_LEN, WriteBuffer, 0);
-  //ms.write(reinterpret_cast<const char*>(WriteBuffer), COMPLETE_MSG_LEN);
-
-  //EZStream::Write(ms, ReplayData::Footer);
-
-  //WriteSegmentData(EDataSegmentType::Complete, ms);
-
-  //int64_t finalSize = static_cast<int64_t>(DataStream.tellp()) + static_cast<int64_t>(sizeof(int64_t));
-
-  //EZStream::Write(DataStream, finalSize);
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -317,17 +276,18 @@ void CReplayFile::WriteSegmentData(EDataSegmentType segmentType, stringstream& d
   streampos start = DataStream.tellp();
 
   data.seekp(0, ios::end);
-  uint32_t segmentSize = static_cast<uint32_t>(data.tellp());
 
-  EZStream::Write(DataStream, static_cast<uint8_t>(segmentType));
-  EZStream::Write(DataStream, static_cast<uint32_t>(segmentSize));
+  CSegmentHeader segHeader;
+  segHeader.Type = segmentType;
+  segHeader.Size = static_cast<uint32_t>(data.tellp());
+  WriteSegmentHeader(segHeader);
 
   data.seekg(0, ios::beg);
   DataStream << data.rdbuf();
 
   streampos end = DataStream.tellp();
   int64_t total = static_cast<int64_t>(end - start);
-  int expected = segmentSize + sizeof(uint8_t) + sizeof(uint32_t);
+  int expected = segHeader.Size + sizeof(uint8_t) + sizeof(uint32_t);
 
   if (total != expected)
   {
@@ -379,37 +339,18 @@ void CReplayFile::ReadHeader()
 
 // ------------------------------------------------------------------------------------------------------------------------
 void CReplayFile::ReadGameData() {
+  CSegmentHeader segHeader;
+  ReadSegmentHeader(segHeader);
 
-  // NOTE: We should put these in their own type!
-  uint8_t typeVal;
-  uint16_t dataSize;
-
-  // auto start = DataStream.tellp();
-
-  EZStream::Read(DataStream, typeVal);
-  auto segType = (EDataSegmentType)typeVal;
-  if (segType != EDataSegmentType::GameData) {
+  if (segHeader.Type != EDataSegmentType::GameData) {
     throw runtime_error("Invalid segment type for GameData!");
   }
 
-  EZStream::Read(DataStream, dataSize);
-  if (dataSize != sizeof(CGameData)) {
+  if (segHeader.Size != sizeof(CGameData)) {
     throw runtime_error("Invalid data size for GameData!");
   }
 
   EZStream::Read<CGameData>(DataStream, GameData);
-
-  //auto end = DataStream.tellp();
-
-  //auto total = (end - start);
-  //if (total != 0) {
-  //  
-  //  GameData.PlayerCount = 1;
-  //  // throw runtime_error("SPLAT!");
-  //}
-
-  //// FAKE:
-  //GameData.PlayerCount = 1;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -418,16 +359,17 @@ void CReplayFile::WriteGameData() {
 
   streampos start = DataStream.tellp();
 
-  uint16_t segmentSize = sizeof(CGameData);
 
-  EZStream::Write(DataStream, static_cast<uint8_t>(EDataSegmentType::GameData));
-  EZStream::Write(DataStream, segmentSize);
+  CSegmentHeader segHeader;
+  segHeader.Type = EDataSegmentType::GameData;
+  segHeader.Size = sizeof(CGameData);
+
+  WriteSegmentHeader(segHeader);
   EZStream::Write<CGameData>(DataStream, GameData);
-
 
   streampos end = DataStream.tellp();
   int64_t total = static_cast<int64_t>(end - start);
-  int expected = segmentSize + 3;
+  int expected = segHeader.Size + CSegmentHeader::SizeOf();
 
   if (total != expected)
   {
@@ -447,19 +389,22 @@ void CReplayFile::AddChatSegment(ChatData& chat)
 
   chat.Message = StringTools::Truncate(chat.Message, ChatData::CHAT_DATA_MAX);
 
-  int segmentSize = static_cast<int>(chat.Message.size()) + sizeof(int) + sizeof(int);
-
   streampos start = DataStream.tellp();
 
-  EZStream::Write(DataStream, static_cast<uint8_t>(EDataSegmentType::ChatData));
-  EZStream::Write(DataStream, static_cast<uint16_t>(segmentSize));
+  CSegmentHeader segHeader;
+  segHeader.Type = EDataSegmentType::ChatData;
+  segHeader.Size = chat.GetSize();
+  // NOTE: Capturing this chat data doesn't capture who said what... the player indexes should be marked in the CGameData part of the file.
+
+  WriteSegmentHeader(segHeader);
+
   EZStream::Write(DataStream, chat.FromPlayerIndex);
   EZStream::Write(DataStream, chat.ToPlayerIndex);
   EZStream::RawString(DataStream, chat.Message);
 
   streampos end = DataStream.tellp();
   int64_t total = static_cast<int64_t>(end - start);
-  int expected = segmentSize + 3;
+  int expected = segHeader.Size + segHeader.SizeOf();
 
   if (total != expected)
   {
@@ -479,12 +424,16 @@ void CReplayFile::WriteInputSegment(const GameInput& input) {
   streampos start = DataStream.tellp();
 
   int inputSize = GameData.TotalInputSize;
-  int segmentSize = inputSize + sizeof(int);
 
-  EZStream::Write(DataStream, static_cast<uint8_t>(EDataSegmentType::InputData));
-  EZStream::Write(DataStream, static_cast<uint16_t>(inputSize));
+  CSegmentHeader segHeader;
+  segHeader.Type = EDataSegmentType::InputData;
+  segHeader.Size = inputSize + sizeof(int);   // all inputs + frame #
+  WriteSegmentHeader(segHeader);
+
+  streampos x = DataStream.tellp();
+
   EZStream::Write(DataStream, input.frame);
-
+  // TODO: memcpy
   for (int i = 0; i < inputSize; i++)
   {
     WriteBuffer[i] = input.bits[i];
@@ -494,7 +443,7 @@ void CReplayFile::WriteInputSegment(const GameInput& input) {
 
   streampos end = DataStream.tellp();
   int64_t total = static_cast<int64_t>(end - start);
-  int expected = segmentSize + 3;
+  int expected = segHeader.Size + CSegmentHeader::SizeOf();
 
   if (total != expected)
   {

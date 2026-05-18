@@ -24,7 +24,7 @@ enum class EErrorReason
 
 
 // ========================================================================================================================
-enum class EDataSegmentType
+enum class EDataSegmentType : uint8_t
 {
   Invalid = 0,
   GameData,
@@ -52,6 +52,7 @@ enum EReplayFileMode {
 };
 
 // ========================================================================================================================
+// TODO: Add the player names + indexes for chat data.  This CAN be blank for single player games, or if you don't care.
 class CGameData
 {
 public:
@@ -77,16 +78,22 @@ class ChatData
 public:
   static constexpr int CHAT_DATA_MAX = 128;
 
-  int FromPlayerIndex = 0;
+  // NOTE: There is an error if all indexes are the same number!
+  uint8_t FromPlayerIndex = 0;
+  uint8_t ToPlayerIndex = 0;
   int Frame = 0;
   std::string Message;
-  int ToPlayerIndex = -1;
+
+  inline uint32_t GetSize() { return Message.size() + sizeof(uint8_t) + sizeof(uint8_t) + sizeof(int); }
 };
 
 // ========================================================================================================================
 struct CSegmentHeader {
   EDataSegmentType Type;
   uint32_t Size;
+
+  // This unfucks c++ not actually treating the enum as a byte even tho we told it to.  Apologists can suck it, not interested in the excuses.
+  static constexpr uint32_t SizeOf() { return sizeof(uint8_t) + sizeof(uint32_t); }
 };
 
 // ========================================================================================================================
@@ -128,6 +135,7 @@ private:
 
   //
   void ReadSegmentHeader(CSegmentHeader& header);
+  void WriteSegmentHeader(CSegmentHeader& header);
 
   // Writing funcitons:
   void WriteHeader();
