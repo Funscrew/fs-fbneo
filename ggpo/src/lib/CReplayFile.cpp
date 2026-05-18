@@ -52,8 +52,11 @@ namespace EZStream
 
 namespace ReplayData
 {
-  const vector<uint8_t> Preamble = { 'f', 's', 'n', 'e', 'o', '-', 'r', 'f' };
-  extern const vector<uint8_t> Footer = { 'r', 'r', 'x', '-' };
+  const vector<uint8_t> Header = { 'f', 's', 'n', 'e', 'o', '-', 'r', 'f' };
+  // const vector<uint8_t> Footer = { 'r', 'r', 'x', '-' };
+
+  const int HEADER_STUB_SIZE = 8;
+  // const int FOOTER_STUB_SIZE = 4;
 }
 
 namespace StringTools
@@ -80,6 +83,11 @@ CReplayFile::CReplayFile(const std::filesystem::path& path, const CGameData& gam
   : GameData(gameData_)
 {
   Init(path, REPLAY_FILE_MODE_WRITE);
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+int CReplayFile::TotalFrames() {
+  return _CurFrame;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -110,6 +118,9 @@ void CReplayFile::Init(const filesystem::path& path, EReplayFileMode mode_) {
   switch (_Mode) {
   case REPLAY_FILE_MODE_READ:
     ReadHeader();
+
+    // The footer is read so that we can verify that the data is complete / valid.
+    ReadFooter();
     break;
 
   case REPLAY_FILE_MODE_WRITE:
@@ -121,30 +132,130 @@ void CReplayFile::Init(const filesystem::path& path, EReplayFileMode mode_) {
   }
 }
 
+// ------------------------------------------------------------------------------------------------------------------------
+void CReplayFile::ReadSegmentHeader(CSegmentHeader& header) {
+  uint8_t type;
+  uint32_t size;
+
+  EZStream::Read(DataStream, type);
+  EZStream::Read(DataStream, size);
+
+  header.Type = (EDataSegmentType)type;
+  header.Size = size;
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+void CReplayFile::ReadFooter()
+{
+  // We will go to the end of the replay file first to check for the appropriate markers.
+  auto oldPos = DataStream.tellg();
+
+  // Seek to the end....
+  DataStream.seekg(0, ios::end);
+  auto fileSize = (uint64_t)DataStream.tellg();
+
+
+  // Just back a few bytes to make sure that our footer is formed correctly....
+  // File Size Check:
+  DataStream.seekg(-(int64_t)(sizeof(uint64_t)), ios::end);
+  uint64_t checkSize;
+  EZStream::Read(DataStream, checkSize);
+
+  if (checkSize != fileSize) { 
+    throw new runtime_error("Invalid check size!");
+  }
+
+  // Now to the top of the header to read in the Footer segment + data.
+  // TODO: Place with other data related constants:
+  const int FOOTER_SIZE = 109;
+  DataStream.seekg(-FOOTER_SIZE, ios::end);
+
+  // Read Footer Segment:
+  CSegmentHeader sh;
+  ReadSegmentHeader(sh);
+
+  // More parity checking....
+  if (sh.Type != EDataSegmentType::Footer)
+  {
+    throw new runtime_error("Invalid footer marker!");
+  }
+  if (sh.Size != (fileSize - (FOOTER_SIZE - sizeof(uint8_t) + sizeof(uint32_t))))
+  {
+    throw new runtime_error("Invalid footer segment size!");
+  }
+
+  ////int offset = sizeof(uint64_t) + ReplayData::FOOTER_STUB_SIZE;
+  ////DataStream.seekg(-offset, ios::end);
+
+  ////auto nPos = DataStream.tellg();
+
+  ////// Read the stub + total data size....
+  ////uint8_t stub[ReplayData::FOOTER_STUB_SIZE];
+  ////EZStream::ReadBytes(DataStream, stub, ReplayData::FOOTER_STUB_SIZE);
+
+  //////if (memcmp(stub, ReplayData::Footer.data(), ReplayData::FOOTER_STUB_SIZE) != 0)
+  //////{
+  //////  throw runtime_error("Invalid footer for replay file!");
+  //////}
+
+  ////uint64_t totalSize;
+  ////EZStream::Read(DataStream, totalSize);
+
+  ////if (fileSize != totalSize) {
+  ////  throw runtime_error("Incorrect size marker in replay file footer!");
+  ////}
+
+  ////// Now it's back to where we started so we can read inputs and whatever other events may be present.
+  ////DataStream.seekg(oldPos, ios::beg);
+
+  // NOW we can read in the rest of the footer data.....  
+  // const int COMPLETE_MSG_LEN = 64;
+
+  // stringstream ms(ios::in | ios::out | ios::binary);
+
+  //ECompletionReason reason = (ECompletionReason)EZStream::ReadUint8(DataStream);
+  //EErrorReason errReason = (EErrorReason)EZStream::ReadUint8(DataStream);
+
+
+  ////EZStream::Write(ms, static_cast<uint8_t>(reason));
+  ////EZStream::Write(ms, static_cast<uint8_t>(errReason));
+  ////EZStream::Write(ms, frame);
+
+  //CopyFixedString(message, COMPLETE_MSG_LEN, WriteBuffer, 0);
+  //ms.write(reinterpret_cast<const char*>(WriteBuffer), COMPLETE_MSG_LEN);
+
+  //EZStream::Write(ms, ReplayData::Footer);
+
+  //WriteSegmentData(EDataSegmentType::Complete, ms);
+
+  //int64_t finalSize = static_cast<int64_t>(DataStream.tellp()) + static_cast<int64_t>(sizeof(int64_t));
+
+  //EZStream::Write(DataStream, finalSize);
+}
 
 // ------------------------------------------------------------------------------------------------------------------------
 void CReplayFile::CompleteReplay(int frame, ECompletionReason reason, EErrorReason errReason, const std::string& message) {
 
   CheckComplete();
 
-  const int COMPLETE_MSG_LEN = 64;
+  // TODO: Some kind of check to make sure that the frame we are ending on is at or near the current input frame.
+  // WRITE FOOTER
 
   stringstream ms(ios::in | ios::out | ios::binary);
-
+  EZStream::Write(ms, frame);
   EZStream::Write(ms, static_cast<uint8_t>(reason));
   EZStream::Write(ms, static_cast<uint8_t>(errReason));
-  EZStream::Write(ms, frame);
 
+  const int COMPLETE_MSG_LEN = 64;
   CopyFixedString(message, COMPLETE_MSG_LEN, WriteBuffer, 0);
   ms.write(reinterpret_cast<const char*>(WriteBuffer), COMPLETE_MSG_LEN);
 
-  EZStream::Write(ms, ReplayData::Footer);
-
-  WriteSegmentData(EDataSegmentType::Complete, ms);
 
   int64_t finalSize = static_cast<int64_t>(DataStream.tellp()) + static_cast<int64_t>(sizeof(int64_t));
 
-  EZStream::Write(DataStream, finalSize);
+  EZStream::Write(ms, finalSize);
+
+  WriteSegmentData(EDataSegmentType::Footer, ms);
 
   CloseStream();
 }
@@ -206,17 +317,17 @@ void CReplayFile::WriteSegmentData(EDataSegmentType segmentType, stringstream& d
   streampos start = DataStream.tellp();
 
   data.seekp(0, ios::end);
-  int segmentSize = static_cast<int>(data.tellp());
+  uint32_t segmentSize = static_cast<uint32_t>(data.tellp());
 
   EZStream::Write(DataStream, static_cast<uint8_t>(segmentType));
-  EZStream::Write(DataStream, static_cast<uint16_t>(segmentSize));
+  EZStream::Write(DataStream, static_cast<uint32_t>(segmentSize));
 
   data.seekg(0, ios::beg);
   DataStream << data.rdbuf();
 
   streampos end = DataStream.tellp();
   int64_t total = static_cast<int64_t>(end - start);
-  int expected = segmentSize + 3;
+  int expected = segmentSize + sizeof(uint8_t) + sizeof(uint32_t);
 
   if (total != expected)
   {
@@ -238,7 +349,7 @@ void CReplayFile::CloseStream()
 // ------------------------------------------------------------------------------------------------------------------------
 void CReplayFile::WriteHeader()
 {
-  EZStream::Write(DataStream, ReplayData::Preamble);
+  EZStream::Write(DataStream, ReplayData::Header);
   EZStream::Write(DataStream, vector<uint8_t> { 1 });
 
   WriteGameData();
@@ -253,7 +364,7 @@ void CReplayFile::ReadHeader()
   uint8_t header[SIZE];
   EZStream::ReadBytes(DataStream, header, SIZE);
 
-  if (memcmp(header, ReplayData::Preamble.data(), SIZE) != 0)
+  if (memcmp(header, ReplayData::Header.data(), SIZE) != 0)
   {
     throw runtime_error("Invalid header for replay file!");
   }
@@ -264,7 +375,6 @@ void CReplayFile::ReadHeader()
   }
 
   ReadGameData();
-
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -313,21 +423,7 @@ void CReplayFile::WriteGameData() {
   EZStream::Write(DataStream, static_cast<uint8_t>(EDataSegmentType::GameData));
   EZStream::Write(DataStream, segmentSize);
   EZStream::Write<CGameData>(DataStream, GameData);
-  // GameData.Clear();
 
-
-  //{
-  //  int size = CopyFixedString(GameData.GameName, CGameData::MAX_GAME_NAME_SIZE, WriteBuffer, 0);
-  //  DataStream.write(reinterpret_cast<const char*>(WriteBuffer), size);
-  //}
-
-  //{
-  //  int size = CopyFixedString(GameData.GameVersion, CGameData::MAX_VERSION_SIZE, WriteBuffer, 0);
-  //  DataStream.write(reinterpret_cast<const char*>(WriteBuffer), size);
-  //}
-
-  //EZStream::Write(DataStream, GameData.PlayerCount);
-  //EZStream::Write(DataStream, GameData.TotalInputSize);
 
   streampos end = DataStream.tellp();
   int64_t total = static_cast<int64_t>(end - start);
@@ -376,6 +472,10 @@ void CReplayFile::AddChatSegment(ChatData& chat)
 // ------------------------------------------------------------------------------------------------------------------------
 void CReplayFile::WriteInputSegment(const GameInput& input) {
   CheckComplete();
+
+  // TODO: Some kind of check to make sure that we are writing the frame numbers sequentially!
+  _CurFrame = input.frame;
+
   streampos start = DataStream.tellp();
 
   int inputSize = GameData.TotalInputSize;

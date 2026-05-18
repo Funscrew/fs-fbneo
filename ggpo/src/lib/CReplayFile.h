@@ -30,7 +30,7 @@ enum class EDataSegmentType
   GameData,
   InputData,
   ChatData,
-  Complete
+  Footer
 };
 
 // ========================================================================================================================
@@ -84,6 +84,12 @@ public:
 };
 
 // ========================================================================================================================
+struct CSegmentHeader {
+  EDataSegmentType Type;
+  uint32_t Size;
+};
+
+// ========================================================================================================================
 // Reads / writes data into a replay file.
 class CReplayFile {
 
@@ -103,17 +109,25 @@ public:
   // TODO: Share
   static int CopyFixedString(const std::string& data, int maxSize, uint8_t* toBuffer, int offset);
 
+  // Get the total frame count for the file.
+  int TotalFrames();
+
 private:
   uint8_t WriteBuffer[0x400];
 
   EReplayFileMode _Mode;
   CGameData GameData;
 
+  int _CurFrame = 0;
+
   // REFACTOR: _Stream
   std::fstream DataStream;
 
   void Init(const filesystem::path& path, EReplayFileMode mode_);
   void CheckComplete();
+
+  //
+  void ReadSegmentHeader(CSegmentHeader& header);
 
   // Writing funcitons:
   void WriteHeader();
@@ -123,6 +137,7 @@ private:
 
   // Reading functions:
   void ReadHeader();
+  void ReadFooter();
   void ReadGameData();
 
   void Flush();

@@ -1,0 +1,28 @@
+Replay File Format
+
+HEADER
+SEGMENTS...  (5 bytes)
+[SH (segment header)] - 8 32
++ Segment Type
++ Segment Size
+
+FOOTER (segment) - (109 Bytes)
+[SH] 8 8 16 64 8
+
++ SH (8 + 32)
++ Last Frame (completion frame)
++ Complete Reason
++ Error Reason
++ Message
++ Final File Size
+
+
+FOOTER (segment) - (128 Bytes)
+[SH] 8 8 16 64 8
+
++ SH (8 + 16)
++ Last Frame (completion frame)
++ Complete Reason
++ Error Reason
++ Message
++ Final File Size
