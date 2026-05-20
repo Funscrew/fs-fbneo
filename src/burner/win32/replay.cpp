@@ -1,6 +1,5 @@
 // Functions for recording & replaying input
 #include "burner.h"
-#include "dynhuff.h"
 #include <commdlg.h>
 #include <io.h>
 #include <filesystem>
@@ -48,7 +47,7 @@ UINT32 nThisFBVersion = 0;
 UINT32 nStartFrame = 0;
 static UINT32 nEndFrame;
 
-static FILE* fp = NULL;
+// static FILE* fp = NULL;
 static INT32 nSizeOffset;
 
 static int16_t nPrevInputs[0x0100];
@@ -431,8 +430,6 @@ INT32 StartReplay(const TCHAR* szFileName)
 
   PrintInputsReset();
 
-  fp = NULL;
-
   if (szFileName) {
     _tcscpy(szChoice, szFileName);
     if (!bReplayDontClose) {
@@ -458,35 +455,35 @@ INT32 StartReplay(const TCHAR* szFileName)
 
   MenuEnableItems();
 
-  
-    struct BurnInputInfo bii;
-    memset(&bii, 0, sizeof(bii));
 
-    throw new runtime_error("please complete me");
-    // New approach.  We ask the replay file for the first input and continue.
-    // nPrevInputs
+  struct BurnInputInfo bii;
+  memset(&bii, 0, sizeof(bii));
 
-      //// LEGACY:  This is setting the initial value of the inputs... is it for frame #1?  I think so since
-      // LoadCompressedFile();
-      // it is also assigning 'nprevinputs'...
-      //// I guess that this is required for proper playback in the old system....
-      //// Get the baseline
-      //for (UINT32 i = 0; i < nGameInpCount; i++) {
-      //  BurnDrvGetInputInfo(&bii, i);
-      //  if (bii.pVal) {
-      //    if (bii.nType & BIT_GROUP_ANALOG) {
-      //      *bii.pShortVal = nPrevInputs[i] = (DecodeBuffer() << 8) | DecodeBuffer();
+  throw new runtime_error("please complete me");
+  // New approach.  We ask the replay file for the first input and continue.
+  // nPrevInputs
 
-      //    }
-      //    else {
-      //      *bii.pVal = nPrevInputs[i] = DecodeBuffer();
-      //    }
-      //  }
-      //  else {
-      //    DecodeBuffer();
-      //  }
-      //}
-  
+    //// LEGACY:  This is setting the initial value of the inputs... is it for frame #1?  I think so since
+    // LoadCompressedFile();
+    // it is also assigning 'nprevinputs'...
+    //// I guess that this is required for proper playback in the old system....
+    //// Get the baseline
+    //for (UINT32 i = 0; i < nGameInpCount; i++) {
+    //  BurnDrvGetInputInfo(&bii, i);
+    //  if (bii.pVal) {
+    //    if (bii.nType & BIT_GROUP_ANALOG) {
+    //      *bii.pShortVal = nPrevInputs[i] = (DecodeBuffer() << 8) | DecodeBuffer();
+
+    //    }
+    //    else {
+    //      *bii.pVal = nPrevInputs[i] = DecodeBuffer();
+    //    }
+    //  }
+    //  else {
+    //    DecodeBuffer();
+    //  }
+    //}
+
 
 
 //#ifdef FBNEO_DEBUG
@@ -549,12 +546,6 @@ static void CloseRecord()
 // -------------------------------------------------------------------------------------------------------------------------
 static void CloseReplay()
 {
-  CloseCompressedFile();
-
-  if (fp) {
-    fclose(fp);
-    fp = NULL;
-  }
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
@@ -567,9 +558,6 @@ void StopReplay()
       debugPrintf(_T(" ** Recording stopped, recorded %d frames.\n"), GetCurrentFrame() - nStartFrame);
 #endif
       CloseRecord();
-#ifdef FBNEO_DEBUG
-      PrintResult();
-#endif
     }
     else {
 #ifdef FBNEO_DEBUG
