@@ -173,27 +173,39 @@ void CReplayFile::ReadFooter()
 
   // Now to the top of the header to read in the Footer segment + data.
   // TODO: Place with other data related constants:
-  const int FOOTER_SIZE = 109;
+  const int FOOTER_SIZE = 83;
   DataStream.seekg(-FOOTER_SIZE, ios::end);
 
   // Read Footer Segment:
   CSegmentHeader sh;
   ReadSegmentHeader(sh);
 
+
   // More parity checking....
   if (sh.Type != EDataSegmentType::Footer)
   {
     throw new runtime_error("Invalid footer marker!");
   }
-  if (sh.Size != (fileSize - (FOOTER_SIZE - sizeof(uint8_t) + sizeof(uint32_t))))
+
+  auto expectedSize = FOOTER_SIZE - CSegmentHeader::SizeOf();
+  if (sh.Size != expectedSize) // (fileSize - (FOOTER_SIZE - sizeof(uint8_t) + sizeof(uint32_t))))
   {
     throw new runtime_error("Invalid footer segment size!");
   }
 
+  // Last Frame...
+  EZStream::Read(DataStream, _CurFrame);
+
+  // TODO: Read more data here, depending on if we care..... (we do)
+
+
+  // Move back to where we started....
+  DataStream.seekg(oldPos);
+
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
-void CReplayFile::CompleteReplay(int frame, ECompletionReason reason, EErrorReason errReason, const std::string& message) {
+void CReplayFile::CompleteReplayFile(int frame, ECompletionReason reason, EErrorReason errReason, const std::string& message) {
 
   CheckComplete();
 
@@ -209,12 +221,17 @@ void CReplayFile::CompleteReplay(int frame, ECompletionReason reason, EErrorReas
   CopyFixedString(message, COMPLETE_MSG_LEN, WriteBuffer, 0);
   ms.write(reinterpret_cast<const char*>(WriteBuffer), COMPLETE_MSG_LEN);
 
-
-  int64_t finalSize = static_cast<int64_t>(DataStream.tellp()) + static_cast<int64_t>(sizeof(int64_t));
+  auto footerSize = (uint64_t)ms.tellp();
+  int64_t finalSize = static_cast<int64_t>((uint64_t)DataStream.tellp() + footerSize + sizeof(uint64_t) + CSegmentHeader::SizeOf());
 
   EZStream::Write(ms, finalSize);
 
   WriteSegmentData(EDataSegmentType::Footer, ms);
+
+  auto curSize = DataStream.tellp();
+  if (curSize != finalSize) { 
+    throw runtime_error("final size computation is incorrect!");
+  }
 
   CloseStream();
 }

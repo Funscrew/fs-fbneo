@@ -84,7 +84,7 @@ bool CGameRecorder::HasError() const
 // ----------------------------------------------------------------------------------------------------------
 void CGameRecorder::CompleteReplay(int frame, ECompletionReason reason, EErrorReason errReason, const string& message)
 {
-  _File->CompleteReplay(frame, reason, errReason, message);
+  _File->CompleteReplayFile(frame, reason, errReason, message);
   RecordingComplete = true;
 }
 

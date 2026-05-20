@@ -109,7 +109,7 @@ public:
 
   void AddChatSegment(ChatData& chat);
   void WriteInputSegment(const GameInput& input);
-  void CompleteReplay(int frame, ECompletionReason reason, EErrorReason errReason, const std::string& message);
+  void CompleteReplayFile(int frame, ECompletionReason reason, EErrorReason errReason, const std::string& message);
 
   void CloseStream();
 
