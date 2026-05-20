@@ -34,10 +34,6 @@ TCHAR szCurrentMovieFilename[MAX_PATH] = _T("");      // TODO: Convert to ASCII 
 UINT32 nTotalFrames = 0;
 UINT32 nReplayCurrentFrame;
 
-// If a driver has external data that needs to be recorded every frame.
-INT32 nReplayExternalDataCount = 0;
-UINT8* ReplayExternalData = NULL;
-
 #define MOVIE_FLAG_FROM_POWERON (1<<1)
 
 const UINT32 nMovieVersion = 0x0401;
@@ -262,7 +258,6 @@ static void PrintInputs()
 // ----------------------------------------------------------------------------------------------------------
 INT32 ReplayInput()
 {
-  UINT8 n;
   struct BurnInputInfo bii;
   memset(&bii, 0, sizeof(bii));
 
@@ -279,51 +274,68 @@ INT32 ReplayInput()
     }
   }
 
-  // Now read all inputs that need to change from the .fr file
-  while ((n = DecodeBuffer()) != 0xFF) {
-    BurnDrvGetInputInfo(&bii, n);
-    if (bii.pVal) {
-      if (bii.nType & BIT_GROUP_ANALOG) {
-        *bii.pShortVal = nPrevInputs[n] = (DecodeBuffer() << 8) | DecodeBuffer();
-      }
-      else {
-        *bii.pVal = nPrevInputs[n] = DecodeBuffer();
-      }
+  // Now read all inputs that need to change from the replay file.
+  // nCurrentFrame
+  GameInput gi;
+  bool hasInput = _ReplayFile->GetNextInput(gi);
+  
+  if (hasInput) { 
+    if (bReplayFrameCounterDisplay) {
+      wchar_t framestring[32];
+      swprintf(framestring, L"%d / %d", GetCurrentFrame() - nStartFrame, nTotalFrames);
+      VidSNewTinyMsg(framestring);
     }
-    else {
-      DecodeBuffer();
-    }
-  }
 
-  if (nReplayExternalDataCount && ReplayExternalData) {
-    for (INT32 i = 0; i < nReplayExternalDataCount; i++) {
-      ReplayExternalData[i] = DecodeBuffer();
+    if (bReplayShowMovement) {
+      PrintInputs();
     }
   }
-
-  if (bReplayFrameCounterDisplay) {
-    wchar_t framestring[32];
-    swprintf(framestring, L"%d / %d", GetCurrentFrame() - nStartFrame, nTotalFrames);
-    VidSNewTinyMsg(framestring);
-  }
-
-  if (bReplayShowMovement) {
-    PrintInputs();
-  }
-
-#if 0
-  if ((GetCurrentFrame() - nStartFrame) == (nTotalFrames - 1)) {
-    bRunPause = 1; // pause at the last recorded frame? causes weird issues when pauses.  investigate later.. -dink
-  }
-#endif
-
-  if (end_of_buffer) {
+  else {
     StopReplay();
     return 1;
   }
-  else {
-    return 0;
-  }
+  
+  //UINT8 n;
+  //while ((n = DecodeBuffer()) != 0xFF) {
+  //  BurnDrvGetInputInfo(&bii, n);
+  //  if (bii.pVal) {
+  //    if (bii.nType & BIT_GROUP_ANALOG) {
+  //      *bii.pShortVal = nPrevInputs[n] = (DecodeBuffer() << 8) | DecodeBuffer();
+  //    }
+  //    else {
+  //      *bii.pVal = nPrevInputs[n] = DecodeBuffer();
+  //    }
+  //  }
+  //  else {
+  //    DecodeBuffer();
+  //  }
+  //}
+
+  // NOTE: "ReplayExternalData" looks to be used exclusively for the MSX driver, which
+  // I am not really interested in supporting.  It seems that the 'external data' stuff
+  // is kind of a hack around not wanting to define every keyboard key in the normal input
+  // system.  Since I care about making the future input system better, I am going to punt
+  // and we will just live with breaking MSX replay support.
+  // Not really worried about it since it seems to only be enabled for win32 builds anyway....
+  //if (nReplayExternalDataCount && ReplayExternalData) {
+  //  for (INT32 i = 0; i < nReplayExternalDataCount; i++) {
+  //    ReplayExternalData[i] = DecodeBuffer();
+  //  }
+  //}
+
+//
+//#if 0
+//  if ((GetCurrentFrame() - nStartFrame) == (nTotalFrames - 1)) {
+//    bRunPause = 1; // pause at the last recorded frame? causes weird issues when pauses.  investigate later.. -dink
+//  }
+//#endif
+//
+//  if (end_of_buffer) {
+//  }
+//  else {
+//    return 0;
+//  }
+
 }
 
 static void MakeOfn(TCHAR* pszFilter)
@@ -350,7 +362,6 @@ INT32 StartRecord()
   INT32 nRet;
   INT32 bOldPause;
 
-  fp = NULL;
   movieFlags = 0;
 
   bOldPause = bRunPause;

@@ -6,7 +6,10 @@
 // Oddities:
 //  VoidRunner and Milk Race freeze when selecting between kbd/joy. (VoidRunner has a kludge, but it doesn't work for Milk Race)
 //  Krakout any key starts, can't get into settings
-
+// @@AAR: 5.20.2026 : While working on updates to the record / replay system, I removed the 'ReplayExternalData' and related
+// concepts from replay.cpp.  MSX is the only driver that used the feature, and only on win32 builds.  My long term goals include
+// updates to the input system, which would include first-class support for these 'extra inputs' so I will take it up at that time.
+// For now, MSX no longer has 100% record / replay support.
 #include "tiles_generic.h"
 #include "z80_intf.h"
 #include "driver.h"
@@ -18,17 +21,10 @@
 
 #ifdef BUILD_WIN32
 extern void (*cBurnerKeyCallback)(UINT8 code, UINT8 KeyType, UINT8 down);
-extern INT32 nReplayExternalDataCount;
-extern UINT8 *ReplayExternalData;
 #endif
 
 #ifdef __LIBRETRO__
 extern void (*cBurnerKeyCallback)(UINT8 code, UINT8 KeyType, UINT8 down);
-#endif
-
-#ifndef BUILD_WIN32
-INT32 nReplayExternalDataCount = 0;
-UINT8 *ReplayExternalData = NULL;
 #endif
 
 #include "ay8910.h"
@@ -1442,8 +1438,6 @@ static INT32 DrvInit()
 	}
 #ifdef BUILD_WIN32
 	cBurnerKeyCallback = msxKeyCallback;
-	nReplayExternalDataCount = sizeof(keyRows);
-	ReplayExternalData = &keyRows[0];
 #endif
 #ifdef __LIBRETRO__
 	cBurnerKeyCallback = msxKeyCallback;
@@ -1508,8 +1502,6 @@ static INT32 DrvExit()
 
 #ifdef BUILD_WIN32
 	cBurnerKeyCallback = NULL;
-	nReplayExternalDataCount = 0;
-	ReplayExternalData = NULL;
 #endif
 #ifdef __LIBRETRO__
 	cBurnerKeyCallback = NULL;

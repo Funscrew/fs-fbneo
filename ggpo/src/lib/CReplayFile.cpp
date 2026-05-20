@@ -443,7 +443,7 @@ void CReplayFile::AddChatSegment(ChatData& chat)
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
-void CReplayFile::WriteInputSegment(const GameInput& input) {
+void CReplayFile::AddInputSegment(const GameInput& input) {
   CheckComplete();
 
   // TODO: Some kind of check to make sure that we are writing the frame numbers sequentially!

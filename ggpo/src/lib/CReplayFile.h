@@ -129,10 +129,13 @@ public:
   CReplayFile(const filesystem::path& path, const CGameData& gameData_);
 
   void AddChatSegment(ChatData& chat);
-  void WriteInputSegment(const GameInput& input);
+  void AddInputSegment(const GameInput& input);
   void CompleteReplayFile(int frame, ECompletionReason reason, EErrorReason errReason, const std::string& message);
-
   void CloseStream();
+
+  // Read to the next recorded input....
+  // NOTE: We should be pulling all events up to a certain frame, really.....  How else can we get timed chat data, etc.
+  bool GetNextInput(GameInput& input);
 
   // TODO: Share
   static int CopyFixedString(const std::string& data, int maxSize, uint8_t* toBuffer, int offset);

@@ -188,7 +188,7 @@ bool CGameRecorder::AddInputs(int frame, uint8_t* data, int dataSize) {
   // Copy the memory over.....
   memcpy(merged.bits, data, dataSize);
 
-  _File->WriteInputSegment(merged);
+  _File->AddInputSegment(merged);
 
   MergedInputs.Push(merged);
 
@@ -223,7 +223,7 @@ void CGameRecorder::MergeInputs()
     }
   }
 
-  _File->WriteInputSegment(merged);
+  _File->AddInputSegment(merged);
 
   MergedInputs.Push(merged);
 }
