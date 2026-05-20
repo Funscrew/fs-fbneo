@@ -51,7 +51,7 @@ static UINT32 nEndFrame;
 static FILE* fp = NULL;
 static INT32 nSizeOffset;
 
-static short nPrevInputs[0x0100];
+static int16_t nPrevInputs[0x0100];
 
 static INT32 nPrintInputsActive[2] = { 0, 0 };
 
@@ -260,6 +260,7 @@ static void PrintInputs()
   VidSNewJoystickMsg(lines[2], 0xffffff, 20, 2);
 }
 
+// ----------------------------------------------------------------------------------------------------------
 INT32 ReplayInput()
 {
   UINT8 n;
@@ -389,9 +390,10 @@ INT32 StartRecord()
     //version.append(
     char version[16];
     memset(version, 0, 16);
+
+    // TODO: Check for this formatting on the window as well.
     sprintf_s(version, 16, "%d.%d.%d-%d", VER_MAJOR, VER_MINOR, VER_REVISION, VER_GGPO);
 
-    // szRomName
 
     TCHAR* unicodeRomName = BurnDrvGetText(DRV_NAME);
     char romName[CGameData::MAX_GAME_NAME_SIZE];
@@ -399,14 +401,14 @@ INT32 StartRecord()
     WideCharToMultiByte(CP_UTF8, 0, unicodeRomName, -1, romName, CGameData::MAX_GAME_NAME_SIZE, NULL, NULL);
 
     // This will tell us the correct size for the inputs for the current game.
-    // May be a better way to do this in the future....
+    // May be a better way to do this in the future, like from the gamedef directly....
     int inputSize = PackGameInputs();
 
     CGameData gd;
-    gd.SetGameName(romName);                
+    gd.SetGameName(romName);
     gd.SetVersion(version);
     gd.PlayerCount = nMaxPlayers;
-    gd.TotalInputSize = inputSize;             
+    gd.TotalInputSize = inputSize;
 
     _GameRecorder = new CGameRecorder(gd, usePath, true);
   }
@@ -418,7 +420,7 @@ INT32 StartRecord()
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
-INT32 StartReplay(const TCHAR* szFileName)					// const char* szFileName = NULL
+INT32 StartReplay(const TCHAR* szFileName)
 {
   // TEMP: This is currently disabled:
   // return 0;
@@ -451,170 +453,47 @@ INT32 StartReplay(const TCHAR* szFileName)					// const char* szFileName = NULL
   }
   _tcscpy(szCurrentMovieFilename, szChoice);
 
-  //  // init metadata
-  //  wszMetadata[0] = L'\0';
-  //  {
-  //    const char szFileHeader[] = "FB1 ";					// File identifier
-  //    char ReadHeader[] = "    ";
-  //    fp = _tfopen(szChoice, _T("r+b"));
-  //    if (!fp) return 1;
-  //    memset(ReadHeader, 0, 4);
-  //    fread(ReadHeader, 1, 4, fp);						// Read identifier
-  //    if (memcmp(ReadHeader, szFileHeader, 4)) {			// Not the right file type
-  //      fclose(fp);
-  //      fp = NULL;
-  //      nRet = 2;
-  //    }
-  //    else {
-  //      memset(ReadHeader, 0, 4);
-  //      fread(&movieFlags, 1, 4, fp); // Read movie flags
-  //      if (movieFlags & MOVIE_FLAG_FROM_POWERON) { // Starts from reset
-  //        bStartFromReset = 1;
-  //        if (!bReplayDontClose)
-  //          if (!StartFromReset(wszStartupGame)) {
-  //            bprintf(0, _T("*** Replay(playback): error starting game.\n"));
-  //            movieFlags = 0;
-  //            return 0;
-  //          }
-  //        nRet = 0;
-  //      }
-  //      else {// Load the savestate associated with the recording
-  //        bStartFromReset = 0;
-  //        nRet = BurnStateLoadEmbed(fp, -1, 1, &DrvInitCallback);
-  //      }
-  //      if (nRet == 0) {
-  //        const char szChunkHeader[] = "FR1 ";		// Chunk identifier
-  //        fread(ReadHeader, 1, 4, fp);				// Read identifier
-  //        if (memcmp(ReadHeader, szChunkHeader, 4)) {	// Not the right file type
-  //          fclose(fp);
-  //          fp = NULL;
-  //          nRet = 2;
-  //        }
-  //        else {
-  //          INT32 nChunkSize = 0;
-  //          // Open the recording itself
-  //          nSizeOffset = ftell(fp);				// Save chunk size offset in case the file is re-recorded
-  //          fread(&nChunkSize, 1, 0x04, fp);		// Read chunk size
-  //          INT32 nChunkPosition = ftell(fp);			// For seeking to the metadata
-  //          fread(&nEndFrame, 1, 4, fp);			// Read framecount
-  //          nTotalFrames = nEndFrame;
-  //
-  //          nStartFrame = GetCurrentFrame();
-  //          bReplayDontClose = 0; // we don't need it anymore from this point
-  //          nEndFrame += nStartFrame;
-  //          fread(&nReplayUndoCount, 1, 4, fp);
-  //          fread(&nThisMovieVersion, 1, 4, fp);
-  //
-  //          memset(&MovieInfo, 0, sizeof(MovieInfo));
-  //          if (nThisMovieVersion >= 0x0401) {
-  //            bprintf(0, _T("loading ext movie version!!\n"));
-  //            fread(&MovieInfo, 1, sizeof(MovieInfo), fp);
-  //            bprintf(0, _T("Ext Info: %d:%d:%d %d/%d/%d\n"), MovieInfo.hour, MovieInfo.minute, MovieInfo.second, MovieInfo.year, MovieInfo.month, MovieInfo.day);
-  //          }
-  //          fread(&nThisFBVersion, 1, 4, fp);
-  //          INT32 nEmbedPosition = ftell(fp);
-  //
-  //          // Read metadata
-  //          const char szMetadataHeader[] = "FRM1";
-  //          fseek(fp, nChunkPosition + nChunkSize, SEEK_SET);
-  //          memset(ReadHeader, 0, 4);
-  //          fread(ReadHeader, 1, 4, fp);
-  //          if (memcmp(ReadHeader, szMetadataHeader, 4) == 0) {
-  //            INT32 nMetaSize;
-  //            fread(&nMetaSize, 1, 4, fp);
-  //            INT32 nMetaLen = nMetaSize >> 1;
-  //            if (nMetaLen >= MAX_METADATA) {
-  //              nMetaLen = MAX_METADATA - 1;
-  //            }
-  //            INT32 i;
-  //            for (i = 0; i < nMetaLen; ++i) {
-  //              wchar_t c = 0;
-  //              c |= fgetc(fp) & 0xff;
-  //              c |= (fgetc(fp) & 0xff) << 8;
-  //              wszMetadata[i] = c;
-  //            }
-  //            wszMetadata[i] = L'\0';
-  //          }
-  //
-  //          // Seek back to the beginning of compressed data
-  //          fseek(fp, nEmbedPosition, SEEK_SET);
-  //          nRet = EmbedCompressedFile(fp, -1);
-  //
-  //        }
-  //      }
-  //    }
-  //
-  //    // Describe any possible errors:
-  //    if (nRet == 3) {
-  //      FBAPopupAddText(PUF_TEXT_DEFAULT, MAKEINTRESOURCE(IDS_DISK_THIS_REPLAY));
-  //      FBAPopupAddText(PUF_TEXT_DEFAULT, MAKEINTRESOURCE(IDS_ERR_DISK_UNAVAIL));
-  //    }
-  //    else {
-  //      if (nRet == 4) {
-  //        FBAPopupAddText(PUF_TEXT_DEFAULT, MAKEINTRESOURCE(IDS_DISK_THIS_REPLAY));
-  //        FBAPopupAddText(PUF_TEXT_DEFAULT, MAKEINTRESOURCE(IDS_ERR_DISK_TOOOLD), _T(APP_TITLE));
-  //      }
-  //      else {
-  //        if (nRet == 5) {
-  //          FBAPopupAddText(PUF_TEXT_DEFAULT, MAKEINTRESOURCE(IDS_DISK_THIS_REPLAY));
-  //          FBAPopupAddText(PUF_TEXT_DEFAULT, MAKEINTRESOURCE(IDS_ERR_DISK_TOONEW), _T(APP_TITLE));
-  //        }
-  //        else {
-  //          if (nRet) {
-  //            FBAPopupAddText(PUF_TEXT_DEFAULT, MAKEINTRESOURCE(IDS_ERR_DISK_LOAD));
-  //            FBAPopupAddText(PUF_TEXT_DEFAULT, MAKEINTRESOURCE(IDS_DISK_REPLAY));
-  //          }
-  //        }
-  //      }
-  //    }
-  //
-  //    if (nRet) {
-  //      if (fp) {
-  //        fclose(fp);
-  //        fp = NULL;
-  //      }
-  //
-  //      FBAPopupDisplay(PUF_TYPE_ERROR);
-  //      movieFlags = 0;
-  //
-  //      return 1;
-  //    }
-  //  }
-  //
-  //  nReplayStatus = 2;							// Set replay status
-  //  CheckRedraw();
-  //
-  //  MenuEnableItems();
-  //
-  //  {
-  //    struct BurnInputInfo bii;
-  //    memset(&bii, 0, sizeof(bii));
-  //
-  //    LoadCompressedFile();
-  //
-  //    // Get the baseline
-  //    for (UINT32 i = 0; i < nGameInpCount; i++) {
-  //      BurnDrvGetInputInfo(&bii, i);
-  //      if (bii.pVal) {
-  //        if (bii.nType & BIT_GROUP_ANALOG) {
-  //          *bii.pShortVal = nPrevInputs[i] = (DecodeBuffer() << 8) | DecodeBuffer();
-  //
-  //        }
-  //        else {
-  //          *bii.pVal = nPrevInputs[i] = DecodeBuffer();
-  //        }
-  //      }
-  //      else {
-  //        DecodeBuffer();
-  //      }
-  //    }
-  //  }
-  //
-  //#ifdef FBNEO_DEBUG
-  //  debugPrintf(_T("*** Replay of file %s started.\n"), szChoice);
-  //#endif
-  //
-  //  return 0;
+  nReplayStatus = EReplayStatus::REPLAY_STATUS_REPLAY;
+  CheckRedraw();
+
+  MenuEnableItems();
+
+  
+    struct BurnInputInfo bii;
+    memset(&bii, 0, sizeof(bii));
+
+    throw new runtime_error("please complete me");
+    // New approach.  We ask the replay file for the first input and continue.
+    // nPrevInputs
+
+      //// LEGACY:  This is setting the initial value of the inputs... is it for frame #1?  I think so since
+      // LoadCompressedFile();
+      // it is also assigning 'nprevinputs'...
+      //// I guess that this is required for proper playback in the old system....
+      //// Get the baseline
+      //for (UINT32 i = 0; i < nGameInpCount; i++) {
+      //  BurnDrvGetInputInfo(&bii, i);
+      //  if (bii.pVal) {
+      //    if (bii.nType & BIT_GROUP_ANALOG) {
+      //      *bii.pShortVal = nPrevInputs[i] = (DecodeBuffer() << 8) | DecodeBuffer();
+
+      //    }
+      //    else {
+      //      *bii.pVal = nPrevInputs[i] = DecodeBuffer();
+      //    }
+      //  }
+      //  else {
+      //    DecodeBuffer();
+      //  }
+      //}
+  
+
+
+//#ifdef FBNEO_DEBUG
+//  debugPrintf(_T("*** Replay of file %s started.\n"), szChoice);
+//#endif
+//
+//  return 0;
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
@@ -745,7 +624,10 @@ static inline UINT16 Read16(const UINT8*& ptr)
   return v;
 }
 
-INT32 FreezeInput(UINT8** buf, INT32* size)
+// NOTE: These functions are used when saving + loading a game state, which of course means that it is assumed that every
+// game will use the same inputs.  Fine for now, but future input system will need to take this into account.
+// NOTE: These function do essentially the same thing as 'PackGameInputs, but use a lot more space.
+INT32 SaveInputState(UINT8** buf, INT32* size)
 {
   *size = 4 + 2 * nGameInpCount;
   *buf = (UINT8*)malloc(*size);
@@ -765,7 +647,7 @@ INT32 FreezeInput(UINT8** buf, INT32* size)
   return 0;
 }
 
-INT32 UnfreezeInput(const UINT8* buf, INT32 size)
+INT32 LoadInputState(const UINT8* buf, INT32 size)
 {
   UINT32 n = Read32(buf);
   if (n > 0x100 || (unsigned)size < (4 + 2 * n))

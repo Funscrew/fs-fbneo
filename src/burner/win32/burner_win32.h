@@ -513,8 +513,8 @@ int ReplayInput();
 int StartRecord();
 int StartReplay(const TCHAR* szFileName = NULL);
 void StopReplay();
-int FreezeInput(unsigned char** buf, int* size);
-int UnfreezeInput(const unsigned char* buf, int size);
+int SaveInputState(unsigned char** buf, int* size);
+int LoadInputState(const unsigned char* buf, int size);
 void DisplayReplayProperties(HWND hDlg, bool bClear);
 
 // memcard.cpp

@@ -78,6 +78,7 @@ extern TCHAR szAppEEPROMPath[MAX_PATH];
  #define WRITE_UNICODE_BOM(file)
 #endif
 
+// TODO: Replace all these with proper fixed-width types in the future.
 typedef unsigned char						UINT8;
 typedef signed char 						INT8;
 typedef unsigned short						UINT16;
