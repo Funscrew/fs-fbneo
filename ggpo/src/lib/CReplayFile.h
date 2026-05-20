@@ -53,9 +53,8 @@ enum EReplayFileMode {
 
 // ========================================================================================================================
 // TODO: Add the player names + indexes for chat data.  This CAN be blank for single player games, or if you don't care.
-class CGameData
+struct CGameData
 {
-public:
   static constexpr int MAX_GAME_NAME_SIZE = 32;
   static constexpr int MAX_VERSION_SIZE = 16;
 
@@ -73,6 +72,28 @@ public:
 };
 
 // ========================================================================================================================
+struct CFooterData {
+  static constexpr int MSG_SIZE = 64;
+
+  uint32_t Frame;
+  uint8_t CompleteReason;
+  uint8_t ErrorReason;
+  char Message[MSG_SIZE];
+  uint64_t FinalFileSize;
+
+  inline ECompletionReason GetCompleteReason() { return (ECompletionReason)CompleteReason; }
+  inline EErrorReason GetErrorReason() { return (EErrorReason)ErrorReason; }
+
+  void SetMessage(std::string msg);
+  void GetMessage(std::string& msg);
+
+  static constexpr uint32_t SizeOf() { return sizeof(uint32_t) + sizeof(uint8_t) + sizeof(uint8_t) + MSG_SIZE + sizeof(uint64_t); }
+
+  void Read(istream& from);
+  void Write(istream& to);
+};
+
+// ========================================================================================================================
 class ChatData
 {
 public:
@@ -84,7 +105,7 @@ public:
   int Frame = 0;
   std::string Message;
 
-  inline uint32_t GetSize() { return Message.size() + sizeof(uint8_t) + sizeof(uint8_t) + sizeof(int); }
+  inline uint32_t SizeOf() { return Message.size() + sizeof(uint8_t) + sizeof(uint8_t) + sizeof(int); }
 };
 
 // ========================================================================================================================
@@ -125,7 +146,8 @@ private:
   EReplayFileMode _Mode;
   CGameData GameData;
 
-  int _CurFrame = 0;
+  // int _CurFrame = 0;
+  CFooterData _Footer = {};
 
   // REFACTOR: _Stream
   std::fstream DataStream;

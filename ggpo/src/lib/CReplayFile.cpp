@@ -87,7 +87,7 @@ CReplayFile::CReplayFile(const std::filesystem::path& path, const CGameData& gam
 
 // ------------------------------------------------------------------------------------------------------------------------
 int CReplayFile::TotalFrames() {
-  return _CurFrame;
+  return _Footer.Frame;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -161,25 +161,11 @@ void CReplayFile::ReadFooter()
   auto fileSize = (uint64_t)DataStream.tellg();
 
 
-  // Just back a few bytes to make sure that our footer is formed correctly....
-  // File Size Check:
-  DataStream.seekg(-(int64_t)(sizeof(uint64_t)), ios::end);
-  uint64_t checkSize;
-  EZStream::Read(DataStream, checkSize);
-
-  if (checkSize != fileSize) { 
-    throw new runtime_error("Invalid check size!");
-  }
-
-  // Now to the top of the header to read in the Footer segment + data.
-  // TODO: Place with other data related constants:
-  const int FOOTER_SIZE = 83;
-  DataStream.seekg(-FOOTER_SIZE, ios::end);
-
-  // Read Footer Segment:
+  // Read in the footer....
+  int seekTo = -(int)(CFooterData::SizeOf() + CSegmentHeader::SizeOf());
+  DataStream.seekg(seekTo, ios::end);
   CSegmentHeader sh;
   ReadSegmentHeader(sh);
-
 
   // More parity checking....
   if (sh.Type != EDataSegmentType::Footer)
@@ -187,21 +173,30 @@ void CReplayFile::ReadFooter()
     throw new runtime_error("Invalid footer marker!");
   }
 
-  auto expectedSize = FOOTER_SIZE - CSegmentHeader::SizeOf();
-  if (sh.Size != expectedSize) // (fileSize - (FOOTER_SIZE - sizeof(uint8_t) + sizeof(uint32_t))))
+  if (sh.Size != CFooterData::SizeOf()) // (fileSize - (FOOTER_SIZE - sizeof(uint8_t) + sizeof(uint32_t))))
   {
     throw new runtime_error("Invalid footer segment size!");
   }
 
-  // Last Frame...
-  EZStream::Read(DataStream, _CurFrame);
-
-  // TODO: Read more data here, depending on if we care..... (we do)
-
+  _Footer.Read(DataStream);
+  if (_Footer.FinalFileSize != fileSize) { 
+    throw new runtime_error("Invalid check size!");
+  }
 
   // Move back to where we started....
   DataStream.seekg(oldPos);
 
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+void CFooterData::Read(istream& from) {
+  EZStream::Read(from, Frame);
+  EZStream::Read(from, CompleteReason);
+  EZStream::Read(from, ErrorReason);
+
+  EZStream::ReadBytes(from, reinterpret_cast<uint8_t*>(&Message), MSG_SIZE);
+
+  EZStream::Read(from, FinalFileSize);
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -229,7 +224,7 @@ void CReplayFile::CompleteReplayFile(int frame, ECompletionReason reason, EError
   WriteSegmentData(EDataSegmentType::Footer, ms);
 
   auto curSize = DataStream.tellp();
-  if (curSize != finalSize) { 
+  if (curSize != finalSize) {
     throw runtime_error("final size computation is incorrect!");
   }
 
@@ -261,13 +256,29 @@ int CReplayFile::CopyFixedString(const string& data, int maxSize, uint8_t* toBuf
 }
 
 // ------------------------------------------------------------------------------------------------------
+void CFooterData::GetMessage(std::string& msg) {
+  msg.clear();
+  msg.append(Message);
+}
+
+// ------------------------------------------------------------------------------------------------------
+void CFooterData::SetMessage(std::string msg) {
+  int len = msg.length();
+  if (len >= CFooterData::MSG_SIZE) {
+    throw runtime_error("message exceeds max size!");
+  }
+  memset(Message, 0, CGameData::MAX_GAME_NAME_SIZE);
+  memcpy(Message, msg.data(), len);
+}
+
+// ------------------------------------------------------------------------------------------------------
 // NOTE: This will probably choke on unicode stuff..  we do want it all to be utf8 tho.
 // Maybe something like this:
 // https://sourceforge.net/directory/internationalization-i18n/windows/
 void CGameData::SetGameName(std::string name) {
   int len = name.length();
-  if (len > CGameData::MAX_GAME_NAME_SIZE) {
-    throw runtime_error("game name exceed 32 bytes!");
+  if (len >= CGameData::MAX_GAME_NAME_SIZE) {
+    throw runtime_error("game name exceed max size!");
   }
   memset(GameName, 0, CGameData::MAX_GAME_NAME_SIZE);
   memcpy(GameName, name.data(), len);
@@ -277,8 +288,8 @@ void CGameData::SetGameName(std::string name) {
 // NOTE: This will probably choke on unicode stuff..  we do want it all to be utf8 tho.
 void CGameData::SetVersion(std::string version) {
   int len = version.length();
-  if (len > CGameData::MAX_VERSION_SIZE) {
-    throw runtime_error("game name exceed 32 bytes!");
+  if (len >= CGameData::MAX_VERSION_SIZE) {
+    throw runtime_error("version exceeds max size!");
   }
   memset(GameVersion, 0, CGameData::MAX_VERSION_SIZE);
   memcpy(GameVersion, version.data(), len);
@@ -410,7 +421,7 @@ void CReplayFile::AddChatSegment(ChatData& chat)
 
   CSegmentHeader segHeader;
   segHeader.Type = EDataSegmentType::ChatData;
-  segHeader.Size = chat.GetSize();
+  segHeader.Size = chat.SizeOf();
   // NOTE: Capturing this chat data doesn't capture who said what... the player indexes should be marked in the CGameData part of the file.
 
   WriteSegmentHeader(segHeader);
@@ -436,7 +447,7 @@ void CReplayFile::WriteInputSegment(const GameInput& input) {
   CheckComplete();
 
   // TODO: Some kind of check to make sure that we are writing the frame numbers sequentially!
-  _CurFrame = input.frame;
+  _Footer.Frame = input.frame;
 
   streampos start = DataStream.tellp();
 
