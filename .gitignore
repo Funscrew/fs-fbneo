@@ -29,3 +29,4 @@ dev-notes.*
 /src/dep/libs/lib7z/7zVersion.aps
 *.\~lock
 /.~lock.replay-file-format.ods#
+*.aps

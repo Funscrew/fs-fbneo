@@ -4,7 +4,7 @@
 #define VER_MAJOR  0
 #define VER_MINOR  5
 #define VER_REVISION 0
-static const int VER_GGPO = 4;
+static const int VER_GGPO = 5;
 
 #define VER_BETA  00
 #define VER_ALPHA 0
@@ -13,4 +13,5 @@ constexpr unsigned int FS_VERSION = VER_MAJOR << 24 | VER_MINOR << 16 | VER_REVI
 
 // OBSOLETE:  This will be phased out at some point.
 // The issue is that some of the program uses BURN_VERSION to version data files as well.  Data format versions + program versions are not the same thing, so I want to disambiguate them at some point.
+// REFACTOR: We will eventually use string to represent the version number (like 16 bytes or whatever) instead of trying to get clever and pack it all into an int....
 #define BURN_VERSION (VER_MAJOR * 0x100000) + (VER_MINOR * 0x010000) + (((VER_BETA / 10) * 0x001000) + ((VER_BETA % 10) * 0x000100)) + (((VER_ALPHA / 10) * 0x000010) + (VER_ALPHA % 10))

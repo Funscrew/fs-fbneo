@@ -2,6 +2,8 @@
 #include "burner.h"
 #include "luaengine.h"
 
+#include <stdexcept>
+
 // from dynhuff.cpp
 INT32 FreezeDecode(UINT8** buffer, INT32* size);
 INT32 UnfreezeDecode(const UINT8* buffer, INT32 size);
@@ -248,12 +250,15 @@ INT32 BurnStateLoad(TCHAR* filename, INT32 bAll, INT32(*pLoadGame)())
 			fread(buf, 1, nChunkSize, fp);
 
 			INT32 ret = -1;
-			if (nReplayStatus == 1)
+			if (nReplayStatus == EReplayStatus::REPLAY_STATUS_RECORD)
 			{
+        // TODO: We should update the menu to disable, but this isn't a priority at this time.
+        // At the very least the variable name should be updated to better represent what it is actually for (the number of state loads, not UNDO)
+        throw std::runtime_error("State loading during replay is not supported!");
 				ret = UnfreezeEncode(buf, nChunkSize);
 				if (!FBA_LuaRerecordCountSkip()) { ++nReplayUndoCount; }
 			}
-			else if (nReplayStatus == 2)
+			else if (nReplayStatus == EReplayStatus::REPLAY_STATUS_REPLAY)
 			{
 				ret = UnfreezeDecode(buf, nChunkSize);
 			}
