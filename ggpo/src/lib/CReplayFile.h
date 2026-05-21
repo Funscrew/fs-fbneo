@@ -137,17 +137,25 @@ public:
   // NOTE: We should be pulling all events up to a certain frame, really.....  How else can we get timed chat data, etc.
   bool GetNextInput(GameInput& input);
 
+
+
   // TODO: Share
   static int CopyFixedString(const std::string& data, int maxSize, uint8_t* toBuffer, int offset);
 
   // Get the total frame count for the file.
-  int TotalFrames();
+  uint32_t TotalFrames() { return _Footer.Frame; }
+  uint16_t TotalInputSize() { return _GameData.TotalInputSize; }
+  
+  CGameData GameData() { return _GameData; }
 
 private:
-  uint8_t WriteBuffer[0x400];
+  uint64_t scratch = 0;
+
+  // Used to make some read/write stuff not need to allocate more data.
+  uint8_t DataBuffer[0x400];
 
   EReplayFileMode _Mode;
-  CGameData GameData;
+  CGameData _GameData;
 
   // int _CurFrame = 0;
   CFooterData _Footer = {};

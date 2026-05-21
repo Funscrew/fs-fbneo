@@ -1826,9 +1826,9 @@ int movie_framecount(lua_State* L) {
 //
 //   "record", "playback" or nil
 int movie_mode(lua_State* L) {
-  if (nReplayStatus == 1)
+  if (nReplayStatus == EReplayStatus::REPLAY_STATUS_RECORD)
     lua_pushstring(L, "record");
-  else if (nReplayStatus == 2)
+  else if (nReplayStatus == EReplayStatus::REPLAY_STATUS_REPLAY)
     lua_pushstring(L, "playback");
   else
     lua_pushnil(L);
@@ -1885,7 +1885,7 @@ static int movie_length(lua_State* L) {
 //
 //   Stops movie playback/recording. Bombs out if movie is not running.
 static int movie_stop(lua_State* L) {
-  if (nReplayStatus == 0)
+  if (nReplayStatus == EReplayStatus::REPLAY_STATUS_NONE)
     luaL_error(L, "no movie");
 
   StopReplay();

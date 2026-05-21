@@ -468,6 +468,7 @@ int NetworkGetInput(int size);
 // @@AAR: 5.2.2026 : This is part of the efforts to make the input system more streamlined and less redundant.
 // NOTE: This will pack inputs for all players.
 int PackGameInputs();
+void UnpackGameInputs(int playerInputSize);
 
 const int INPUTSIZE = 8 * (4 + 8);				// We are assuming a max of eight bytes of input for up to 12 players.
 // REFACTOR: Use uint8_t....

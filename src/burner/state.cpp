@@ -211,6 +211,8 @@ INT32 BurnStateLoad(TCHAR* filename, INT32 bAll, INT32(*pLoadGame)())
   char szReadHeader[4] = "";
   INT32 nRet = 0;
 
+  // TODO: Check if file exists!
+
   FILE* fp = _tfopen(filename, _T("rb"));
   if (fp == NULL) {
     return 1;

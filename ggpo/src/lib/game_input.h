@@ -25,7 +25,8 @@ struct GameInput {
   int      size; /* size in bytes of the entire input for all players */
 
   // REFACTOR: Rename to 'data'
-  char     bits[GAMEINPUT_MAX_BYTES * GAMEINPUT_MAX_PLAYERS];
+  static constexpr int32_t DATA_SIZE = GAMEINPUT_MAX_BYTES * GAMEINPUT_MAX_PLAYERS;
+  char     bits[DATA_SIZE];
 
   bool is_null() { return frame == NullFrame; }
   void init(int frame, char* bits, int size, int offset);

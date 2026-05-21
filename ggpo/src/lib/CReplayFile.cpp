@@ -80,14 +80,9 @@ CReplayFile::CReplayFile(const std::filesystem::path& path) {
 
 // ------------------------------------------------------------------------------------------------------------------------
 CReplayFile::CReplayFile(const std::filesystem::path& path, const CGameData& gameData_)
-  : GameData(gameData_)
+  : _GameData(gameData_)
 {
   Init(path, REPLAY_FILE_MODE_WRITE);
-}
-
-// ------------------------------------------------------------------------------------------------------------------------
-int CReplayFile::TotalFrames() {
-  return _Footer.Frame;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -179,13 +174,52 @@ void CReplayFile::ReadFooter()
   }
 
   _Footer.Read(DataStream);
-  if (_Footer.FinalFileSize != fileSize) { 
+  if (_Footer.FinalFileSize != fileSize) {
     throw new runtime_error("Invalid check size!");
   }
 
   // Move back to where we started....
   DataStream.seekg(oldPos);
 
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+bool CReplayFile::GetNextInput(GameInput& input) {
+  // NOTE: We are collecting segments until we hit the next input segment.
+  auto cPos = DataStream.tellg();
+  scratch = cPos;
+
+  CSegmentHeader segHeader;
+  ReadSegmentHeader(segHeader);
+
+  while (true) {
+    switch (segHeader.Type)
+    {
+    case EDataSegmentType::InputData:
+      // NOTE: If we swap to sequential inputs (we probably should) then we don't need to read this back in.
+      // I am leaning in that direction as the overhead of recording the frame# is going to be more than the inputs
+      // in many cases.
+      EZStream::Read(DataStream, input.frame);
+
+      EZStream::ReadBytes(DataStream, DataBuffer, _GameData.TotalInputSize);
+      memcpy_s(input.bits, GameInput::DATA_SIZE, DataBuffer, _GameData.TotalInputSize);
+      return true;
+      break;
+
+    case EDataSegmentType::ChatData:
+      // TODO: We can capture this data some other time....
+      // Move ahead....
+      DataStream.seekg(segHeader.Size, ios::cur);
+      break;
+
+    case EDataSegmentType::Footer:
+      // There are no more inputs to be had!
+      return false;
+
+    default:
+      throw new runtime_error("invalid segment type!");
+    }
+  }
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -213,8 +247,8 @@ void CReplayFile::CompleteReplayFile(int frame, ECompletionReason reason, EError
   EZStream::Write(ms, static_cast<uint8_t>(errReason));
 
   const int COMPLETE_MSG_LEN = 64;
-  CopyFixedString(message, COMPLETE_MSG_LEN, WriteBuffer, 0);
-  ms.write(reinterpret_cast<const char*>(WriteBuffer), COMPLETE_MSG_LEN);
+  CopyFixedString(message, COMPLETE_MSG_LEN, DataBuffer, 0);
+  ms.write(reinterpret_cast<const char*>(DataBuffer), COMPLETE_MSG_LEN);
 
   auto footerSize = (uint64_t)ms.tellp();
   int64_t finalSize = static_cast<int64_t>((uint64_t)DataStream.tellp() + footerSize + sizeof(uint64_t) + CSegmentHeader::SizeOf());
@@ -378,7 +412,7 @@ void CReplayFile::ReadGameData() {
     throw runtime_error("Invalid data size for GameData!");
   }
 
-  EZStream::Read<CGameData>(DataStream, GameData);
+  EZStream::Read<CGameData>(DataStream, _GameData);
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -393,7 +427,7 @@ void CReplayFile::WriteGameData() {
   segHeader.Size = sizeof(CGameData);
 
   WriteSegmentHeader(segHeader);
-  EZStream::Write<CGameData>(DataStream, GameData);
+  EZStream::Write<CGameData>(DataStream, _GameData);
 
   streampos end = DataStream.tellp();
   int64_t total = static_cast<int64_t>(end - start);
@@ -451,23 +485,21 @@ void CReplayFile::AddInputSegment(const GameInput& input) {
 
   streampos start = DataStream.tellp();
 
-  int inputSize = GameData.TotalInputSize;
+  int inputSize = _GameData.TotalInputSize;
 
   CSegmentHeader segHeader;
   segHeader.Type = EDataSegmentType::InputData;
   segHeader.Size = inputSize + sizeof(int);   // all inputs + frame #
   WriteSegmentHeader(segHeader);
 
-  streampos x = DataStream.tellp();
-
   EZStream::Write(DataStream, input.frame);
   // TODO: memcpy
   for (int i = 0; i < inputSize; i++)
   {
-    WriteBuffer[i] = input.bits[i];
+    DataBuffer[i] = input.bits[i];
   }
 
-  DataStream.write(reinterpret_cast<const char*>(WriteBuffer), inputSize);
+  DataStream.write(reinterpret_cast<const char*>(DataBuffer), inputSize);
 
   streampos end = DataStream.tellp();
   int64_t total = static_cast<int64_t>(end - start);

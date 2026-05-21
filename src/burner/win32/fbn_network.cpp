@@ -84,6 +84,115 @@ int NetworkInitInput()
 
 
 // ---------------------------------------------------------------------------------------------------------------------
+// TODO: Allow a future version to use a direct memory address to unpack from.
+// From the nControls data, this will read back inputs + update the values in the emulator directly.
+// inputSize: size in memory of all inputs for all players.
+void UnpackGameInputs(int playerInputSize) {
+
+  // int playerInputSize = inputSize / nMaxPlayers;
+
+  struct BurnInputInfo bii;
+  memset(&bii, 0, sizeof(bii));
+
+  int i, j = 0;
+
+  // Decode Player 1 input block.
+  // This takes the synced inputs and decodes them back into the system input
+  // memory.
+  for (i = 0, j = 0; i < nPlayerInputs[0]; i++, j++) {
+    BurnDrvGetInputInfo(&bii, i + nPlayerOffset[0]);
+    if (bii.nType == BIT_DIGITAL) {
+      if (nControls[j >> 3] & (1 << (j & 7))) {
+        *bii.pVal = 0x01;
+      }
+      else {
+        *bii.pVal = 0x00;
+      }
+    }
+  }
+  for (i = 0; i < nConstInputs; i++, j++) {
+    BurnDrvGetInputInfo(&bii, i + nConstOffsets);
+    if (nControls[j >> 3] & (1 << (j & 7))) {
+      *bii.pVal = 0x01;
+    }
+    else {
+      *bii.pVal = 0x00;
+    }
+  }
+
+  // Convert j to byte count
+  j = (j + 7) >> 3;
+
+  // Analog inputs
+  for (i = 0; i < nPlayerInputs[0]; i++) {
+    BurnDrvGetInputInfo(&bii, i + nDIPOffset);
+    if (bii.nType & BIT_GROUP_ANALOG) {
+      *bii.pShortVal = (nControls[j] << 8) | nControls[j + 1];
+      j += 2;
+    }
+  }
+
+  // DIP switches --> each one gets a byte!
+  for (i = 0; i < nDIPInputs; i++, j++) {
+    BurnDrvGetInputInfo(&bii, i + nDIPOffset);
+    *bii.pVal = nControls[j];
+  }
+
+  // Decode other player's input blocks
+  for (int l = 1; l < nMaxPlayers; l++) {
+    // Only decode if there is a player for this game.
+    if (nPlayerInputs[l]) {
+      for (i = 0, j = playerInputSize * (l << 3); i < nPlayerInputs[l]; i++, j++) {
+        BurnDrvGetInputInfo(&bii, i + nPlayerOffset[l]);
+        if (bii.nType == BIT_DIGITAL) {
+          if (nControls[j >> 3] & (1 << (j & 7))) {
+            *bii.pVal = 0x01;
+          }
+          else {
+            *bii.pVal = 0x00;
+          }
+        }
+      }
+
+      for (i = 0; i < nConstInputs; i++, j++) {
+#if 0
+        // Allow other players to use common inputs
+        BurnDrvGetInputInfo(&bii, i + nConstOffsets);
+        if (nControls[j >> 3] & (1 << (j & 7))) {
+          *bii.pVal |= 0x01;
+        }
+#endif
+      }
+
+      // Convert j to byte count
+      j = (j + 7) >> 3;
+
+      // Analog inputs/constants
+      for (i = 0; i < nPlayerInputs[l]; i++) {
+        BurnDrvGetInputInfo(&bii, i + nPlayerOffset[l]);
+        if (bii.nType != BIT_DIGITAL) {
+          if (bii.nType & BIT_GROUP_ANALOG) {
+            *bii.pShortVal = (nControls[j] << 8) | nControls[j + 1];
+            j += 2;
+          }
+        }
+      }
+
+      // TEST if this is needed for both players?
+#if 1
+      // For a DIP switch to be set to 1, ALL players must set it
+      for (i = 0; i < nDIPInputs; i++, j++) {
+        BurnDrvGetInputInfo(&bii, i + nDIPOffset);
+        *bii.pVal &= nControls[j];
+      }
+#endif
+    }
+  }
+
+}
+
+// ---------------------------------------------------------------------------------------------------------------------
+// TODO: In a future iteration let's make it so we can choose where we put the inputs in memory....
 int PackGameInputs()
 {
   int res = 0;
@@ -237,104 +346,7 @@ int NetworkGetInput(int size)
     }
   }
 
-
-  int i, j = 0;
-  struct BurnInputInfo bii;
-  memset(&bii, 0, sizeof(bii));
-
-
-  // Decode Player 1 input block.
-  // This takes the synced inputs and decodes them back into the system input
-  // memory.
-  for (i = 0, j = 0; i < nPlayerInputs[0]; i++, j++) {
-    BurnDrvGetInputInfo(&bii, i + nPlayerOffset[0]);
-    if (bii.nType == BIT_DIGITAL) {
-      if (nControls[j >> 3] & (1 << (j & 7))) {
-        *bii.pVal = 0x01;
-      }
-      else {
-        *bii.pVal = 0x00;
-      }
-    }
-  }
-  for (i = 0; i < nConstInputs; i++, j++) {
-    BurnDrvGetInputInfo(&bii, i + nConstOffsets);
-    if (nControls[j >> 3] & (1 << (j & 7))) {
-      *bii.pVal = 0x01;
-    }
-    else {
-      *bii.pVal = 0x00;
-    }
-  }
-
-  // Convert j to byte count
-  j = (j + 7) >> 3;
-
-  // Analog inputs
-  for (i = 0; i < nPlayerInputs[0]; i++) {
-    BurnDrvGetInputInfo(&bii, i + nDIPOffset);
-    if (bii.nType & BIT_GROUP_ANALOG) {
-      *bii.pShortVal = (nControls[j] << 8) | nControls[j + 1];
-      j += 2;
-    }
-  }
-
-  // DIP switches
-  for (i = 0; i < nDIPInputs; i++, j++) {
-    BurnDrvGetInputInfo(&bii, i + nDIPOffset);
-    *bii.pVal = nControls[j];
-  }
-
-  // Decode other player's input blocks
-  for (int l = 1; l < MAXPLAYER; l++) {
-    // Only decode if there is a player for this game.
-    if (nPlayerInputs[l]) {
-      for (i = 0, j = playerInputSize * (l << 3); i < nPlayerInputs[l]; i++, j++) {
-        BurnDrvGetInputInfo(&bii, i + nPlayerOffset[l]);
-        if (bii.nType == BIT_DIGITAL) {
-          if (nControls[j >> 3] & (1 << (j & 7))) {
-            *bii.pVal = 0x01;
-          }
-          else {
-            *bii.pVal = 0x00;
-          }
-        }
-      }
-
-      for (i = 0; i < nConstInputs; i++, j++) {
-#if 0
-        // Allow other players to use common inputs
-        BurnDrvGetInputInfo(&bii, i + nConstOffsets);
-        if (nControls[j >> 3] & (1 << (j & 7))) {
-          *bii.pVal |= 0x01;
-        }
-#endif
-      }
-
-      // Convert j to byte count
-      j = (j + 7) >> 3;
-
-      // Analog inputs/constants
-      for (i = 0; i < nPlayerInputs[l]; i++) {
-        BurnDrvGetInputInfo(&bii, i + nPlayerOffset[l]);
-        if (bii.nType != BIT_DIGITAL) {
-          if (bii.nType & BIT_GROUP_ANALOG) {
-            *bii.pShortVal = (nControls[j] << 8) | nControls[j + 1];
-            j += 2;
-          }
-        }
-      }
-
-      // TEST if this is needed for both players?
-#if 1
-      // For a DIP switch to be set to 1, ALL players must set it
-      for (i = 0; i < nDIPInputs; i++, j++) {
-        BurnDrvGetInputInfo(&bii, i + nDIPOffset);
-        *bii.pVal &= nControls[j];
-      }
-#endif
-    }
-  }
+  UnpackGameInputs(playerInputSize);
 
   return 0;
 }

@@ -32,7 +32,7 @@ INT32 movieFlags = 0;
 // bool bStartFromReset = true;
 TCHAR szCurrentMovieFilename[MAX_PATH] = _T("");      // TODO: Convert to ASCII for linux compatibility
 UINT32 nTotalFrames = 0;
-UINT32 nReplayCurrentFrame;
+UINT32 nReplayCurrentFrame = 0;
 
 #define MOVIE_FLAG_FROM_POWERON (1<<1)
 
@@ -43,8 +43,11 @@ UINT32 nThisFBVersion = 0;
 UINT32 nStartFrame = 0;
 static UINT32 nEndFrame;
 
+uint32_t TotalInputSize = 0;
+uint32_t PlayerInputSize = 0;
+
 // static FILE* fp = NULL;
-static INT32 nSizeOffset;
+// static INT32 nSizeOffset;
 
 static int16_t nPrevInputs[0x0100];
 
@@ -261,7 +264,10 @@ INT32 ReplayInput()
   struct BurnInputInfo bii;
   memset(&bii, 0, sizeof(bii));
 
-  // Just to be safe, restore the inputs to the known correct settings
+  // Just to be safe, restore the inputs to the known correct settings.
+  // Just to be safe?  I guess there is some concern that some other step in the process
+  // is corrupting the inputs, but.... we are setting them again in the next block.....
+  // This code may not be needed...
   for (UINT32 i = 0; i < nGameInpCount; i++) {
     BurnDrvGetInputInfo(&bii, i);
     if (bii.pVal) {
@@ -278,8 +284,39 @@ INT32 ReplayInput()
   // nCurrentFrame
   GameInput gi;
   bool hasInput = _ReplayFile->GetNextInput(gi);
-  
-  if (hasInput) { 
+
+  if (hasInput) {
+
+    // TODO: Frame check for parity....
+    if (gi.frame != nCurrentFrame) {
+      // NOTE: this is temp check while we are getting the most basic version of the feature
+      // running the way that we would expect it to.
+      throw runtime_error("next input is wrong!");
+    }
+
+    memcpy_s(nControls, INPUTSIZE, gi.bits, TotalInputSize);
+    UnpackGameInputs(PlayerInputSize);
+
+    // This is where we will unpack the inputs and shove them back into the driver memory.
+
+    //UINT8 n;
+  //while ((n = DecodeBuffer()) != 0xFF) {
+  //  BurnDrvGetInputInfo(&bii, n);
+  //  if (bii.pVal) {
+  //    if (bii.nType & BIT_GROUP_ANALOG) {
+  //      *bii.pShortVal = nPrevInputs[n] = (DecodeBuffer() << 8) | DecodeBuffer();
+  //    }
+  //    else {
+  //      *bii.pVal = nPrevInputs[n] = DecodeBuffer();
+  //    }
+  //  }
+  //  else {
+  //    DecodeBuffer();
+  //  }
+  //}
+
+
+
     if (bReplayFrameCounterDisplay) {
       wchar_t framestring[32];
       swprintf(framestring, L"%d / %d", GetCurrentFrame() - nStartFrame, nTotalFrames);
@@ -294,7 +331,9 @@ INT32 ReplayInput()
     StopReplay();
     return 1;
   }
-  
+
+  return 0;
+
   //UINT8 n;
   //while ((n = DecodeBuffer()) != 0xFF) {
   //  BurnDrvGetInputInfo(&bii, n);
@@ -412,13 +451,16 @@ INT32 StartRecord()
 
     // This will tell us the correct size for the inputs for the current game.
     // May be a better way to do this in the future, like from the gamedef directly....
-    int inputSize = PackGameInputs();
+    TotalInputSize = PackGameInputs();
+    PlayerInputSize = TotalInputSize / nMaxPlayers;
 
     CGameData gd;
     gd.SetGameName(romName);
     gd.SetVersion(version);
     gd.PlayerCount = nMaxPlayers;
-    gd.TotalInputSize = inputSize;
+    gd.TotalInputSize = TotalInputSize;
+
+    // TODO: Add player names, etc. to CGameData!
 
     _GameRecorder = new CGameRecorder(gd, usePath, true);
   }
@@ -466,34 +508,40 @@ INT32 StartReplay(const TCHAR* szFileName)
 
   MenuEnableItems();
 
+  nCurrentFrame = 0;
+  nReplayCurrentFrame = 0;
 
-  struct BurnInputInfo bii;
-  memset(&bii, 0, sizeof(bii));
+  CGameData gameData = _ReplayFile->GameData();
+  TotalInputSize = gameData.TotalInputSize;
+  PlayerInputSize = gameData.TotalInputSize / gameData.PlayerCount;
 
-  throw new runtime_error("please complete me");
-  // New approach.  We ask the replay file for the first input and continue.
-  // nPrevInputs
+  // TotalInputSize = _ReplayFile->TotalInputSize();
 
-    //// LEGACY:  This is setting the initial value of the inputs... is it for frame #1?  I think so since
-    // LoadCompressedFile();
-    // it is also assigning 'nprevinputs'...
-    //// I guess that this is required for proper playback in the old system....
-    //// Get the baseline
-    //for (UINT32 i = 0; i < nGameInpCount; i++) {
-    //  BurnDrvGetInputInfo(&bii, i);
-    //  if (bii.pVal) {
-    //    if (bii.nType & BIT_GROUP_ANALOG) {
-    //      *bii.pShortVal = nPrevInputs[i] = (DecodeBuffer() << 8) | DecodeBuffer();
+  // NOTE: We are not taking the legacy approach of setting the inputs here.
+  // I don't think that it should be necessary, but I guess we will find out!
 
-    //    }
-    //    else {
-    //      *bii.pVal = nPrevInputs[i] = DecodeBuffer();
-    //    }
-    //  }
-    //  else {
-    //    DecodeBuffer();
-    //  }
-    //}
+  //// LEGACY:  This is setting the initial value of the inputs... is it for frame #1?  I think so since
+  //struct BurnInputInfo bii;
+  //memset(&bii, 0, sizeof(bii));
+  // LoadCompressedFile();
+  // it is also assigning 'nprevinputs'...
+  //// I guess that this is required for proper playback in the old system....
+  //// Get the baseline
+  //for (UINT32 i = 0; i < nGameInpCount; i++) {
+  //  BurnDrvGetInputInfo(&bii, i);
+  //  if (bii.pVal) {
+  //    if (bii.nType & BIT_GROUP_ANALOG) {
+  //      *bii.pShortVal = nPrevInputs[i] = (DecodeBuffer() << 8) | DecodeBuffer();
+
+  //    }
+  //    else {
+  //      *bii.pVal = nPrevInputs[i] = DecodeBuffer();
+  //    }
+  //  }
+  //  else {
+  //    DecodeBuffer();
+  //  }
+  //}
 
 
 
