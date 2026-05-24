@@ -417,8 +417,9 @@ INT32 StartRecord()
 
   // We always reset the emulator to do a recording.  This is the way!
   // Later on, I guess we could record inputs at some arbitrary point, but I don't really see the purpose....
-  const bool RESET_FIRST = true;
-  if (RESET_FIRST) {
+  // OPTIONS: TODO: Sync this with the other inline constant of the same name (~replay.cpp:883)
+  const bool START_FROM_RESET = true;
+  if (START_FROM_RESET) {
     movieFlags |= MOVIE_FLAG_FROM_POWERON;
     if (!StartFromReset(NULL)) {
       bprintf(0, _T("*** Replay(record): error starting game.\n"));
@@ -457,7 +458,7 @@ INT32 StartRecord()
     CGameData gd;
     gd.SetGameName(romName);
     gd.SetVersion(version);
-    gd.PlayerCount = nMaxPlayers;
+    gd.MaxPlayerCount = nMaxPlayers;
     gd.TotalInputSize = TotalInputSize;
 
     // TODO: Add player names, etc. to CGameData!
@@ -513,7 +514,7 @@ INT32 StartReplay(const TCHAR* szFileName)
 
   CGameData gameData = _ReplayFile->GameData();
   TotalInputSize = gameData.TotalInputSize;
-  PlayerInputSize = gameData.TotalInputSize / gameData.PlayerCount;
+  PlayerInputSize = gameData.TotalInputSize / gameData.MaxPlayerCount;
 
   // TotalInputSize = _ReplayFile->TotalInputSize();
 

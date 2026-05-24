@@ -1,11 +1,5 @@
 #pragma once
 
-//#include <cstdint>
-//#include <string>
-//#include <array>
-//#include <fstream>
-//#include <memory>
-
 #include <filesystem>
 #include <string>
 #include <fstream>
@@ -52,22 +46,47 @@ enum EReplayFileMode {
 };
 
 // ========================================================================================================================
+struct CGameState {
+
+  uint16_t PlayerCount = 0;
+  char** PlayerNames;
+
+  uint32_t SizeOf();
+};
+
+// ========================================================================================================================
 // TODO: Add the player names + indexes for chat data.  This CAN be blank for single player games, or if you don't care.
 struct CGameData
 {
   static constexpr int MAX_GAME_NAME_SIZE = 32;
   static constexpr int MAX_VERSION_SIZE = 16;
+  static constexpr int MAX_PLAYER_NAME = 32;
+
+  ~CGameData();
 
   char GameName[MAX_GAME_NAME_SIZE];
   char GameVersion[MAX_VERSION_SIZE];
 
-  uint16_t PlayerCount = 0;
+  uint16_t MaxPlayerCount = 0;
   uint16_t TotalInputSize = 0;
-
-  // static constexpr uint16_t DataSize = MAX_GAME_NAME_SIZE + MAX_VERSION_SIZE + sizeof(int) + sizeof(int);
+  uint16_t StartFrame = 0;          // Should be 1 for games that begin at start.  If > 1 then the segment that follows gamedata should be 'State' segment.
 
   void SetGameName(std::string name);
   void SetVersion(std::string version);
+
+  void SetPlayerName(std::string name, uint8_t index);
+
+  // Attempt to get the player's name at the given index.
+  // Player names are typically only set in network games, so names may not be available
+  // for a normal playback.
+  // Returns true if the player name was set on the given index.
+  // Returns false if the player name is not set on the given index.
+  bool TryGetPlayerName(uint8_t index, std::string& to);
+
+  uint32_t SizeOf();
+
+private:
+  void AllocatePlayerNames();
 
 };
 
@@ -145,23 +164,14 @@ public:
   // Get the total frame count for the file.
   uint32_t TotalFrames() { return _Footer.Frame; }
   uint16_t TotalInputSize() { return _GameData.TotalInputSize; }
-  
   CGameData GameData() { return _GameData; }
 
 private:
-  uint64_t scratch = 0;
 
   // Used to make some read/write stuff not need to allocate more data.
-  uint8_t DataBuffer[0x400];
-
-  EReplayFileMode _Mode;
   CGameData _GameData;
-
-  // int _CurFrame = 0;
   CFooterData _Footer = {};
 
-  // REFACTOR: _Stream
-  std::fstream DataStream;
 
   void Init(const filesystem::path& path, EReplayFileMode mode_);
   void CheckComplete();

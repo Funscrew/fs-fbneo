@@ -24,6 +24,9 @@ static void MakeOfn(TCHAR* pszFilter)
 
 // The automatic save (nvram or nvram+state if restore state on load is enabled.)
 // TODO: Find a better name for this function.  Something like 'Load Default State(bool saveFirst)'
+// TODO: "Restore State on Load" appears to be enabled / set by default, but I don't think that it is really
+// doing what it is meant to...
+// REFACTOR: bSave is a boolean value that indicates you are saving or not, but you are actually saving OR loading.  This should proabably be an enum!
 int StatedAuto(int bSave)
 {
 	static TCHAR szName[MAX_PATH] = _T("");
