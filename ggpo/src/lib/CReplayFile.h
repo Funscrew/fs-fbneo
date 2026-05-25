@@ -87,7 +87,6 @@ struct CGameData
 
 private:
   void AllocatePlayerNames();
-
 };
 
 // ========================================================================================================================
@@ -172,6 +171,7 @@ private:
   CGameData _GameData;
   CFooterData _Footer = {};
 
+  void FlushPendingInputData();
 
   void Init(const filesystem::path& path, EReplayFileMode mode_);
   void CheckComplete();

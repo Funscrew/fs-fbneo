@@ -460,6 +460,7 @@ INT32 StartRecord()
     gd.SetVersion(version);
     gd.MaxPlayerCount = nMaxPlayers;
     gd.TotalInputSize = TotalInputSize;
+    gd.StartFrame = GetCurrentFrame();
 
     // TODO: Add player names, etc. to CGameData!
 

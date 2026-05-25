@@ -31,7 +31,7 @@ namespace EZStream
   }
 
   // ----------------------------------------------------------------------------------------------------
-  void ReadRawString(istream& stream,  string& value, size_t size)
+  void ReadRawString(istream& stream, string& value, size_t size)
   {
     char* buffer = new char[size + 1];
     stream.read(buffer, size);
@@ -86,14 +86,23 @@ namespace StringTools
   }
 }
 
+// OPTIONS:  Max # of inputs that can be grouped together.
+const int MAX_INPUT_GROUP_SIZE = 0x80;
+uint32_t CurInputGroupCount = 0;
+uint32_t InputStartFrame = 0;
+
+uint8_t* InputGroupBuffer = nullptr;
+size_t InputGroupBufSize = 0;
 
 
+const int BUFFER_SIZE = 0x400;
 uint64_t scratch = 0;
-uint8_t DataBuffer[0x400];
+uint8_t DataBuffer[BUFFER_SIZE];
 EReplayFileMode _Mode;
 
 std::fstream _Stream;
 std::string* PlayerNames = nullptr;
+
 
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -123,6 +132,12 @@ void CReplayFile::Init(const filesystem::path& path, EReplayFileMode mode_) {
 
   case REPLAY_FILE_MODE_WRITE:
     openMode |= (ios::out | ios::trunc);
+
+    InputGroupBufSize = MAX_INPUT_GROUP_SIZE * _GameData.TotalInputSize;
+    InputGroupBuffer = (uint8_t*)malloc(InputGroupBufSize);
+    CurInputGroupCount = 0;
+    InputStartFrame = 0;
+
     break;
 
   default:
@@ -426,8 +441,8 @@ void CReplayFile::ReadHeader()
 
 // ------------------------------------------------------------------------------------------------------------------------
 void CGameData::AllocatePlayerNames() {
-  if (!PlayerNames){
-  PlayerNames = new std::string[MaxPlayerCount];
+  if (!PlayerNames) {
+    PlayerNames = new std::string[MaxPlayerCount];
   }
 }
 
@@ -478,15 +493,17 @@ CGameData::~CGameData() {
   if (PlayerNames) {
     delete[](PlayerNames);
   }
+  if (InputGroupBuffer) { free(InputGroupBuffer); }
 }
 
 
 // ------------------------------------------------------------------------------------------------------------------------
 void CReplayFile::WriteGameData() {
   CheckComplete();
-  if (_GameData.StartFrame == 0) { 
-    throw new runtime_error("Inavlid start frame!  Must be > 0!");
-  }
+
+  //if (_GameData.StartFrame == 0) {
+  //  throw new runtime_error("Inavlid start frame!  Must be > 0!");
+  //}
 
   streampos start = _Stream.tellp();
 
@@ -503,7 +520,7 @@ void CReplayFile::WriteGameData() {
   WDATA(_GameData.TotalInputSize);
   WDATA(_GameData.StartFrame);
 
-  if (PlayerNames) { 
+  if (PlayerNames) {
     // Write the player names.
     for (size_t i = 0; i < _GameData.MaxPlayerCount; i++)
     {
@@ -514,7 +531,7 @@ void CReplayFile::WriteGameData() {
       EZStream::WriteRawString(_Stream, name);
     }
   }
-  else { 
+  else {
     // Write the player names (empty)
     for (size_t i = 0; i < _GameData.MaxPlayerCount; i++)
     {
@@ -553,7 +570,7 @@ void CReplayFile::ReadGameData() {
   {
     uint8_t nameSize;
     RDATA(nameSize);
-    if (nameSize > 0)  {
+    if (nameSize > 0) {
       std::string nameBuffer;
       EZStream::ReadRawString(_Stream, PlayerNames[i], nameSize);
       _GameData.SetPlayerName(nameBuffer, i);
@@ -601,6 +618,41 @@ void CReplayFile::AddChatSegment(ChatData& chat)
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
+// Copy current input group data into the file...
+void CReplayFile::FlushPendingInputData()
+{
+  auto start = _Stream.tellp();
+
+  size_t bufSize = InputGroupBufSize;
+
+  CSegmentHeader segHeader;
+  segHeader.Type = EDataSegmentType::InputData;
+  segHeader.Size = sizeof(uint32_t) + sizeof(uint16_t) + bufSize;
+  
+  WriteSegmentHeader(segHeader);
+
+  // Frame info.
+  WDATA(InputStartFrame);
+  WDATA((uint16_t)CurInputGroupCount);
+
+  // Group data.
+  _Stream.write(reinterpret_cast<char*>(InputGroupBuffer), bufSize);
+ 
+  // Parity check.
+  auto end = _Stream.tellp();
+  auto total = end - start;
+  if (total != segHeader.Size + CSegmentHeader::SizeOf())
+  {
+    throw new runtime_error("Unexpected write size!");
+  }
+
+  Flush();
+
+  InputStartFrame = 0;
+  CurInputGroupCount = 0;
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
 void CReplayFile::AddInputSegment(const GameInput& input) {
   CheckComplete();
 
@@ -609,32 +661,51 @@ void CReplayFile::AddInputSegment(const GameInput& input) {
 
   streampos start = _Stream.tellp();
 
-  int inputSize = _GameData.TotalInputSize;
 
-  CSegmentHeader segHeader;
-  segHeader.Type = EDataSegmentType::InputData;
-  segHeader.Size = inputSize + sizeof(int);   // all inputs + frame #
-  WriteSegmentHeader(segHeader);
-
-  EZStream::Write(_Stream, input.frame);
-  // TODO: memcpy
-  for (int i = 0; i < inputSize; i++)
-  {
-    DataBuffer[i] = input.bits[i];
+  if (InputStartFrame == 0) {
+    InputStartFrame = input.frame;
   }
+  auto memOffset = CurInputGroupCount * _GameData.TotalInputSize;
+  memcpy_s(InputGroupBuffer, InputGroupBufSize, input.bits, _GameData.TotalInputSize);
 
-  _Stream.write(reinterpret_cast<const char*>(DataBuffer), inputSize);
-
-  streampos end = _Stream.tellp();
-  int64_t total = static_cast<int64_t>(end - start);
-  int expected = segHeader.Size + CSegmentHeader::SizeOf();
-
-  if (total != expected)
-  {
-    throw runtime_error("Data size mismatch on write!");
+  ++CurInputGroupCount;
+  if (CurInputGroupCount >= MAX_INPUT_GROUP_SIZE) { 
+    FlushPendingInputData();
   }
+  ////if (InputGroupSize >= MAX_INPUT_GROUP_SIZE) {
+  ////  // Flush all inputs!
+  ////}
+  ////else {
+  ////  // Throw it into the buffer....
+  ////}
 
-  Flush();
+  ////int inputSize = _GameData.TotalInputSize;
+
+  //CSegmentHeader segHeader;
+  //segHeader.Type = EDataSegmentType::InputData;
+  //segHeader.Size = inputSize;
+  //WriteSegmentHeader(segHeader);
+
+  //// EZStream::Write(_Stream, input.frame);
+  //// TODO: memcpy
+  //memcpy_s(DataBuffer, BUFFER_SIZE, input.bits, inputSize);
+  ////for (int i = 0; i < inputSize; i++)
+  ////{
+  ////  DataBuffer[i] = input.bits[i];
+  ////}
+
+  //_Stream.write(reinterpret_cast<const char*>(DataBuffer), inputSize);
+
+  //streampos end = _Stream.tellp();
+  //int64_t total = static_cast<int64_t>(end - start);
+  //int expected = segHeader.Size + CSegmentHeader::SizeOf();
+
+  //if (total != expected)
+  //{
+  //  throw runtime_error("Data size mismatch on write!");
+  //}
+
+  // Flush();
 }
 
 
