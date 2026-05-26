@@ -6,6 +6,9 @@
 #define WDATA(x) EZStream::Write(_Stream, x)
 #define RDATA(x) EZStream::Read(_Stream, x);
 
+#define WDATA2(stream, x) EZStream::Write(stream, x)
+#define RDATA2(stream, x) EZStream::Read(stream, x);
+
 namespace EZStream
 {
   template <typename T>
@@ -86,22 +89,8 @@ namespace StringTools
   }
 }
 
-// OPTIONS:  Max # of inputs that can be grouped together.
-const int MAX_INPUT_GROUP_SIZE = 0x80;
-uint32_t CurInputGroupCount = 0;
-uint32_t InputStartFrame = 0;
-
-uint8_t* InputGroupBuffer = nullptr;
-size_t InputGroupBufSize = 0;
 
 
-const int BUFFER_SIZE = 0x400;
-uint64_t scratch = 0;
-uint8_t DataBuffer[BUFFER_SIZE];
-EReplayFileMode _Mode;
-
-std::fstream _Stream;
-std::string* PlayerNames = nullptr;
 
 
 
@@ -112,9 +101,12 @@ CReplayFile::CReplayFile(const std::filesystem::path& path) {
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
-CReplayFile::CReplayFile(const std::filesystem::path& path, const CGameData& gameData_)
+CReplayFile::CReplayFile(const std::filesystem::path& path, const CGameData& gameData_, const CGameState* state_)
   : _GameData(gameData_)
 {
+  if (state_) {
+    _State = *state_;
+  }
   Init(path, REPLAY_FILE_MODE_WRITE);
 }
 
@@ -133,8 +125,14 @@ void CReplayFile::Init(const filesystem::path& path, EReplayFileMode mode_) {
   case REPLAY_FILE_MODE_WRITE:
     openMode |= (ios::out | ios::trunc);
 
-    InputGroupBufSize = MAX_INPUT_GROUP_SIZE * _GameData.TotalInputSize;
+    InputGroupBufSize = MAX_INPUT_GROUP_COUNT * _GameData.TotalInputSize;
     InputGroupBuffer = (uint8_t*)malloc(InputGroupBufSize);
+    if (InputGroupBuffer == nullptr)
+    {
+      throw new runtime_error("Could not allocate space for input group buffer!");
+    }
+    memset(InputGroupBuffer, 0, InputGroupBufSize);
+
     CurInputGroupCount = 0;
     InputStartFrame = 0;
 
@@ -152,6 +150,7 @@ void CReplayFile::Init(const filesystem::path& path, EReplayFileMode mode_) {
   switch (_Mode) {
   case REPLAY_FILE_MODE_READ:
     ReadHeader();
+    ReadState();
 
     // The footer is read so that we can verify that the data is complete / valid.
     ReadFooter();
@@ -159,11 +158,42 @@ void CReplayFile::Init(const filesystem::path& path, EReplayFileMode mode_) {
 
   case REPLAY_FILE_MODE_WRITE:
     WriteHeader();
+    WriteState();
 
     break;
   default:
     throw runtime_error("invalid mode for replay file!");
   }
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+void CReplayFile::WriteState() {
+
+  CSegmentHeader segHeader;
+  segHeader.Type = EDataSegmentType::GameState;
+  segHeader.Size = _State.SizeOf();
+
+  auto start = _Stream.tellg();
+
+  WriteSegmentHeader(segHeader);
+  _State.Write(_Stream);
+
+  // Parity check....
+  auto end = _Stream.tellg();
+  auto total = end - start;
+  auto expected = segHeader.Size + CSegmentHeader::SizeOf();
+  if (total != expected)
+  {
+    throw runtime_error("Data size mismatch on write!");
+  }
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+void CReplayFile::ReadState() {
+  CSegmentHeader header;
+  ReadSegmentHeader(header);
+
+  _State.Read(_Stream);
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -176,6 +206,13 @@ void CReplayFile::ReadSegmentHeader(CSegmentHeader& header) {
 
   header.Type = (EDataSegmentType)type;
   header.Size = size;
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+void CReplayFile::PeekSegmentHeader(CSegmentHeader& header) {
+  auto pos = _Stream.tellg();
+  ReadSegmentHeader(header);
+  _Stream.seekg(pos, ios::beg);
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -458,7 +495,7 @@ void CGameData::SetPlayerName(std::string name, uint8_t index)
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
-bool TryGetPlayerName(uint8_t index, std::string& to)
+bool CGameData::TryGetPlayerName(uint8_t index, std::string& to)
 {
   if (!PlayerNames) { return false; }
 
@@ -473,7 +510,7 @@ bool TryGetPlayerName(uint8_t index, std::string& to)
 
 // ------------------------------------------------------------------------------------------------------------------------
 uint32_t CGameData::SizeOf() {
-  uint32_t res = sizeof(uint16_t) * 3;    // Player count, input size, and start frame.
+  uint32_t res = sizeof(uint16_t) * 2;    // Player count, input size.
   res += (MAX_GAME_NAME_SIZE + MAX_VERSION_SIZE);
 
   // Player names.....
@@ -493,9 +530,58 @@ CGameData::~CGameData() {
   if (PlayerNames) {
     delete[](PlayerNames);
   }
-  if (InputGroupBuffer) { free(InputGroupBuffer); }
 }
 
+// ------------------------------------------------------------------------------------------------------------------------
+void CGameData::Read(istream& from) {
+
+  RDATA2(from, GameName);
+  RDATA2(from, GameVersion);
+  RDATA2(from, MaxPlayerCount);
+  RDATA2(from, TotalInputSize);
+
+  for (uint8_t i = 0; i < MaxPlayerCount; i++)
+  {
+    uint8_t nameSize;
+    RDATA2(from, nameSize);
+    if (nameSize > 0) {
+      std::string nameBuffer;
+      EZStream::ReadRawString(from, PlayerNames[i], nameSize);
+      SetPlayerName(nameBuffer, i);
+    }
+  }
+
+}
+
+
+// ------------------------------------------------------------------------------------------------------------------------
+void CGameData::Write(ostream& to) {
+
+  WDATA2(to, GameName);
+  WDATA2(to, GameVersion);
+  WDATA2(to, MaxPlayerCount);
+  WDATA2(to, TotalInputSize);
+
+  // TODO: GameData can provide its own serialization code!
+  if (PlayerNames) {
+    // Write the player names.
+    for (size_t i = 0; i < MaxPlayerCount; i++)
+    {
+      auto& name = PlayerNames[i];
+      size_t size = name.size();
+      WDATA2(to, (uint8_t)size);
+
+      EZStream::WriteRawString(to, name);
+    }
+  }
+  else {
+    // Write the player names (empty)
+    for (size_t i = 0; i < MaxPlayerCount; i++)
+    {
+      WDATA2(to, (uint8_t)0);
+    }
+  }
+}
 
 // ------------------------------------------------------------------------------------------------------------------------
 void CReplayFile::WriteGameData() {
@@ -513,31 +599,9 @@ void CReplayFile::WriteGameData() {
 
   WriteSegmentHeader(segHeader);
   // EZStream::Write<CGameData>(_Stream, _GameData);
+  _GameData.Write(_Stream);
 
-  WDATA(_GameData.GameName);
-  WDATA(_GameData.GameVersion);
-  WDATA(_GameData.MaxPlayerCount);
-  WDATA(_GameData.TotalInputSize);
-  WDATA(_GameData.StartFrame);
 
-  if (PlayerNames) {
-    // Write the player names.
-    for (size_t i = 0; i < _GameData.MaxPlayerCount; i++)
-    {
-      auto& name = PlayerNames[i];
-      size_t size = name.size();
-      WDATA((uint8_t)size);
-
-      EZStream::WriteRawString(_Stream, name);
-    }
-  }
-  else {
-    // Write the player names (empty)
-    for (size_t i = 0; i < _GameData.MaxPlayerCount; i++)
-    {
-      WDATA((uint8_t)0);
-    }
-  }
 
 
   streampos end = _Stream.tellp();
@@ -560,23 +624,7 @@ void CReplayFile::ReadGameData() {
     throw runtime_error("Invalid segment type for GameData!");
   }
 
-  RDATA(_GameData.GameName);
-  RDATA(_GameData.GameVersion);
-  RDATA(_GameData.MaxPlayerCount);
-  RDATA(_GameData.TotalInputSize);
-  RDATA(_GameData.StartFrame);
-
-  for (uint8_t i = 0; i < _GameData.MaxPlayerCount; i++)
-  {
-    uint8_t nameSize;
-    RDATA(nameSize);
-    if (nameSize > 0) {
-      std::string nameBuffer;
-      EZStream::ReadRawString(_Stream, PlayerNames[i], nameSize);
-      _GameData.SetPlayerName(nameBuffer, i);
-    }
-  }
-
+  _GameData.Read(_Stream);
 }
 
 
@@ -628,7 +676,7 @@ void CReplayFile::FlushPendingInputData()
   CSegmentHeader segHeader;
   segHeader.Type = EDataSegmentType::InputData;
   segHeader.Size = sizeof(uint32_t) + sizeof(uint16_t) + bufSize;
-  
+
   WriteSegmentHeader(segHeader);
 
   // Frame info.
@@ -637,7 +685,7 @@ void CReplayFile::FlushPendingInputData()
 
   // Group data.
   _Stream.write(reinterpret_cast<char*>(InputGroupBuffer), bufSize);
- 
+
   // Parity check.
   auto end = _Stream.tellp();
   auto total = end - start;
@@ -665,11 +713,12 @@ void CReplayFile::AddInputSegment(const GameInput& input) {
   if (InputStartFrame == 0) {
     InputStartFrame = input.frame;
   }
+
   auto memOffset = CurInputGroupCount * _GameData.TotalInputSize;
-  memcpy_s(InputGroupBuffer, InputGroupBufSize, input.bits, _GameData.TotalInputSize);
+  memcpy_s(InputGroupBuffer + memOffset, InputGroupBufSize, input.bits, _GameData.TotalInputSize);
 
   ++CurInputGroupCount;
-  if (CurInputGroupCount >= MAX_INPUT_GROUP_SIZE) { 
+  if (CurInputGroupCount >= MAX_INPUT_GROUP_COUNT) {
     FlushPendingInputData();
   }
   ////if (InputGroupSize >= MAX_INPUT_GROUP_SIZE) {
@@ -723,5 +772,37 @@ void CReplayFile::Flush()
 void CReplayFile::CheckComplete() {
   if (_Mode == REPLAY_FILE_MODE_COMPLETE || _Mode == REPLAY_FILE_MODE_READ) {
     throw runtime_error("Invalid replay file mode:");
+  }
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+void CGameState::Read(istream& from) {
+  RDATA2(from, Type);
+  RDATA2(from, Frame);
+  RDATA2(from, DataSize);
+  RDATA2(from, CRC);
+
+  if (Type == GAMESTATE_TYPE_NONE) {
+    if (Frame != 0 || DataSize != 0 || CRC != 0) {
+      throw new runtime_error("Invalid data for GAMESTATE_TYPE_NONE!");
+    }
+
+  }
+  if (DataSize) {
+    // TODO: We will have to internally allocate space for the state!
+    throw new runtime_error("write some code so we can allocate space for the game state!");
+    from.read(reinterpret_cast<char*>(Data), DataSize);
+  }
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+void CGameState::Write(ostream& to) {
+  WDATA2(to, (uint8_t)Type);
+  WDATA2(to, Frame);
+  WDATA2(to, DataSize);
+  WDATA2(to, CRC);
+
+  if (Data) {
+    to.write(reinterpret_cast<char*>(Data), DataSize);
   }
 }

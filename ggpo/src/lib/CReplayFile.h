@@ -22,6 +22,7 @@ enum class EDataSegmentType : uint8_t
 {
   Invalid = 0,
   GameData,
+  GameState,
   InputData,
   ChatData,
   Footer
@@ -44,15 +45,15 @@ enum EReplayFileMode {
   // The replay data is complete.  No new data can be added now.
   REPLAY_FILE_MODE_COMPLETE
 };
-
-// ========================================================================================================================
-struct CGameState {
-
-  uint16_t PlayerCount = 0;
-  char** PlayerNames;
-
-  uint32_t SizeOf();
-};
+//
+//// ========================================================================================================================
+//struct CGameState {
+//
+//  uint16_t PlayerCount = 0;
+//  char** PlayerNames;
+//
+//  uint32_t SizeOf();
+//};
 
 // ========================================================================================================================
 // TODO: Add the player names + indexes for chat data.  This CAN be blank for single player games, or if you don't care.
@@ -69,7 +70,6 @@ struct CGameData
 
   uint16_t MaxPlayerCount = 0;
   uint16_t TotalInputSize = 0;
-  uint16_t StartFrame = 0;          // Should be 1 for games that begin at start.  If > 1 then the segment that follows gamedata should be 'State' segment.
 
   void SetGameName(std::string name);
   void SetVersion(std::string version);
@@ -85,8 +85,47 @@ struct CGameData
 
   uint32_t SizeOf();
 
+  void Read(istream& from);
+  void Write(ostream& to);
+
 private:
+  std::string* PlayerNames = nullptr;
   void AllocatePlayerNames();
+};
+
+// ========================================================================================================================
+enum EGameStateType : uint8_t {
+  GAMESTATE_TYPE_NONE = 0,         // No game state!
+  GAMESTATE_TYPE_FILE,             // The replay data is stored in a file.
+  GAMESTATE_TYPE_DATA,             // The replay data is raw data.
+};
+
+// ========================================================================================================================
+struct CGameState {
+  // How / where is the state data stored?
+  // Interpretation of the data (where to read files from, data compresssion, etc. are implementation defined).
+  EGameStateType Type = GAMESTATE_TYPE_NONE;
+  
+  // Frame # of the save state.  If zero, then Size + data should be zero as well as this indicates that the replay starts
+  // at system boot.
+  uint32_t Frame = 0;
+  uint32_t DataSize = 0;
+
+  // CRC of data / data in file.
+  // Use zero if you don't actually care about a CRC.
+  // Interpretation of the CRC is also implementation defined.
+  uint32_t CRC = 0;
+
+  // Raw data, or a path to the file that contains the state information.
+  uint8_t* Data = nullptr;
+
+  uint32_t SizeOf() { return sizeof(uint8_t)          // Type 
+                           + (sizeof(uint32_t) * 3)   // Frame, DataSize, CRC 
+                           + DataSize; 
+                    }
+
+  void Read(istream& from);
+  void Write(ostream& to);
 };
 
 // ========================================================================================================================
@@ -144,18 +183,17 @@ public:
   CReplayFile(const filesystem::path& path);
 
   // Open a replay file in write mode, for the given game.
-  CReplayFile(const filesystem::path& path, const CGameData& gameData_);
+  CReplayFile(const filesystem::path& path, const CGameData& gameData_, const CGameState* state);
 
   void AddChatSegment(ChatData& chat);
   void AddInputSegment(const GameInput& input);
   void CompleteReplayFile(int frame, ECompletionReason reason, EErrorReason errReason, const std::string& message);
   void CloseStream();
 
+
   // Read to the next recorded input....
   // NOTE: We should be pulling all events up to a certain frame, really.....  How else can we get timed chat data, etc.
   bool GetNextInput(GameInput& input);
-
-
 
   // TODO: Share
   static int CopyFixedString(const std::string& data, int maxSize, uint8_t* toBuffer, int offset);
@@ -169,7 +207,27 @@ private:
 
   // Used to make some read/write stuff not need to allocate more data.
   CGameData _GameData;
+  CGameState _State;
+
   CFooterData _Footer = {};
+
+
+  // OPTIONS:  Max # of inputs that can be grouped together.
+  const uint16_t MAX_INPUT_GROUP_COUNT = 0x80;
+  uint16_t CurInputGroupCount = 0;
+  uint32_t InputStartFrame = 0;
+
+  uint8_t* InputGroupBuffer = nullptr;
+  size_t InputGroupBufSize = 0;
+
+
+  static const int BUFFER_SIZE = 0x400;
+  uint8_t DataBuffer[BUFFER_SIZE];
+  EReplayFileMode _Mode;
+
+  std::fstream _Stream;
+
+  uint64_t scratch = 0;
 
   void FlushPendingInputData();
 
@@ -180,14 +238,20 @@ private:
   void ReadSegmentHeader(CSegmentHeader& header);
   void WriteSegmentHeader(CSegmentHeader& header);
 
+  // Read for / check for a segment header at current read position, but don't
+  // move the actual read position.
+  void CReplayFile::PeekSegmentHeader(CSegmentHeader& header);
+
   // Writing funcitons:
   void WriteHeader();
+  void WriteState();
   void WriteGameData();
 
   void WriteSegmentData(EDataSegmentType segmentType, stringstream& data);
 
   // Reading functions:
   void ReadHeader();
+  void ReadState();
   void ReadFooter();
   void ReadGameData();
 

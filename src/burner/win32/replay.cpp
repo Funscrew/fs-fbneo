@@ -460,9 +460,14 @@ INT32 StartRecord()
     gd.SetVersion(version);
     gd.MaxPlayerCount = nMaxPlayers;
     gd.TotalInputSize = TotalInputSize;
-    gd.StartFrame = GetCurrentFrame();
 
+
+    // gd.StartFrame = GetCurrentFrame();
     // TODO: Add player names, etc. to CGameData!
+    // NOTE: If we are adding state / statefiles, then it needs to happen here!
+    // We will pass it into the game recorder...
+    // TODO: We should probably just use a replay file directly.  I don't think that we need the game
+    // recorder functionality for the emulator... that is more of an appliance kind of thing?
 
     _GameRecorder = new CGameRecorder(gd, usePath, true);
   }

@@ -70,7 +70,7 @@ void CGameRecorder::Init(const filesystem::path& toPath, bool overwriteExisting)
     throw runtime_error("Data file for session id already exists!");
   }
 
-  _File = new CReplayFile(toPath, GameData);
+  _File = new CReplayFile(toPath, GameData, nullptr);
 
   BaseFrames.fill(-1);
 }
