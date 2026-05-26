@@ -105,7 +105,7 @@ struct CGameState {
   // How / where is the state data stored?
   // Interpretation of the data (where to read files from, data compresssion, etc. are implementation defined).
   EGameStateType Type = GAMESTATE_TYPE_NONE;
-  
+
   // Frame # of the save state.  If zero, then Size + data should be zero as well as this indicates that the replay starts
   // at system boot.
   uint32_t Frame = 0;
@@ -119,10 +119,11 @@ struct CGameState {
   // Raw data, or a path to the file that contains the state information.
   uint8_t* Data = nullptr;
 
-  uint32_t SizeOf() { return sizeof(uint8_t)          // Type 
-                           + (sizeof(uint32_t) * 3)   // Frame, DataSize, CRC 
-                           + DataSize; 
-                    }
+  uint32_t SizeOf() {
+    return sizeof(uint8_t)          // Type 
+      + (sizeof(uint32_t) * 3)   // Frame, DataSize, CRC 
+      + DataSize;
+  }
 
   void Read(istream& from);
   void Write(ostream& to);
@@ -190,10 +191,11 @@ public:
   void CompleteReplayFile(int frame, ECompletionReason reason, EErrorReason errReason, const std::string& message);
   void CloseStream();
 
-
   // Read to the next recorded input....
   // NOTE: We should be pulling all events up to a certain frame, really.....  How else can we get timed chat data, etc.
   bool GetNextInput(GameInput& input);
+
+  void ReadInputFromBuffer(GameInput& input);
 
   // TODO: Share
   static int CopyFixedString(const std::string& data, int maxSize, uint8_t* toBuffer, int offset);
@@ -216,9 +218,12 @@ private:
   const uint16_t MAX_INPUT_GROUP_COUNT = 0x80;
   uint16_t CurInputGroupCount = 0;
   uint32_t InputStartFrame = 0;
-
   uint8_t* InputGroupBuffer = nullptr;
   size_t InputGroupBufSize = 0;
+  uint32_t LastReadFrame = 0;
+
+  // Index of the input group that we are reading from.
+  uint32_t InputGroupReadIndex = 0;
 
 
   static const int BUFFER_SIZE = 0x400;
@@ -232,6 +237,7 @@ private:
   void FlushPendingInputData();
 
   void Init(const filesystem::path& path, EReplayFileMode mode_);
+  void SetupInputDataBuffer();
   void CheckComplete();
 
   //

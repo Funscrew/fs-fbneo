@@ -125,13 +125,7 @@ void CReplayFile::Init(const filesystem::path& path, EReplayFileMode mode_) {
   case REPLAY_FILE_MODE_WRITE:
     openMode |= (ios::out | ios::trunc);
 
-    InputGroupBufSize = MAX_INPUT_GROUP_COUNT * _GameData.TotalInputSize;
-    InputGroupBuffer = (uint8_t*)malloc(InputGroupBufSize);
-    if (InputGroupBuffer == nullptr)
-    {
-      throw new runtime_error("Could not allocate space for input group buffer!");
-    }
-    memset(InputGroupBuffer, 0, InputGroupBufSize);
+    SetupInputDataBuffer();
 
     CurInputGroupCount = 0;
     InputStartFrame = 0;
@@ -164,6 +158,18 @@ void CReplayFile::Init(const filesystem::path& path, EReplayFileMode mode_) {
   default:
     throw runtime_error("invalid mode for replay file!");
   }
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+void CReplayFile::SetupInputDataBuffer()
+{
+  InputGroupBufSize = MAX_INPUT_GROUP_COUNT * _GameData.TotalInputSize;
+  InputGroupBuffer = (uint8_t*)malloc(InputGroupBufSize);
+  if (InputGroupBuffer == nullptr)
+  {
+    throw new runtime_error("Could not allocate space for input group buffer!");
+  }
+  memset(InputGroupBuffer, 0, InputGroupBufSize);
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -261,6 +267,14 @@ void CReplayFile::ReadFooter()
 
 // ------------------------------------------------------------------------------------------------------------------------
 bool CReplayFile::GetNextInput(GameInput& input) {
+
+  // Check to see if we are currently within an input group....
+  // NOTE: With this approach we can't really get chat replay data, but that is OK for now.....
+  if (CurInputGroupCount > 0) {
+    ReadInputFromBuffer(input);
+    return true;
+  }
+
   // NOTE: We are collecting segments until we hit the next input segment.
   auto cPos = _Stream.tellg();
   scratch = cPos;
@@ -272,15 +286,30 @@ bool CReplayFile::GetNextInput(GameInput& input) {
     switch (segHeader.Type)
     {
     case EDataSegmentType::InputData:
-      // NOTE: If we swap to sequential inputs (we probably should) then we don't need to read this back in.
-      // I am leaning in that direction as the overhead of recording the frame# is going to be more than the inputs
-      // in many cases.
-      EZStream::Read(_Stream, input.frame);
+    {
+      // Here we will read in the next block of inputs...
+      // Frame info.
+      RDATA(InputStartFrame);
+      RDATA((uint16_t)CurInputGroupCount);
 
-      EZStream::ReadBytes(_Stream, DataBuffer, _GameData.TotalInputSize);
-      memcpy_s(input.bits, GameInput::DATA_SIZE, DataBuffer, _GameData.TotalInputSize);
+      auto expectedFrame = LastReadFrame + 1;
+      if (expectedFrame != InputStartFrame) { 
+        throw new runtime_error("Unexpected input frame was encountered!");
+      }
+
+      auto readSize = CurInputGroupCount * _GameData.TotalInputSize;
+      if (readSize != segHeader.Size - (sizeof(uint32_t) + sizeof(uint16_t)))
+      {
+        throw new runtime_error("Invalid data size in InputData segment!");
+      }
+
+      _Stream.read(reinterpret_cast<char*>(InputGroupBuffer), readSize);
+      InputGroupReadIndex = 0;
+
+      ReadInputFromBuffer(input);
       return true;
-      break;
+    }
+    break;
 
     case EDataSegmentType::ChatData:
       // TODO: We can capture this data some other time....
@@ -299,6 +328,21 @@ bool CReplayFile::GetNextInput(GameInput& input) {
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
+void CReplayFile::ReadInputFromBuffer(GameInput& input)
+{
+  input.frame = InputStartFrame + InputGroupReadIndex;
+  auto readPos = InputGroupReadIndex * _GameData.TotalInputSize;
+  memcpy_s(input.bits, GameInput::DATA_SIZE, InputGroupBuffer + readPos, _GameData.TotalInputSize);
+
+  ++InputGroupReadIndex;
+  if (InputGroupReadIndex >= CurInputGroupCount) {
+    CurInputGroupCount = 0;
+  }
+
+  LastReadFrame = input.frame;
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
 void CFooterData::Read(istream& from) {
   EZStream::Read(from, Frame);
   EZStream::Read(from, CompleteReason);
@@ -314,9 +358,12 @@ void CReplayFile::CompleteReplayFile(int frame, ECompletionReason reason, EError
 
   CheckComplete();
 
+  // Write any pending inputs.
+  FlushPendingInputData();
+
+
   // TODO: Some kind of check to make sure that the frame we are ending on is at or near the current input frame.
   // WRITE FOOTER
-
   stringstream ms(ios::in | ios::out | ios::binary);
   EZStream::Write(ms, frame);
   EZStream::Write(ms, static_cast<uint8_t>(reason));
@@ -474,6 +521,8 @@ void CReplayFile::ReadHeader()
   }
 
   ReadGameData();
+
+  SetupInputDataBuffer();
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -669,9 +718,11 @@ void CReplayFile::AddChatSegment(ChatData& chat)
 // Copy current input group data into the file...
 void CReplayFile::FlushPendingInputData()
 {
+  if (CurInputGroupCount == 0) { return; }
+
   auto start = _Stream.tellp();
 
-  size_t bufSize = InputGroupBufSize;
+  size_t bufSize = _GameData.TotalInputSize * CurInputGroupCount;
 
   CSegmentHeader segHeader;
   segHeader.Type = EDataSegmentType::InputData;
