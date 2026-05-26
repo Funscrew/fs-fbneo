@@ -195,7 +195,8 @@ public:
   // NOTE: We should be pulling all events up to a certain frame, really.....  How else can we get timed chat data, etc.
   bool GetNextInput(GameInput& input);
 
-  void ReadInputFromBuffer(GameInput& input);
+
+  void GetState(CGameState& state);
 
   // TODO: Share
   static int CopyFixedString(const std::string& data, int maxSize, uint8_t* toBuffer, int offset);
@@ -234,13 +235,12 @@ private:
 
   uint64_t scratch = 0;
 
-  void FlushPendingInputData();
-
   void Init(const filesystem::path& path, EReplayFileMode mode_);
   void SetupInputDataBuffer();
   void CheckComplete();
+  void ReadInputFromBuffer(GameInput& input);
+  void FlushPendingInputData();
 
-  //
   void ReadSegmentHeader(CSegmentHeader& header);
   void WriteSegmentHeader(CSegmentHeader& header);
 

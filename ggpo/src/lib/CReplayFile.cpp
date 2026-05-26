@@ -90,10 +90,6 @@ namespace StringTools
 }
 
 
-
-
-
-
 // ------------------------------------------------------------------------------------------------------------------------
 // Open the replay file in read mode.
 CReplayFile::CReplayFile(const std::filesystem::path& path) {
@@ -108,6 +104,11 @@ CReplayFile::CReplayFile(const std::filesystem::path& path, const CGameData& gam
     _State = *state_;
   }
   Init(path, REPLAY_FILE_MODE_WRITE);
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+void CReplayFile::GetState(CGameState& state) { 
+  state = _State;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------

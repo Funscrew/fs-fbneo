@@ -294,28 +294,9 @@ INT32 ReplayInput()
       throw runtime_error("next input is wrong!");
     }
 
+    // This is where we will unpack the inputs and shove them back into the driver memory.
     memcpy_s(nControls, INPUTSIZE, gi.bits, TotalInputSize);
     UnpackGameInputs(PlayerInputSize);
-
-    // This is where we will unpack the inputs and shove them back into the driver memory.
-
-    //UINT8 n;
-  //while ((n = DecodeBuffer()) != 0xFF) {
-  //  BurnDrvGetInputInfo(&bii, n);
-  //  if (bii.pVal) {
-  //    if (bii.nType & BIT_GROUP_ANALOG) {
-  //      *bii.pShortVal = nPrevInputs[n] = (DecodeBuffer() << 8) | DecodeBuffer();
-  //    }
-  //    else {
-  //      *bii.pVal = nPrevInputs[n] = DecodeBuffer();
-  //    }
-  //  }
-  //  else {
-  //    DecodeBuffer();
-  //  }
-  //}
-
-
 
     if (bReplayFrameCounterDisplay) {
       wchar_t framestring[32];
@@ -333,48 +314,6 @@ INT32 ReplayInput()
   }
 
   return 0;
-
-  //UINT8 n;
-  //while ((n = DecodeBuffer()) != 0xFF) {
-  //  BurnDrvGetInputInfo(&bii, n);
-  //  if (bii.pVal) {
-  //    if (bii.nType & BIT_GROUP_ANALOG) {
-  //      *bii.pShortVal = nPrevInputs[n] = (DecodeBuffer() << 8) | DecodeBuffer();
-  //    }
-  //    else {
-  //      *bii.pVal = nPrevInputs[n] = DecodeBuffer();
-  //    }
-  //  }
-  //  else {
-  //    DecodeBuffer();
-  //  }
-  //}
-
-  // NOTE: "ReplayExternalData" looks to be used exclusively for the MSX driver, which
-  // I am not really interested in supporting.  It seems that the 'external data' stuff
-  // is kind of a hack around not wanting to define every keyboard key in the normal input
-  // system.  Since I care about making the future input system better, I am going to punt
-  // and we will just live with breaking MSX replay support.
-  // Not really worried about it since it seems to only be enabled for win32 builds anyway....
-  //if (nReplayExternalDataCount && ReplayExternalData) {
-  //  for (INT32 i = 0; i < nReplayExternalDataCount; i++) {
-  //    ReplayExternalData[i] = DecodeBuffer();
-  //  }
-  //}
-
-//
-//#if 0
-//  if ((GetCurrentFrame() - nStartFrame) == (nTotalFrames - 1)) {
-//    bRunPause = 1; // pause at the last recorded frame? causes weird issues when pauses.  investigate later.. -dink
-//  }
-//#endif
-//
-//  if (end_of_buffer) {
-//  }
-//  else {
-//    return 0;
-//  }
-
 }
 
 static void MakeOfn(TCHAR* pszFilter)
@@ -481,8 +420,6 @@ INT32 StartRecord()
 // -------------------------------------------------------------------------------------------------------------------------
 INT32 StartReplay(const TCHAR* szFileName)
 {
-  // TEMP: This is currently disabled:
-  // return 0;
 
   // LEGACY:
   INT32 nRet;
@@ -510,17 +447,32 @@ INT32 StartReplay(const TCHAR* szFileName)
   }
   _tcscpy(szCurrentMovieFilename, szChoice);
 
-  nReplayStatus = EReplayStatus::REPLAY_STATUS_REPLAY;
-  CheckRedraw();
-
-  MenuEnableItems();
-
-  nCurrentFrame = 0;
-  nReplayCurrentFrame = 0;
-
   CGameData gameData = _ReplayFile->GameData();
   TotalInputSize = gameData.TotalInputSize;
   PlayerInputSize = gameData.TotalInputSize / gameData.MaxPlayerCount;
+
+  // This is where we will do a state load, etc. as needed:
+  CGameState state;
+  _ReplayFile->GetState(state);
+
+  nCurrentFrame = state.Frame;
+  nReplayCurrentFrame = state.Frame;
+
+  // NOTE: Do we really need both frames?
+  if (nCurrentFrame == 0 && nReplayCurrentFrame == 0)
+  {
+    StartFromReset(nullptr);
+  }
+  else {
+    throw new runtime_error("No support for state loading on replay (yet)");
+  }
+
+  // Begin the replay from here.
+  nReplayStatus = EReplayStatus::REPLAY_STATUS_REPLAY;
+  CheckRedraw();
+  MenuEnableItems();
+
+  return 0;
 
   // TotalInputSize = _ReplayFile->TotalInputSize();
 
