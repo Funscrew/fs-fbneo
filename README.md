@@ -75,3 +75,24 @@ static const char* CATEGORY_TIMESYNC = "TIME";
 
 ### TODO:
 Add instructions for interop library builds on windows/linux.
+
+
+## Linux
+Add required build tools to your environment.
+```
+snap install --classic cmake
+#snap install --classic dotnet
+#sudo snap install dotnet-runtime-90
+sudo apt install build-essentials
+
+wget https://dot.net/v1/dotnet-install.sh -O dotnet-install.sh
+chmod +x ./dotnet-install.sh
+./dotnet-install.sh --version latest
+
+```
+
+Update bash so that dotnet command can be found:
+```
+export DOTNET_ROOT=$HOME/.dotnet
+export PATH=$PATH:$DOTNET_ROOT:$DOTNET_ROOT/tools
+```

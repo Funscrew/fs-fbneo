@@ -1,19 +1,28 @@
 ﻿using System.Runtime.InteropServices;
 using System.Text;
 
+
+
 internal class Program
 {
+  #if OS_LINUX
+  const string LIB_NAME = "libNetcodeCore.so";
+  #elif OS_WINDOWS
+  const string LIB_NAME = "NetcodeCore.dll";
+  #else
+  unsupported OS....  check .csproj to add support
+  #endif
 
   //[DllImport("NetcodeCore.dll", CallingConvention = CallingConvention.Cdecl)]
   //private static extern IntPtr ReplayFile_OpenRead([MarshalAs(UnmanagedType.LPUTF8Str)] string path);
 
-  [DllImport("NetcodeCore.dll", CallingConvention = CallingConvention.Cdecl)]
+  [DllImport(LIB_NAME, CallingConvention = CallingConvention.Cdecl)]
   private static extern void TestError();
 
   //[DllImport("NetcodeCore.dll", CallingConvention = CallingConvention.Cdecl)]
   //private static extern IntPtr LastError();
 
-  [DllImport("NetcodeCore.dll", CallingConvention = CallingConvention.Cdecl)]
+  [DllImport(LIB_NAME, CallingConvention = CallingConvention.Cdecl)]
   private static extern int LastError(byte[] buffer, int bufferSize);
 
   private static void Main(string[] args)
