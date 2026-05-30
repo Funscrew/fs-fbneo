@@ -1,10 +1,16 @@
 #include "NetcodeInterop.h"
 #include "CReplayFile.h"
 
+#ifdef _WIN32
+#define API_EXPORT extern "C" __declspec(dllexport)
+#else
+#define API_EXPORT extern "C" __attribute__((visibility("default")))
+#endif
+
 std::string _LastError;
 
 // ---------------------------------------------------------------------------------------------------------
-extern "C" __declspec(dllexport)
+API_EXPORT
 int ReplayFile_OpenRead(char* path, CReplayFile** file)
 {
   if (!std::filesystem::exists(path)) {
@@ -26,14 +32,14 @@ int ReplayFile_OpenRead(char* path, CReplayFile** file)
   }
 }
 
-extern "C" __declspec(dllexport)
+API_EXPORT
 void TestError()
 {
   // _LastError.assign("This is a test error!");
   _LastError.assign("大犬");
 }
 
-extern "C" __declspec(dllexport)
+API_EXPORT
 const int LastError(char* buffer, uint32_t bufferSize)
 {
   size_t res = _LastError.size() + 1; // includes null terminator
@@ -45,12 +51,12 @@ const int LastError(char* buffer, uint32_t bufferSize)
     res = bufferSize - 1;
   }
 
-  std::memcpy(buffer, _LastError.c_str(), res);
+  memcpy(buffer, _LastError.c_str(), res);
 
   return static_cast<int>(res);
 }
 
-extern "C" __declspec(dllexport)
+API_EXPORT
 void ReplayFile_Destroy(CReplayFile* replayFile)
 {
   if (replayFile) {

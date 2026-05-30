@@ -1,13 +1,26 @@
-#include <string>
-
 #include "CReplayFile.h"
+
+#include <string>
 #include <sstream>
+#include <vector>
 
 #define WDATA(x) EZStream::Write(_Stream, x)
 #define RDATA(x) EZStream::Read(_Stream, x);
 
 #define WDATA2(stream, x) EZStream::Write(stream, x)
 #define RDATA2(stream, x) EZStream::Read(stream, x);
+
+using namespace std;
+
+
+// PATCH: Workaround for no memcpy_s on linux....
+// TODO: There should be a real macro like '__STDC_LIB_EXT1__' to properly identify the feautre....
+#ifdef _WIN32
+#define MEMCPY(dest, destSize, src, srcSize) memcpy_s(dest, destSize, src, srcSize)
+#else
+  // Linux, probably
+#define MEMCPY(dest, destSize, src, srcSize) memcpy(dest, src, srcSize)
+#endif
 
 namespace EZStream
 {
@@ -291,7 +304,7 @@ bool CReplayFile::GetNextInput(GameInput& input) {
       // Here we will read in the next block of inputs...
       // Frame info.
       RDATA(InputStartFrame);
-      RDATA((uint16_t)CurInputGroupCount);
+      RDATA(CurInputGroupCount);
 
       auto expectedFrame = LastReadFrame + 1;
       if (expectedFrame != InputStartFrame) { 
@@ -333,7 +346,7 @@ void CReplayFile::ReadInputFromBuffer(GameInput& input)
 {
   input.frame = InputStartFrame + InputGroupReadIndex;
   auto readPos = InputGroupReadIndex * _GameData.TotalInputSize;
-  memcpy_s(input.bits, GameInput::DATA_SIZE, InputGroupBuffer + readPos, _GameData.TotalInputSize);
+  MEMCPY(input.bits, GameInput::DATA_SIZE, InputGroupBuffer + readPos, _GameData.TotalInputSize);
 
   ++InputGroupReadIndex;
   if (InputGroupReadIndex >= CurInputGroupCount) {
@@ -767,7 +780,7 @@ void CReplayFile::AddInputSegment(const GameInput& input) {
   }
 
   auto memOffset = CurInputGroupCount * _GameData.TotalInputSize;
-  memcpy_s(InputGroupBuffer + memOffset, InputGroupBufSize, input.bits, _GameData.TotalInputSize);
+  MEMCPY(InputGroupBuffer + memOffset, InputGroupBufSize, input.bits, _GameData.TotalInputSize);
 
   ++CurInputGroupCount;
   if (CurInputGroupCount >= MAX_INPUT_GROUP_COUNT) {

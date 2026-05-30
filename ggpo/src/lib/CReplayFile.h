@@ -246,7 +246,7 @@ private:
 
   // Read for / check for a segment header at current read position, but don't
   // move the actual read position.
-  void CReplayFile::PeekSegmentHeader(CSegmentHeader& header);
+  void PeekSegmentHeader(CSegmentHeader& header);
 
   // Writing funcitons:
   void WriteHeader();
