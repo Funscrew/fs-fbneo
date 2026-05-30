@@ -71,3 +71,7 @@ static const char* CATEGORY_UDP = "UDP";
 static const char* CATEGORY_INPUT_QUEUE = "INPQ";
 static const char* CATEGORY_TIMESYNC = "TIME";
 ```
+
+
+### TODO:
+Add instructions for interop library builds on windows/linux.
