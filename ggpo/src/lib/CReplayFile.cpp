@@ -106,7 +106,7 @@ namespace StringTools
 // ------------------------------------------------------------------------------------------------------------------------
 // Open the replay file in read mode.
 CReplayFile::CReplayFile(const std::filesystem::path& path) {
-  Init(path, REPLAY_FILE_MODE_READ);
+  Init(path, EReplayFileMode::REPLAY_FILE_MODE_READ);
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -116,7 +116,7 @@ CReplayFile::CReplayFile(const std::filesystem::path& path, const CGameData& gam
   if (state_) {
     _State = *state_;
   }
-  Init(path, REPLAY_FILE_MODE_WRITE);
+  Init(path, EReplayFileMode::REPLAY_FILE_MODE_WRITE);
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -137,11 +137,11 @@ void CReplayFile::Init(const filesystem::path& path, EReplayFileMode mode_) {
 
   auto openMode = ios::binary;
   switch (_Mode) {
-  case REPLAY_FILE_MODE_READ:
+  case EReplayFileMode::REPLAY_FILE_MODE_READ:
     openMode |= ios::in;
     break;
 
-  case REPLAY_FILE_MODE_WRITE:
+  case EReplayFileMode::REPLAY_FILE_MODE_WRITE:
     openMode |= (ios::out | ios::trunc);
 
     SetupInputDataBuffer();
@@ -161,7 +161,7 @@ void CReplayFile::Init(const filesystem::path& path, EReplayFileMode mode_) {
   }
 
   switch (_Mode) {
-  case REPLAY_FILE_MODE_READ:
+  case EReplayFileMode::REPLAY_FILE_MODE_READ:
     ReadHeader();
     ReadState();
 
@@ -169,7 +169,7 @@ void CReplayFile::Init(const filesystem::path& path, EReplayFileMode mode_) {
     ReadFooter();
     break;
 
-  case REPLAY_FILE_MODE_WRITE:
+  case EReplayFileMode::REPLAY_FILE_MODE_WRITE:
     WriteHeader();
     WriteState();
 
@@ -507,7 +507,7 @@ void CReplayFile::WriteSegmentData(EDataSegmentType segmentType, stringstream& d
 void CReplayFile::CloseStream()
 {
   _Stream.close();
-  _Mode = REPLAY_FILE_MODE_COMPLETE;
+  _Mode = EReplayFileMode::REPLAY_FILE_MODE_COMPLETE;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -837,7 +837,7 @@ void CReplayFile::Flush()
 
 // ------------------------------------------------------------------------------------------------------------------------
 void CReplayFile::CheckComplete() {
-  if (_Mode == REPLAY_FILE_MODE_COMPLETE || _Mode == REPLAY_FILE_MODE_READ) {
+  if (_Mode == EReplayFileMode::REPLAY_FILE_MODE_COMPLETE || _Mode == EReplayFileMode::REPLAY_FILE_MODE_READ) {
     throw runtime_error("Invalid replay file mode:");
   }
 }

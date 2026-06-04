@@ -10,7 +10,7 @@
 using namespace std;
 
 // ========================================================================================================================
-enum class EErrorReason
+enum class EErrorReason : uint8_t
 {
   None = 0,
   InputBufferFull
@@ -29,7 +29,7 @@ enum class EDataSegmentType : uint8_t
 };
 
 // ========================================================================================================================
-enum class ECompletionReason
+enum class ECompletionReason : uint8_t
 {
   Invalid = 0,
   NormalDisconnect,
@@ -37,7 +37,7 @@ enum class ECompletionReason
 };
 
 // ========================================================================================================================
-enum EReplayFileMode {
+enum class EReplayFileMode : uint8_t {
   REPLAY_FILE_MODE_INVALID = 0,
   REPLAY_FILE_MODE_READ,
   REPLAY_FILE_MODE_WRITE,
@@ -45,6 +45,7 @@ enum EReplayFileMode {
   // The replay data is complete.  No new data can be added now.
   REPLAY_FILE_MODE_COMPLETE
 };
+
 //
 //// ========================================================================================================================
 //struct CGameState {
