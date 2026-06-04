@@ -120,6 +120,11 @@ CReplayFile::CReplayFile(const std::filesystem::path& path, const CGameData& gam
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
+CReplayFile::~CReplayFile() { 
+  CloseStream();
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
 void CReplayFile::GetState(CGameState& state) { 
   state = _State;
 }
@@ -540,21 +545,18 @@ void CReplayFile::ReadHeader()
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
-void CGameData::AllocatePlayerNames() {
-  if (!PlayerNames) {
-    PlayerNames = new std::string[MaxPlayerCount];
-  }
-}
-
-// ------------------------------------------------------------------------------------------------------------------------
 void CGameData::SetPlayerName(std::string name, uint8_t index)
 {
   if (name.length() <= 0) { throw new runtime_error("Name must be at least one character!"); }
   if (name.length() > CGameData::MAX_PLAYER_NAME) { throw new runtime_error("Max name length (32) exceeded!"); }
   if (index >= MaxPlayerCount) { throw new runtime_error("Invalid player index!"); }
 
-  AllocatePlayerNames();
-  PlayerNames[index].assign(name);
+  size_t size = name.size();
+  if (size > MAX_PLAYER_NAME - 1) { size = MAX_PLAYER_NAME - 1; }
+  int offset = index * MAX_PLAYER_NAME;
+
+  memcpy(PlayerNames + offset, name.data(), size);
+  *(PlayerNames + offset + size) = 0;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -562,38 +564,38 @@ bool CGameData::TryGetPlayerName(uint8_t index, std::string& to)
 {
   if (!PlayerNames) { return false; }
 
-  auto& target = PlayerNames[index];
-  auto len = target.length();
-  if (len == 0) { return false; }
+  int offset = index * MAX_PLAYER_NAME;
+  int len = strlen(PlayerNames + offset);
+  to.assign(PlayerNames + offset, len + 1);
 
-  to.assign(target);
   return true;
 }
 
 
 // ------------------------------------------------------------------------------------------------------------------------
 uint32_t CGameData::SizeOf() {
-  uint32_t res = sizeof(uint16_t) * 2;    // Player count, input size.
-  res += (MAX_GAME_NAME_SIZE + MAX_VERSION_SIZE);
+  // Game + Version strings.
+  uint32_t res = (MAX_GAME_NAME_SIZE + MAX_VERSION_SIZE);
+  res += sizeof(uint16_t) * 2;    // Player count, input size.
 
   // Player names.....
-  res += sizeof(uint8_t) * MaxPlayerCount;
-  if (PlayerNames) {
-    for (size_t i = 0; i < MaxPlayerCount; i++)
-    {
-      res += (PlayerNames[i].size());
-    }
-  }
+  res += sizeof(PlayerNames);
+
+  //if (PlayerNames) {
+  //  for (size_t i = 0; i < MaxPlayerCount; i++)
+  //  {
+  //    res += (PlayerNames[i].size());
+  //  }
+  //}
 
   return res;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
-CGameData::~CGameData() {
-  if (PlayerNames) {
-    delete[](PlayerNames);
-  }
+CGameData::CGameData() {
+  // memset(PlayerNames, 0, sizeof(PlayerNames));
 }
+
 
 // ------------------------------------------------------------------------------------------------------------------------
 void CGameData::Read(istream& from) {
@@ -602,17 +604,17 @@ void CGameData::Read(istream& from) {
   RDATA2(from, GameVersion);
   RDATA2(from, MaxPlayerCount);
   RDATA2(from, TotalInputSize);
-
-  for (uint8_t i = 0; i < MaxPlayerCount; i++)
-  {
-    uint8_t nameSize;
-    RDATA2(from, nameSize);
-    if (nameSize > 0) {
-      std::string nameBuffer;
-      EZStream::ReadRawString(from, PlayerNames[i], nameSize);
-      SetPlayerName(nameBuffer, i);
-    }
-  }
+  RDATA2(from, PlayerNames);
+  //for (uint8_t i = 0; i < MaxPlayerCount; i++)
+  //{
+  //  uint8_t nameSize;
+  //  RDATA2(from, nameSize);
+  //  if (nameSize > 0) {
+  //    std::string nameBuffer;
+  //    EZStream::ReadRawString(from, PlayerNames[i], nameSize);
+  //    SetPlayerName(nameBuffer, i);
+  //  }
+  //}
 
 }
 
@@ -624,26 +626,26 @@ void CGameData::Write(ostream& to) {
   WDATA2(to, GameVersion);
   WDATA2(to, MaxPlayerCount);
   WDATA2(to, TotalInputSize);
+  WDATA2(to, PlayerNames);
 
-  // TODO: GameData can provide its own serialization code!
-  if (PlayerNames) {
-    // Write the player names.
-    for (size_t i = 0; i < MaxPlayerCount; i++)
-    {
-      auto& name = PlayerNames[i];
-      size_t size = name.size();
-      WDATA2(to, (uint8_t)size);
+  //if (PlayerNames) {
+  //  // Write the player names.
+  //  for (size_t i = 0; i < MaxPlayerCount; i++)
+  //  {
+  //    auto& name = PlayerNames[i];
+  //    size_t size = name.size();
+  //    WDATA2(to, (uint8_t)size);
 
-      EZStream::WriteRawString(to, name);
-    }
-  }
-  else {
-    // Write the player names (empty)
-    for (size_t i = 0; i < MaxPlayerCount; i++)
-    {
-      WDATA2(to, (uint8_t)0);
-    }
-  }
+  //    EZStream::WriteRawString(to, name);
+  //  }
+  //}
+  //else {
+  //  // Write the player names (empty)
+  //  for (size_t i = 0; i < MaxPlayerCount; i++)
+  //  {
+  //    WDATA2(to, (uint8_t)0);
+  //  }
+  //}
 }
 
 // ------------------------------------------------------------------------------------------------------------------------

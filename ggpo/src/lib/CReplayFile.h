@@ -63,10 +63,10 @@ struct CGameData
   static constexpr int MAX_VERSION_SIZE = 16;
   static constexpr int MAX_PLAYER_NAME = 32;
 
-  ~CGameData();
+  CGameData();
 
-  char GameName[MAX_GAME_NAME_SIZE];
-  char GameVersion[MAX_VERSION_SIZE];
+  char GameName[MAX_GAME_NAME_SIZE] = {};
+  char GameVersion[MAX_VERSION_SIZE]= {};
 
   uint16_t MaxPlayerCount = 0;
   uint16_t TotalInputSize = 0;
@@ -89,8 +89,9 @@ struct CGameData
   void Write(ostream& to);
 
 private:
-  std::string* PlayerNames = nullptr;
-  void AllocatePlayerNames();
+  char PlayerNames[MAX_PLAYER_NAME * GAMEINPUT_MAX_PLAYERS] = {};
+  //std::string* PlayerNames = nullptr;
+  //void AllocatePlayerNames();
 };
 
 // ========================================================================================================================
@@ -109,6 +110,8 @@ struct CGameState {
   // Frame # of the save state.  If zero, then Size + data should be zero as well as this indicates that the replay starts
   // at system boot.
   uint32_t Frame = 0;
+
+  // How much data is there?  (# of bytes in path, or # of bytes for total gamestate)
   uint32_t DataSize = 0;
 
   // CRC of data / data in file.
@@ -116,7 +119,7 @@ struct CGameState {
   // Interpretation of the CRC is also implementation defined.
   uint32_t CRC = 0;
 
-  // Raw data, or a path to the file that contains the state information.
+  // Raw data (array of byte, or a path to the file that contains the state information.
   uint8_t* Data = nullptr;
 
   uint32_t SizeOf() {
@@ -185,11 +188,12 @@ public:
 
   // Open a replay file in write mode, for the given game.
   CReplayFile(const filesystem::path& path, const CGameData& gameData_, const CGameState* state);
+  ~CReplayFile();
+
 
   void AddChatSegment(ChatData& chat);
   void AddInputSegment(const GameInput& input);
   void CompleteReplayFile(int frame, ECompletionReason reason, EErrorReason errReason, const std::string& message);
-  void CloseStream();
 
   // Read to the next recorded input....
   // NOTE: We should be pulling all events up to a certain frame, really.....  How else can we get timed chat data, etc.
@@ -262,4 +266,6 @@ private:
   void ReadGameData();
 
   void Flush();
+  void CloseStream();
+
 };

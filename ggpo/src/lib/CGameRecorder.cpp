@@ -57,7 +57,7 @@ CGameRecorder::CGameRecorder(const CGameData& gameData_, const string& toPath, b
 // ----------------------------------------------------------------------------------------------------------
 CGameRecorder::~CGameRecorder()
 {
-  _File->CloseStream();
+  // _File->CloseStream();
   delete(_File);
   _File = nullptr;
 }
