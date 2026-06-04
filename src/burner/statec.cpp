@@ -136,7 +136,7 @@ INT32 BurnStateCompress(UINT8** pDef, INT32* pnDefLen, INT32 bAll)
 
 // -----------------------------------------------------------------------------
 // Decompression
-
+// This decompresses the data straight into the burn area.
 static INT32 __cdecl StateDecompressAcb(struct BurnArea* pba)
 {
 	Zstr.next_out =(UINT8*)pba->Data;
