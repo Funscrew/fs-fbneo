@@ -123,6 +123,8 @@ struct CGameState {
   // Raw data (array of byte, or a path to the file that contains the state information.
   uint8_t* Data = nullptr;
 
+  uint8_t IsCompressed = 0;
+
   uint32_t SizeOf() {
     return sizeof(uint8_t)          // Type 
       + (sizeof(uint32_t) * 3)   // Frame, DataSize, CRC 

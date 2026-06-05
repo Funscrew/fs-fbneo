@@ -6,34 +6,6 @@ using System.Text;
 
 internal class Program
 {
-#if OS_LINUX
-  const string LIB_NAME = "libNetcodeInterop.so";
-#elif OS_WINDOWS
-  const string LIB_NAME = "NetcodeInterop.dll";
-#else
-  unsupported OS....  check .csproj to add support
-#endif
-
-  //[DllImport("NetcodeCore.dll", CallingConvention = CallingConvention.Cdecl)]
-  //private static extern IntPtr ReplayFile_OpenRead([MarshalAs(UnmanagedType.LPUTF8Str)] string path);
-
-  [DllImport(LIB_NAME, EntryPoint = "ReplayFile_OpenWrite")]
-  private static extern int ReplayFile_OpenWrite(ref CGameData gameData, IntPtr gameState, byte[] path, ref IntPtr replayFile);
-
-  [DllImport(LIB_NAME, CallingConvention = CallingConvention.Cdecl)]
-  private static extern int CompleteReplay(IntPtr replayFile, int frame, byte completionReason, byte errReason, byte[] message, byte messageSize);
-
-  // CReplayFile* target, int frame, ECompletionReason reason, EErrorReason errReason, char* message, uint8_t messageSize) {
-  // CompleteReplay
-
-  [DllImport(LIB_NAME, CallingConvention = CallingConvention.Cdecl)]
-  private static extern void TestError();
-
-  [DllImport(LIB_NAME, CallingConvention = CallingConvention.Cdecl)]
-  private static extern int LastError(byte[] buffer, int bufferSize);
-
-
-
 
   // --------------------------------------------------------------------------------------------------------------------------
   private static void Main(string[] args)

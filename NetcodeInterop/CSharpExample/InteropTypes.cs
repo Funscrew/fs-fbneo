@@ -10,6 +10,8 @@ using uint16_t = System.UInt16;
 using uint8_t = System.Byte;
 
 
+namespace GGPOSharp;
+
 // ==============================================================================================================================
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public unsafe struct CGameData
@@ -100,6 +102,12 @@ public unsafe struct CGameData
 
 
 };
+
+
+// ==============================================================================================================================
+public unsafe struct CGameState {
+  // NOT CURRENTLY IMPLEMENTED / SUPPORTED!
+}
 
 
 // ==============================================================================================================================
