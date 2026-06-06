@@ -339,3 +339,148 @@ enum EReplayFileMode : uint8_t
 
 //}
 
+
+
+
+// ========================================================================================================
+[StructLayout(LayoutKind.Sequential, Pack = 1)]
+public unsafe struct GameInput
+{
+  public const UInt16 GAMEINPUT_MAX_BYTES = 7;
+  public const UInt16 GAMEINPUT_MAX_PLAYERS = 4;    // NOTE: This probably need to be 2?
+  public const int NULL_FRAME = -1;
+
+
+  public int frame;
+  public int size; /* size in bytes of the entire input for all players */
+
+  // NOTE: This is probably too big in terms of copying data around locally....
+  private const int BITS_SIZE = GAMEINPUT_MAX_BYTES * GAMEINPUT_MAX_PLAYERS;
+  public fixed byte data[BITS_SIZE];
+
+  // ------------------------------------------------------------------------------------------
+  public GameInput() { }
+
+  public unsafe void Clear()
+  {
+    frame = 0;
+    size = 0;
+    // NOTE: memcpy or something else is probably better here...
+    for (int i = 0; i < BITS_SIZE; i++)
+    {
+      data[i] = 0;
+    }
+  }
+
+  public bool is_null() { return frame == NULL_FRAME; }
+
+  // ------------------------------------------------------------------------------------------
+  public void init(int iframe, byte[] ibits, int isize, int offset)
+  {
+    Utils.ASSERT(isize < GAMEINPUT_MAX_BYTES);
+
+    frame = iframe;
+    size = isize;
+
+    // TODO: We could probably come up with a better way to copy this data...
+    for (int i = 0; i < size; i++)
+    {
+      data[i] = 0;
+    }
+    if (ibits != null)
+    {
+      for (int i = 0; i < size; i++)
+      {
+        if (i < size)
+        {
+          data[i + offset] = ibits[i];
+        }
+      }
+    }
+
+    // C++ style!
+    //frame = iframe;
+    //size = isize;
+    //memset(bits, 0, sizeof(bits));
+    //if (ibits)
+    //{
+    //  memcpy(bits + (offset * isize), ibits, isize);
+    //}
+
+  }
+
+  // ------------------------------------------------------------------------------------------
+  public void init(int iframe, byte[] ibits, int isize)
+  {
+    init(iframe, ibits, isize, 0);
+  }
+
+  // ----------------------------------------------------------------------------------------
+  public bool value(int i)
+  {
+    return (data[i / 8] & (1 << (i % 8))) != 0;
+  }
+
+  // ----------------------------------------------------------------------------------------
+  public void set(int i)
+  {
+    data[i / 8] |= (byte)(1 << (i % 8));
+  }
+
+  // ----------------------------------------------------------------------------------------
+  public void clear(int i)
+  {
+    data[i / 8] &= (byte)~(1 << (i % 8));
+  }
+
+  // ----------------------------------------------------------------------------------------
+  public unsafe void erase()
+  {
+    fixed (byte* pBits = data)
+    {
+      Unsafe.InitBlock(pBits, 0, BITS_SIZE);
+    }
+  }
+
+  // ----------------------------------------------------------------------------------------
+  public void desc(byte[] buf, int buf_size, bool show_frame = true)
+  {
+    // NOTE: I am not porting this as it is just some expensive logging messages
+    // that can be handled in a better way, both in C++ and here.
+
+    // Refer to C++ version for original code.
+  }
+
+  // ----------------------------------------------------------------------------------------
+  public bool equal(in GameInput other)
+  {
+    ///bool bitsonly = true;
+    //if (!bitsonly && frame != other.frame)
+    //{
+    //  Utils.Log("frames don't match: %d, %d", frame, other.frame);
+    //}
+    //if (size != other.size)
+    //{
+    //  Utils.Log("sizes don't match: %d, %d", size, other.size);
+    //}
+
+    bool memMatch = false;
+    fixed (byte* p = data)
+    fixed (byte* p2 = other.data)
+    {
+      memMatch = Utils.MemMatches(p, p2, size);
+    }
+
+    //if (!memMatch)
+    //{
+    //  Utils.Log("bits don't match");
+    //}
+
+    Utils.ASSERT(size != 0 && other.size != 0);
+    return (frame == other.frame) &&
+           size == other.size &&
+           memMatch;
+  }
+
+}
+

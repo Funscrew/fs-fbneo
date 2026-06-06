@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
@@ -27,20 +28,27 @@ public class ReplayFile : IDisposable
   //[DllImport("NetcodeCore.dll", CallingConvention = CallingConvention.Cdecl)]
   //private static extern IntPtr ReplayFile_OpenRead([MarshalAs(UnmanagedType.LPUTF8Str)] string path);
 
-  [DllImport(LIB_NAME, EntryPoint = "ReplayFile_OpenWrite")]
+  [DllImport(LIB_NAME, EntryPoint = "ReplayFile_OpenWrite", CallingConvention = CallingConvention.Cdecl)]
   private static extern int ReplayFile_OpenWrite(ref CGameData gameData, IntPtr gameState, byte[] path, ref IntPtr replayFile);
 
-  [DllImport(LIB_NAME, EntryPoint = "ReplayFile_OpenRead")]
+  [DllImport(LIB_NAME, EntryPoint = "ReplayFile_OpenRead", CallingConvention = CallingConvention.Cdecl)]
   private static extern int ReplayFile_OpenRead(byte[] path, ref IntPtr replayFile);
 
-  [DllImport(LIB_NAME, EntryPoint = "ReplayFile_Close")]
+  [DllImport(LIB_NAME, EntryPoint = "ReplayFile_Close", CallingConvention = CallingConvention.Cdecl)]
   private static extern int ReplayFile_Close(IntPtr replayFile);
 
   [DllImport(LIB_NAME, CallingConvention = CallingConvention.Cdecl)]
   private static extern int CompleteReplay(IntPtr replayFile, int frame, byte completionReason, byte errReason, byte[] message, byte messageSize);
 
-  // CReplayFile* target, int frame, ECompletionReason reason, EErrorReason errReason, char* message, uint8_t messageSize) {
-  // CompleteReplay
+  [DllImport(LIB_NAME, EntryPoint = "ReplayFile_AddInput", CallingConvention = CallingConvention.Cdecl)]
+  private static extern int ReplayFile_AddInput(IntPtr file, IntPtr input);
+
+  [DllImport(LIB_NAME, EntryPoint = "ReplayFile_GetNextInput", CallingConvention = CallingConvention.Cdecl)]
+  private static extern int ReplayFile_GetNextInput(IntPtr file, IntPtr input);
+
+  [DllImport(LIB_NAME, EntryPoint = "ReplayFile_GetGameData", CallingConvention = CallingConvention.Cdecl)]
+  private static extern int ReplayFile_GetGameData(IntPtr file, IntPtr gameData);
+
 
   [DllImport(LIB_NAME, CallingConvention = CallingConvention.Cdecl)]
   private static extern void TestError();
@@ -51,9 +59,12 @@ public class ReplayFile : IDisposable
   #endregion
 
   private IntPtr ReplayHandle = IntPtr.Zero;
-  private CGameData GameData = default;
+  private CGameData _GameData = default;
 
   private bool IsModeWrite = false;
+
+  private const int ERR_BUF_SIZE = 0x400;
+  private byte[] ErrMsgBuffer = new byte[ERR_BUF_SIZE];
 
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
@@ -61,19 +72,16 @@ public class ReplayFile : IDisposable
   /// </summary>
   public ReplayFile(string path, CGameData gameData_, CGameState? state)
   {
-    GameData = gameData_;
+    _GameData = gameData_;
 
     byte[] usePath = Encoding.UTF8.GetBytes(path);
-    IntPtr useState = IntPtr.Zero;
     GCHandle gch = GCHandle.Alloc(state, GCHandleType.Pinned);
+    IntPtr useState = gch.AddrOfPinnedObject();
 
     try
     {
-      int code = ReplayFile_OpenWrite(ref GameData, useState, usePath, ref this.ReplayHandle);
-      if (code != 0)
-      {
-        throw new InvalidOperationException($"Could not open replay file for write!  Code = {code}");
-      }
+      int code = ReplayFile_OpenWrite(ref _GameData, useState, usePath, ref this.ReplayHandle);
+      ThrowIfNotOK(code);
     }
     finally
     {
@@ -83,6 +91,7 @@ public class ReplayFile : IDisposable
     IsModeWrite = true;
   }
 
+
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
   /// Open a replay file at the given path for reading.
@@ -90,7 +99,28 @@ public class ReplayFile : IDisposable
   public ReplayFile(string path)
   {
     IsModeWrite = false;
-    throw new InvalidOperationException();
+
+    {
+      byte[] usePath = Encoding.UTF8.GetBytes(path);
+      int code = ReplayFile_OpenRead(usePath, ref ReplayHandle);
+      ThrowIfNotOK(code);
+    }
+    {
+      GCHandle gch = GCHandle.Alloc(_GameData, GCHandleType.Pinned);
+      var useData = gch.AddrOfPinnedObject();
+      try
+      {
+        int code = ReplayFile_GetGameData(ReplayHandle, useData);
+        ThrowIfNotOK(code);
+      }
+      finally
+      {
+        gch.Free();
+      }
+    }
+
+
+    // ALL GOOD!
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -99,27 +129,52 @@ public class ReplayFile : IDisposable
     if (ReplayHandle != IntPtr.Zero)
     {
       ReplayFile_Close(ReplayHandle);
-      ReplayHandle =IntPtr.Zero;
+      ReplayHandle = IntPtr.Zero;
 
-      if (IsModeWrite) {
+      if (IsModeWrite)
+      {
         throw new ReplayFileException("Disposing write mode replay file before 'CompleteWrite' was called!");
       }
     }
-
-    //try
-    //{
-
-    //}
-    //catch (Exception)
-    //{
-
-    //  throw;
-    //}
   }
 
+  #region Properties 
+
+  public CGameData GameData { get { return _GameData; } }
+
+  #endregion
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public void AddInput() { }
+  public void GetNextInput(ref GameInput input)
+  {
+    GCHandle gch = GCHandle.Alloc(input, GCHandleType.Pinned);
+    var useInput = gch.AddrOfPinnedObject();
+    try
+    {
+      int code = ReplayFile_GetNextInput(ReplayHandle, useInput);
+      ThrowIfNotOK(code);
+    }
+    finally
+    {
+      gch.Free();
+    }
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public void AddInput(ref GameInput input)
+  {
+    GCHandle gch = GCHandle.Alloc(input, GCHandleType.Pinned);
+    var useInput = gch.AddrOfPinnedObject();
+    try
+    {
+      int code = ReplayFile_AddInput(ReplayHandle, useInput);
+      ThrowIfNotOK(code);
+    }
+    finally
+    {
+      gch.Free();
+    }
+  }
 
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -141,6 +196,18 @@ public class ReplayFile : IDisposable
     ReplayHandle = IntPtr.Zero;
   }
 
+
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private void ThrowIfNotOK(int code, string exMessge = "Error in ReplayFile!")
+  {
+    if (code != 0)
+    {
+      LastError(ErrMsgBuffer, ERR_BUF_SIZE);
+      string errMsg = Encoding.UTF8.GetString(ErrMsgBuffer);
+      throw new ReplayFileException(exMessge, code, errMsg);
+    }
+  }
 }
 
 
@@ -149,8 +216,26 @@ public class ReplayFile : IDisposable
 [Serializable]
 public class ReplayFileException : Exception
 {
+  /// <summary>
+  /// Return code as reported by the interop library.
+  /// </summary>
+  public readonly int LibCode = 0;
+
+  /// <summary>
+  /// Error message as reported by the interop library
+  /// </summary>
+  public readonly string? LibErrMsg = null;
+
   public ReplayFileException() { }
   public ReplayFileException(string message) : base(message) { }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public ReplayFileException(string message, int code_, string msg_) : base(message)
+  {
+    LibCode = code_;
+    LibErrMsg = msg_;
+  }
+
   public ReplayFileException(string message, Exception inner) : base(message, inner) { }
   protected ReplayFileException(
   System.Runtime.Serialization.SerializationInfo info,
