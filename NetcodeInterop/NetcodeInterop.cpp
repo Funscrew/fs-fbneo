@@ -12,7 +12,7 @@ std::string _LastError;
 
 // ---------------------------------------------------------------------------------------------------------
 API_EXPORT
-int ReplayFile_OpenWrite(CGameData* gameData, const CGameState* state, char* path, CReplayFile** file) {
+int ReplayFile_OpenWrite(const CGameData* gameData, const CGameState* state, char* path, CReplayFile** file) {
   *file = nullptr;
 
   try
@@ -29,6 +29,46 @@ int ReplayFile_OpenWrite(CGameData* gameData, const CGameState* state, char* pat
   }
 }
 
+// ---------------------------------------------------------------------------------------------------------
+API_EXPORT
+int ReplayFile_OpenRead(char* path, CReplayFile** file) {
+  if (!std::filesystem::exists(path)) {
+    _LastError.assign("File not found!");
+    return ERRORCODE_FILENOTFOUND;
+  }
+
+  *file = nullptr;
+  try
+  {
+    auto res = new CReplayFile(path);
+    *file = res;
+    return ERRORCODE_OK;
+  }
+  catch (const std::exception& ex)
+  {
+    _LastError.assign(ex.what());
+    return ERRORCODE_UNHANDLED;
+  }
+}
+
+// ---------------------------------------------------------------------------------------------------------
+API_EXPORT
+int ReplayFile_Close(CReplayFile* file) {
+
+  try
+  {
+    if (file != nullptr) {
+      delete file;
+      file = nullptr;
+    }
+    return 0;
+  }
+  catch (const std::exception& ex)
+  {
+    _LastError.assign(ex.what());
+    return ERRORCODE_UNHANDLED;
+  }
+}
 
 // ---------------------------------------------------------------------------------------------------------
 API_EXPORT
@@ -52,6 +92,7 @@ int CompleteReplay(CReplayFile* target, int frame, ECompletionReason reason, EEr
 
   try
   {
+    // NOTE: We may drop the usage of std::string since we really only care about passing bytes around?
     std::string useMsg;
     useMsg.assign(message, messageSize);
     // useMsg.copy(message, messageSize, 0);
@@ -66,28 +107,6 @@ int CompleteReplay(CReplayFile* target, int frame, ECompletionReason reason, EEr
   return ERRORCODE_OK;
 }
 
-
-// ---------------------------------------------------------------------------------------------------------
-API_EXPORT
-int ReplayFile_OpenRead(char* path, CReplayFile** file) {
-  if (!std::filesystem::exists(path)) {
-    _LastError.assign("File not found!");
-    return ERRORCODE_FILENOTFOUND;
-  }
-
-  *file = nullptr;
-  try
-  {
-    auto res = new CReplayFile(path);
-    *file = res;
-    return ERRORCODE_OK;
-  }
-  catch (const std::exception& ex)
-  {
-    _LastError.assign(ex.what());
-    return ERRORCODE_UNHANDLED;
-  }
-}
 
 // ---------------------------------------------------------------------------------------------------------
 API_EXPORT
