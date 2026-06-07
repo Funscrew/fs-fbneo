@@ -29,7 +29,7 @@ public:
   // ----------------------------------------------------------------------------------------------------------------
   void Push(T item) {
     // TODO: We could use an internal ring buffer with this structure if we wanted to.
-    // if (_Count == _Capacity) { throw new runtime_error("queue overflowed!"); }
+    // if (_Count == _Capacity) { throw runtime_error("queue overflowed!"); }
     _Items[_End] = item;
     _End = (_End + 1) % _Capacity;
 

@@ -41,13 +41,13 @@ public class ReplayFile : IDisposable
   private static extern int CompleteReplay(IntPtr replayFile, int frame, byte completionReason, byte errReason, byte[] message, byte messageSize);
 
   [DllImport(LIB_NAME, EntryPoint = "ReplayFile_AddInput", CallingConvention = CallingConvention.Cdecl)]
-  private static extern int ReplayFile_AddInput(IntPtr file, IntPtr input);
+  private static extern int ReplayFile_AddInput(IntPtr file, ref GameInput input);
 
   [DllImport(LIB_NAME, EntryPoint = "ReplayFile_GetNextInput", CallingConvention = CallingConvention.Cdecl)]
-  private static extern int ReplayFile_GetNextInput(IntPtr file, IntPtr input);
+  private static extern int ReplayFile_GetNextInput(IntPtr file, ref GameInput input);
 
   [DllImport(LIB_NAME, EntryPoint = "ReplayFile_GetGameData", CallingConvention = CallingConvention.Cdecl)]
-  private static extern int ReplayFile_GetGameData(IntPtr file, IntPtr gameData);
+  private static extern int ReplayFile_GetGameData(IntPtr file, ref CGameData gameData);
 
 
   [DllImport(LIB_NAME, CallingConvention = CallingConvention.Cdecl)]
@@ -106,19 +106,8 @@ public class ReplayFile : IDisposable
       ThrowIfNotOK(code);
     }
     {
-      GCHandle gch = GCHandle.Alloc(_GameData, GCHandleType.Pinned);
-      var useData = gch.AddrOfPinnedObject();
-      try
-      {
-        int code = ReplayFile_GetGameData(ReplayHandle, useData);
-        ThrowIfNotOK(code);
-      }
-      finally
-      {
-        gch.Free();
-      }
+      int code = ReplayFile_GetGameData(ReplayHandle, ref _GameData);
     }
-
 
     // ALL GOOD!
   }
@@ -147,33 +136,15 @@ public class ReplayFile : IDisposable
   // --------------------------------------------------------------------------------------------------------------------------
   public void GetNextInput(ref GameInput input)
   {
-    GCHandle gch = GCHandle.Alloc(input, GCHandleType.Pinned);
-    var useInput = gch.AddrOfPinnedObject();
-    try
-    {
-      int code = ReplayFile_GetNextInput(ReplayHandle, useInput);
-      ThrowIfNotOK(code);
-    }
-    finally
-    {
-      gch.Free();
-    }
+    int code = ReplayFile_GetNextInput(ReplayHandle, ref input);
+    ThrowIfNotOK(code);
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
   public void AddInput(ref GameInput input)
   {
-    GCHandle gch = GCHandle.Alloc(input, GCHandleType.Pinned);
-    var useInput = gch.AddrOfPinnedObject();
-    try
-    {
-      int code = ReplayFile_AddInput(ReplayHandle, useInput);
-      ThrowIfNotOK(code);
-    }
-    finally
-    {
-      gch.Free();
-    }
+    int code = ReplayFile_AddInput(ReplayHandle, ref input);
+    ThrowIfNotOK(code);
   }
 
 
@@ -199,13 +170,14 @@ public class ReplayFile : IDisposable
 
 
   // --------------------------------------------------------------------------------------------------------------------------
-  private void ThrowIfNotOK(int code, string exMessge = "Error in ReplayFile!")
+  private void ThrowIfNotOK(int code)
   {
     if (code != 0)
     {
       LastError(ErrMsgBuffer, ERR_BUF_SIZE);
-      string errMsg = Encoding.UTF8.GetString(ErrMsgBuffer);
-      throw new ReplayFileException(exMessge, code, errMsg);
+      string libErrMsg = Encoding.UTF8.GetString(ErrMsgBuffer);
+      string useErrMsg = libErrMsg != string.Empty ? libErrMsg : "<no-message>";
+      throw new ReplayFileException(useErrMsg, code, libErrMsg);
     }
   }
 }
@@ -219,21 +191,16 @@ public class ReplayFileException : Exception
   /// <summary>
   /// Return code as reported by the interop library.
   /// </summary>
-  public readonly int LibCode = 0;
+  public readonly int ErrorCode = 0;
 
-  /// <summary>
-  /// Error message as reported by the interop library
-  /// </summary>
-  public readonly string? LibErrMsg = null;
 
   public ReplayFileException() { }
   public ReplayFileException(string message) : base(message) { }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public ReplayFileException(string message, int code_, string msg_) : base(message)
+  public ReplayFileException(string message, int errCode_, string msg_) : base(message)
   {
-    LibCode = code_;
-    LibErrMsg = msg_;
+    ErrorCode = errCode_;
   }
 
   public ReplayFileException(string message, Exception inner) : base(message, inner) { }

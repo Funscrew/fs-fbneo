@@ -67,7 +67,7 @@ namespace EZStream
   // ----------------------------------------------------------------------------------------------------
   void ReadBytes(istream& stream, uint8_t* buffer, int count) {
     //if (stream.tellg() + count > stream.) {
-    //  throw new std::runtime_error("can't read past end of stream!");
+    //  throw std::runtime_error("can't read past end of stream!");
     //}
     stream.read(reinterpret_cast<char*>(buffer), count);
   }
@@ -186,7 +186,7 @@ void CReplayFile::SetupInputDataBuffer()
   InputGroupBuffer = (uint8_t*)malloc(InputGroupBufSize);
   if (InputGroupBuffer == nullptr)
   {
-    throw new runtime_error("Could not allocate space for input group buffer!");
+    throw runtime_error("Could not allocate space for input group buffer!");
   }
   memset(InputGroupBuffer, 0, InputGroupBufSize);
 }
@@ -266,17 +266,17 @@ void CReplayFile::ReadFooter()
   // More parity checking....
   if (sh.Type != EDataSegmentType::Footer)
   {
-    throw new runtime_error("Invalid footer marker!");
+    throw runtime_error("Invalid footer marker!");
   }
 
   if (sh.Size != CFooterData::SizeOf()) // (fileSize - (FOOTER_SIZE - sizeof(uint8_t) + sizeof(uint32_t))))
   {
-    throw new runtime_error("Invalid footer segment size!");
+    throw runtime_error("Invalid footer segment size!");
   }
 
   _Footer.Read(_Stream);
   if (_Footer.FinalFileSize != fileSize) {
-    throw new runtime_error("Invalid check size!");
+    throw runtime_error("Invalid check size!");
   }
 
   // Move back to where we started....
@@ -311,15 +311,15 @@ bool CReplayFile::GetNextInput(GameInput& input) {
       RDATA(InputStartFrame);
       RDATA(CurInputGroupCount);
 
-      auto expectedFrame = LastReadFrame + 1;
+      auto expectedFrame = LastUsedFrame + 1;
       if (expectedFrame != InputStartFrame) { 
-        throw new runtime_error("Unexpected input frame was encountered!");
+        throw runtime_error("Unexpected input frame was encountered!");
       }
 
       auto readSize = CurInputGroupCount * _GameData.TotalInputSize;
       if (readSize != segHeader.Size - (sizeof(uint32_t) + sizeof(uint16_t)))
       {
-        throw new runtime_error("Invalid data size in InputData segment!");
+        throw runtime_error("Invalid data size in InputData segment!");
       }
 
       _Stream.read(reinterpret_cast<char*>(InputGroupBuffer), readSize);
@@ -341,7 +341,7 @@ bool CReplayFile::GetNextInput(GameInput& input) {
       return false;
 
     default:
-      throw new runtime_error("invalid segment type!");
+      throw runtime_error("invalid segment type!");
     }
   }
 }
@@ -358,7 +358,7 @@ void CReplayFile::ReadInputFromBuffer(GameInput& input)
     CurInputGroupCount = 0;
   }
 
-  LastReadFrame = input.frame;
+  LastUsedFrame = input.frame;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
@@ -547,9 +547,9 @@ void CReplayFile::ReadHeader()
 // ------------------------------------------------------------------------------------------------------------------------
 void CGameData::SetPlayerName(std::string name, uint8_t index)
 {
-  if (name.length() <= 0) { throw new runtime_error("Name must be at least one character!"); }
-  if (name.length() > CGameData::MAX_PLAYER_NAME) { throw new runtime_error("Max name length (32) exceeded!"); }
-  if (index >= MaxPlayerCount) { throw new runtime_error("Invalid player index!"); }
+  if (name.length() <= 0) { throw runtime_error("Name must be at least one character!"); }
+  if (name.length() > CGameData::MAX_PLAYER_NAME) { throw runtime_error("Max name length (32) exceeded!"); }
+  if (index >= MaxPlayerCount) { throw runtime_error("Invalid player index!"); }
 
   size_t size = name.size();
   if (size > MAX_PLAYER_NAME - 1) { size = MAX_PLAYER_NAME - 1; }
@@ -653,7 +653,7 @@ void CReplayFile::WriteGameData() {
   CheckComplete();
 
   //if (_GameData.StartFrame == 0) {
-  //  throw new runtime_error("Inavlid start frame!  Must be > 0!");
+  //  throw runtime_error("Inavlid start frame!  Must be > 0!");
   //}
 
   streampos start = _Stream.tellp();
@@ -758,7 +758,7 @@ void CReplayFile::FlushPendingInputData()
   auto total = end - start;
   if (total != segHeader.Size + CSegmentHeader::SizeOf())
   {
-    throw new runtime_error("Unexpected write size!");
+    throw runtime_error("Unexpected write size!");
   }
 
   Flush();
@@ -771,11 +771,15 @@ void CReplayFile::FlushPendingInputData()
 void CReplayFile::AddInputSegment(const GameInput& input) {
   CheckComplete();
 
+  if (input.frame != LastUsedFrame + 1) {
+    throw runtime_error("Incorrect frame #!");
+  }
+  LastUsedFrame = input.frame;
+
   // TODO: Some kind of check to make sure that we are writing the frame numbers sequentially!
   _Footer.Frame = input.frame;
 
   streampos start = _Stream.tellp();
-
 
   if (InputStartFrame == 0) {
     InputStartFrame = input.frame;
@@ -788,40 +792,6 @@ void CReplayFile::AddInputSegment(const GameInput& input) {
   if (CurInputGroupCount >= MAX_INPUT_GROUP_COUNT) {
     FlushPendingInputData();
   }
-  ////if (InputGroupSize >= MAX_INPUT_GROUP_SIZE) {
-  ////  // Flush all inputs!
-  ////}
-  ////else {
-  ////  // Throw it into the buffer....
-  ////}
-
-  ////int inputSize = _GameData.TotalInputSize;
-
-  //CSegmentHeader segHeader;
-  //segHeader.Type = EDataSegmentType::InputData;
-  //segHeader.Size = inputSize;
-  //WriteSegmentHeader(segHeader);
-
-  //// EZStream::Write(_Stream, input.frame);
-  //// TODO: memcpy
-  //memcpy_s(DataBuffer, BUFFER_SIZE, input.bits, inputSize);
-  ////for (int i = 0; i < inputSize; i++)
-  ////{
-  ////  DataBuffer[i] = input.bits[i];
-  ////}
-
-  //_Stream.write(reinterpret_cast<const char*>(DataBuffer), inputSize);
-
-  //streampos end = _Stream.tellp();
-  //int64_t total = static_cast<int64_t>(end - start);
-  //int expected = segHeader.Size + CSegmentHeader::SizeOf();
-
-  //if (total != expected)
-  //{
-  //  throw runtime_error("Data size mismatch on write!");
-  //}
-
-  // Flush();
 }
 
 
@@ -851,13 +821,13 @@ void CGameState::Read(istream& from) {
 
   if (Type == GAMESTATE_TYPE_NONE) {
     if (Frame != 0 || DataSize != 0 || CRC != 0) {
-      throw new runtime_error("Invalid data for GAMESTATE_TYPE_NONE!");
+      throw runtime_error("Invalid data for GAMESTATE_TYPE_NONE!");
     }
 
   }
   if (DataSize) {
     // TODO: We will have to internally allocate space for the state!
-    throw new runtime_error("write some code so we can allocate space for the game state!");
+    throw runtime_error("write some code so we can allocate space for the game state!");
     from.read(reinterpret_cast<char*>(Data), DataSize);
   }
 }

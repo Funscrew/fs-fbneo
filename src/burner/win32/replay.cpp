@@ -464,7 +464,7 @@ INT32 StartReplay(const TCHAR* szFileName)
     StartFromReset(nullptr);
   }
   else {
-    throw new runtime_error("No support for state loading on replay (yet)");
+    throw runtime_error("No support for state loading on replay (yet)");
   }
 
   // Begin the replay from here.

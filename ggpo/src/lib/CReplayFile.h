@@ -228,7 +228,7 @@ private:
   uint32_t InputStartFrame = 0;
   uint8_t* InputGroupBuffer = nullptr;
   size_t InputGroupBufSize = 0;
-  uint32_t LastReadFrame = 0;
+  uint32_t LastUsedFrame = 0;
 
   // Index of the input group that we are reading from.
   uint32_t InputGroupReadIndex = 0;

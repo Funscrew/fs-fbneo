@@ -1,11 +1,13 @@
 ﻿using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
+using System.Security.Cryptography;
 using System.Text;
 
 using GGPOSharp;
 
 internal class Program
 {
+  private Random RNG = new Random();
 
   // --------------------------------------------------------------------------------------------------------------------------
   private unsafe static void Main(string[] args)
@@ -34,28 +36,40 @@ internal class Program
     gameData.SetPlayerName(0, "Funky Dave");
     gameData.SetPlayerName(1, "Spicy Sam");
 
-    //byte[] inputBuffer = new byte[TOTAL_INPUT_SIZE];
-    //for (int i = 0; i < TOTAL_INPUT_SIZE; i++)
-    //{
-    //  inputBuffer[i] = 0;
-    //}
 
     const int REPLAY_INPUT_COUNT = 10;
+    //byte[] p1Vals = new byte[REPLAY_INPUT_COUNT];
+    //byte[] p2Vals = new byte[REPLAY_INPUT_COUNT];
+    byte[][] inputSets = new byte[REPLAY_INPUT_COUNT][];
+
+    for (int i = 0; i < REPLAY_INPUT_COUNT; i++)
+    {
+      byte[] toUse = RandomNumberGenerator.GetBytes(TOTAL_INPUT_SIZE);
+      inputSets[i] = toUse; // new byte[TOTAL_INPUT_SIZE];
+      //for (int j = 0; j < TOTAL_INPUT_SIZE; j++)
+      //{
+
+      //}
+    }
 
     using (var replay = new ReplayFile(testPath, gameData, null))
     {
       Console.WriteLine($"The file is open for write at:  {Path.GetFullPath(testPath)}");
 
-      // TODO: Add at least one game input!
       for (byte i = 0; i < REPLAY_INPUT_COUNT; i++)
       {
-        //inputBuffer[i] = (byte)(i + 1);
-        //inputBuffer[PLAYER_INPUT_SIZE] = (byte)(i + 2);
-
         GameInput input = new GameInput();
         input.size = TOTAL_INPUT_SIZE;
-        input.data[i] = (byte)(i + 1);
-        input.data[PLAYER_INPUT_SIZE] = (byte)(i + 2);
+
+        // TODO: We should come up with some approach to randomized the inputs, across the board...
+
+        for (int j = 0; j < TOTAL_INPUT_SIZE; j++)
+        {
+          input.data[j] = inputSets[i][j];
+        }
+        //input.data[(i % PLAYER_INPUT_SIZE)] = p1Vals[i];
+        //input.data[(i % PLAYER_INPUT_SIZE) + PLAYER_INPUT_SIZE] = p2Vals[i];
+        input.frame = i + 1;
 
         replay.AddInput(ref input);
       }
@@ -66,7 +80,7 @@ internal class Program
     }
 
     Console.WriteLine("Reading back replay file...");
-    using(var check = new ReplayFile(testPath))
+    using (var check = new ReplayFile(testPath))
     {
       var checkGameData = check.GameData;
       if (check.GameData.GameName != gameData.GameName) { throw new Exception("Game names do not match!"); }
@@ -75,12 +89,26 @@ internal class Program
       {
         GameInput input = new GameInput();
         check.GetNextInput(ref input);
+
+        if (input.frame != i + 1)
+        {
+          throw new InvalidOperationException("Incorrect frame #!");
+        }
+
+        var compSet = inputSets[i];
+        for (int j = 0; j < TOTAL_INPUT_SIZE; j++)
+        {
+          var id = input.data[j];
+          var cd = compSet[j];
+
+          bool match = id == cd;
+          if (!match)
+          {
+            throw new Exception($"Input data for frame: {i + 1} does not match at index: {j}");
+          }
+        }
       }
     }
-
-
-    // Let's do a test where we read the file back in!
-    // TODO: Read the file back in!
 
   }
 

@@ -24,7 +24,7 @@ public:
   // ----------------------------------------------------------------------------------------------------------------
   void Push(T item) {
     // TODO: We could use an internal ring buffer with this structure if we wanted to.
-    if (_Count == _Capacity) { throw new runtime_error("queue is full!"); }
+    if (_Count == _Capacity) { throw runtime_error("queue is full!"); }
     _Items[_End] = item;
     _End = (_End + 1) % _Capacity;
     _Count++;
@@ -44,7 +44,7 @@ public:
   // Pop the last item out.
   void Pop()
   {
-    if (_Count == 0) { throw new runtime_error("queue is empty!"); }
+    if (_Count == 0) { throw runtime_error("queue is empty!"); }
     _Start = (_Start + 1) % _Capacity;
     _Count--;
   }

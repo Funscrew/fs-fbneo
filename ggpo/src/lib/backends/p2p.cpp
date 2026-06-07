@@ -345,7 +345,7 @@ GGPOEndpoint* Peer2PeerBackend::AddReplayAppliance(GGPOPlayer* player, int repla
 
   if (LocalPlayer == nullptr)
   {
-    throw new std::exception("The local player must be added before adding a replay client!");
+    throw std::runtime_error("The local player must be added before adding a replay client!");
   }
 
   auto playerIndex = LocalPlayer->PlayerIndex();

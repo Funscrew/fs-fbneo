@@ -53,9 +53,9 @@ int ReplayFile_OpenRead(char* path, CReplayFile** file) {
 
 // ---------------------------------------------------------------------------------------------------------
 API_EXPORT
-int ReplayFile_GetGameData(CReplayFile* file, CGameData* data) {
+int ReplayFile_GetGameData(CReplayFile* file, CGameData& data) {
   try {
-    *data = file->GameData();
+    data = file->GameData();
     return ERRORCODE_OK;
   }
   catch (const std::exception& ex)
@@ -68,11 +68,9 @@ int ReplayFile_GetGameData(CReplayFile* file, CGameData* data) {
 
 // ---------------------------------------------------------------------------------------------------------
 API_EXPORT
-int ReplayFile_GetNextInput(CReplayFile* file, GameInput* input) {
+int ReplayFile_GetNextInput(CReplayFile* file, GameInput& input) {
   try {
-    GameInput local;
-    file->GetNextInput(local);
-    *input = local;
+    file->GetNextInput(input);
     return ERRORCODE_OK;
   }
   catch (const std::exception& ex)
@@ -115,6 +113,7 @@ int ReplayFile_AddInput(CReplayFile* file, GameInput* input) {
     _LastError.assign(ex.what());
     return ERRORCODE_UNHANDLED;
   }
+
 
   return ERRORCODE_OK;
 }
