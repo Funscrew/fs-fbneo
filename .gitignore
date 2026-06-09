@@ -34,3 +34,7 @@ dev-notes.*
 *.\~lock
 /.~lock.replay-file-format.ods#
 *.aps
+/ReplayAppliance/ReplayAppliance/libs/NetcodeInterop.dll
+/ReplayAppliance/ReplayAppliance/libs/NetcodeInterop.exp
+/ReplayAppliance/ReplayAppliance/libs/NetcodeInterop.lib
+/ReplayAppliance/ReplayAppliance/libs/NetcodeInterop.pdb
