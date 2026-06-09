@@ -158,6 +158,7 @@ struct CChatData
   uint8_t ToPlayerIndex = 0;
   int32_t Frame = 0;
 
+
   void Read(istream& from);
   void Write(ostream& to) const;
   inline uint32_t SizeOf() const { return sizeof(uint8_t) + sizeof(uint8_t) + sizeof(int32_t) + sizeof(uint8_t) + DataSize; }

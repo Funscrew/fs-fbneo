@@ -86,7 +86,7 @@ internal class Program
         if (input.frame == CHAT2_FRAME)
         {
           var cData = new CChatData();
-          cData.Message = CHAT_MSG_1;
+          cData.Message = CHAT_MSG_2;
           cData.Frame = input.frame;
           cData.FromPlayerIndex = 0;
           cData.ToPlayerIndex = 1;
