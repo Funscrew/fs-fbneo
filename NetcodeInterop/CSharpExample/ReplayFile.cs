@@ -43,6 +43,22 @@ public class ReplayFile : IDisposable
   [DllImport(LIB_NAME, EntryPoint = "ReplayFile_AddInput", CallingConvention = CallingConvention.Cdecl)]
   private static extern int ReplayFile_AddInput(IntPtr file, ref GameInput input);
 
+  [DllImport(LIB_NAME, EntryPoint = "ReplayFile_AddChat", CallingConvention = CallingConvention.Cdecl)]
+  private static extern int ReplayFile_AddChat(IntPtr file, ref CChatData chat);
+
+  //  API_EXPORT
+  //int ReplayFile_AddChat(CReplayFile* file, const CChatData& chat) { 
+  //  try
+  //  {
+  //    file->AddChatSegment(chat);
+  //}
+  //  catch (const std::exception& ex)
+  //  {
+  //    _LastError.assign(ex.what());
+  //    return ERRORCODE_UNHANDLED;
+  //  }
+
+
   [DllImport(LIB_NAME, EntryPoint = "ReplayFile_GetNextInput", CallingConvention = CallingConvention.Cdecl)]
   private static extern int ReplayFile_GetNextInput(IntPtr file, ref GameInput input);
 
@@ -147,6 +163,12 @@ public class ReplayFile : IDisposable
     ThrowIfNotOK(code);
   }
 
+  // --------------------------------------------------------------------------------------------------------------------------
+  public void AddChat(ref CChatData chat)
+  {
+    int code = ReplayFile_AddChat(ReplayHandle, ref chat);
+    ThrowIfNotOK(code);
+  }
 
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>

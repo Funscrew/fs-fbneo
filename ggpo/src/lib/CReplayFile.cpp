@@ -35,6 +35,12 @@ namespace EZStream
     stream.write(reinterpret_cast<const char*>(&data), static_cast<streamsize>(1));
   }
 
+  // ----------------------------------------------------------------------------------------------------
+  void Write(ostream& stream, const uint8_t* data, size_t size) { 
+    stream.write(reinterpret_cast<const char*>(data), static_cast<streamsize>(size));
+  }
+  
+  // ----------------------------------------------------------------------------------------------------
   void Write(ostream& stream, const vector<uint8_t>& bytes)
   {
     stream.write(reinterpret_cast<const char*>(bytes.data()), static_cast<streamsize>(bytes.size()));
@@ -120,12 +126,12 @@ CReplayFile::CReplayFile(const std::filesystem::path& path, const CGameData& gam
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
-CReplayFile::~CReplayFile() { 
+CReplayFile::~CReplayFile() {
   CloseStream();
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
-void CReplayFile::GetState(CGameState& state) { 
+void CReplayFile::GetState(CGameState& state) {
   state = _State;
 }
 
@@ -294,14 +300,16 @@ bool CReplayFile::GetNextInput(GameInput& input) {
     return true;
   }
 
-  // NOTE: We are collecting segments until we hit the next input segment.
-  auto cPos = _Stream.tellg();
-  scratch = cPos;
-
-  CSegmentHeader segHeader;
-  ReadSegmentHeader(segHeader);
 
   while (true) {
+
+    // NOTE: We are collecting segments until we hit the next input segment.
+    auto cPos = _Stream.tellg();
+    scratch = cPos;
+
+    CSegmentHeader segHeader;
+    ReadSegmentHeader(segHeader);
+
     switch (segHeader.Type)
     {
     case EDataSegmentType::InputData:
@@ -312,7 +320,7 @@ bool CReplayFile::GetNextInput(GameInput& input) {
       RDATA(CurInputGroupCount);
 
       auto expectedFrame = LastUsedFrame + 1;
-      if (expectedFrame != InputStartFrame) { 
+      if (expectedFrame != InputStartFrame) {
         throw runtime_error("Unexpected input frame was encountered!");
       }
 
@@ -694,16 +702,20 @@ void CReplayFile::ReadGameData() {
 
 
 // ----------------------------------------------------------------------------------------------------------
-void CReplayFile::AddChatSegment(ChatData& chat)
+void CReplayFile::AddChatSegment(const CChatData& chat)
 {
   CheckComplete();
 
-  if (chat.Message.empty())
-  {
-    return;
+  // Make sure that the chat data is at a reasonable place in the stream...
+  if (chat.Frame < LastUsedFrame || chat.Frame > LastUsedFrame + 1) { 
+    throw runtime_error("Invalid frame number for chat data!");
+  }
+  if (chat.FromPlayerIndex == chat.ToPlayerIndex) { 
+    throw runtime_error("from/to indexes may not be the same!");
   }
 
-  chat.Message = StringTools::Truncate(chat.Message, ChatData::CHAT_DATA_MAX);
+  // We want to flush all current inputs so that the chat data comes where it should:
+  FlushPendingInputData();
 
   streampos start = _Stream.tellp();
 
@@ -713,10 +725,7 @@ void CReplayFile::AddChatSegment(ChatData& chat)
   // NOTE: Capturing this chat data doesn't capture who said what... the player indexes should be marked in the CGameData part of the file.
 
   WriteSegmentHeader(segHeader);
-
-  EZStream::Write(_Stream, chat.FromPlayerIndex);
-  EZStream::Write(_Stream, chat.ToPlayerIndex);
-  EZStream::WriteRawString(_Stream, chat.Message);
+  chat.Write(_Stream);
 
   streampos end = _Stream.tellp();
   int64_t total = static_cast<int64_t>(end - start);
@@ -810,6 +819,27 @@ void CReplayFile::CheckComplete() {
   if (_Mode == EReplayFileMode::REPLAY_FILE_MODE_COMPLETE || _Mode == EReplayFileMode::REPLAY_FILE_MODE_READ) {
     throw runtime_error("Invalid replay file mode:");
   }
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+void CChatData::Read(istream& from) {
+  RDATA2(from, FromPlayerIndex);
+  RDATA2(from, ToPlayerIndex);
+  RDATA2(from, Frame);
+  RDATA2(from, DataSize);
+
+  memset(Data, 0, CChatData::CHAT_DATA_MAX);
+  EZStream::ReadBytes(from, Data, DataSize);
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+void CChatData::Write(ostream& to) const {
+  WDATA2(to, FromPlayerIndex);
+  WDATA2(to, ToPlayerIndex);
+  WDATA2(to, Frame);
+  WDATA2(to, DataSize);
+  
+  EZStream::Write(to, Data, DataSize);
 }
 
 // ------------------------------------------------------------------------------------------------------------------------

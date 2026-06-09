@@ -81,7 +81,7 @@ public:
   void CompleteReplay(int frame, ECompletionReason reason, EErrorReason errReason, const string& message);
  // void CompleteReplay(int frame, ECompletionReason reason, EErrorReason errReason, const char* message);
 
-  void AddChatSegment(ChatData& chat);
+  void AddChatSegment(CChatData& chat);
 
   // Add a complete set of inputs, no guessing.
   bool AddInputs(int frame, uint8_t* data, int dataSize);

@@ -38,19 +38,22 @@ internal class Program
 
 
     const int REPLAY_INPUT_COUNT = 10;
-    //byte[] p1Vals = new byte[REPLAY_INPUT_COUNT];
-    //byte[] p2Vals = new byte[REPLAY_INPUT_COUNT];
     byte[][] inputSets = new byte[REPLAY_INPUT_COUNT][];
 
     for (int i = 0; i < REPLAY_INPUT_COUNT; i++)
     {
       byte[] toUse = RandomNumberGenerator.GetBytes(TOTAL_INPUT_SIZE);
-      inputSets[i] = toUse; // new byte[TOTAL_INPUT_SIZE];
-      //for (int j = 0; j < TOTAL_INPUT_SIZE; j++)
-      //{
-
-      //}
+      inputSets[i] = toUse;
     }
+
+
+    const int CHAT1_FRAME = 2;
+    const string CHAT_MSG_1 = "My Message!";
+
+    const int CHAT2_FRAME = 3;
+    const string CHAT_MSG_2 = "Their Message!";
+
+
 
     using (var replay = new ReplayFile(testPath, gameData, null))
     {
@@ -62,21 +65,39 @@ internal class Program
         input.size = TOTAL_INPUT_SIZE;
 
         // TODO: We should come up with some approach to randomized the inputs, across the board...
-
         for (int j = 0; j < TOTAL_INPUT_SIZE; j++)
         {
           input.data[j] = inputSets[i][j];
         }
-        //input.data[(i % PLAYER_INPUT_SIZE)] = p1Vals[i];
-        //input.data[(i % PLAYER_INPUT_SIZE) + PLAYER_INPUT_SIZE] = p2Vals[i];
         input.frame = i + 1;
 
         replay.AddInput(ref input);
+
+        if (input.frame == CHAT1_FRAME)
+        {
+          var cData = new CChatData();
+          cData.Message = CHAT_MSG_1;
+          cData.Frame = input.frame;
+          cData.FromPlayerIndex = 0;
+          cData.ToPlayerIndex = 1;
+          replay.AddChat(ref cData);
+        }
+
+        if (input.frame == CHAT2_FRAME)
+        {
+          var cData = new CChatData();
+          cData.Message = CHAT_MSG_1;
+          cData.Frame = input.frame;
+          cData.FromPlayerIndex = 0;
+          cData.ToPlayerIndex = 1;
+          replay.AddChat(ref cData);
+        }
+
       }
 
 
       replay.CompleteWrite(1, ECompletionReason.NormalDisconnect, EErrorReason.None, "ALL GOOD BEBE!");
-      Console.WriteLine("file is complete!");
+      Console.WriteLine("Replay recording is complete!");
     }
 
     Console.WriteLine("Reading back replay file...");
@@ -88,6 +109,10 @@ internal class Program
       for (int i = 0; i < REPLAY_INPUT_COUNT; i++)
       {
         GameInput input = new GameInput();
+
+        // TODO:
+        // I want a way to get the next "event", or all "events" for the current frame....
+        // That means that the events should be abstracted somehow?
         check.GetNextInput(ref input);
 
         if (input.frame != i + 1)
@@ -109,6 +134,10 @@ internal class Program
         }
       }
     }
+
+
+    Console.WriteLine("Readback is complete!");
+
 
   }
 

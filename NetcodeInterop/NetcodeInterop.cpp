@@ -114,8 +114,24 @@ int ReplayFile_AddInput(CReplayFile* file, GameInput* input) {
     return ERRORCODE_UNHANDLED;
   }
 
-
   return ERRORCODE_OK;
+}
+
+
+// ---------------------------------------------------------------------------------------------------------
+API_EXPORT
+int ReplayFile_AddChat(CReplayFile* file, const CChatData& chat) { 
+  try
+  {
+    file->AddChatSegment(chat);
+    return ERRORCODE_OK;
+  }
+  catch (const std::exception& ex)
+  {
+    _LastError.assign(ex.what());
+    return ERRORCODE_UNHANDLED;
+  }
+
 }
 
 // ---------------------------------------------------------------------------------------------------------

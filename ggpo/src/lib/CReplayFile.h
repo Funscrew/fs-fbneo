@@ -46,15 +46,6 @@ enum class EReplayFileMode : uint8_t {
   REPLAY_FILE_MODE_COMPLETE
 };
 
-//
-//// ========================================================================================================================
-//struct CGameState {
-//
-//  uint16_t PlayerCount = 0;
-//  char** PlayerNames;
-//
-//  uint32_t SizeOf();
-//};
 
 // ========================================================================================================================
 // TODO: Add the player names + indexes for chat data.  This CAN be blank for single player games, or if you don't care.
@@ -67,7 +58,7 @@ struct CGameData
   CGameData();
 
   char GameName[MAX_GAME_NAME_SIZE] = {};
-  char GameVersion[MAX_VERSION_SIZE]= {};
+  char GameVersion[MAX_VERSION_SIZE] = {};
 
   uint16_t MaxPlayerCount = 0;
   uint16_t TotalInputSize = 0;
@@ -158,18 +149,23 @@ struct CFooterData {
 };
 
 // ========================================================================================================================
-class ChatData
+struct CChatData
 {
-public:
   static constexpr int CHAT_DATA_MAX = 128;
 
   // NOTE: There is an error if all indexes are the same number!
   uint8_t FromPlayerIndex = 0;
   uint8_t ToPlayerIndex = 0;
-  int Frame = 0;
-  std::string Message;
+  int32_t Frame = 0;
 
-  inline uint32_t SizeOf() { return Message.size() + sizeof(uint8_t) + sizeof(uint8_t) + sizeof(int); }
+  void Read(istream& from);
+  void Write(ostream& to) const;
+  inline uint32_t SizeOf() const { return sizeof(uint8_t) + sizeof(uint8_t) + sizeof(int32_t) + sizeof(uint8_t) + DataSize; }
+
+private:
+  uint8_t DataSize = 0;
+  uint8_t Data[CHAT_DATA_MAX];
+
 };
 
 // ========================================================================================================================
@@ -194,7 +190,7 @@ public:
   ~CReplayFile();
 
 
-  void AddChatSegment(ChatData& chat);
+  void AddChatSegment(const CChatData& chat);
   void AddInputSegment(const GameInput& input);
   void CompleteReplayFile(int frame, ECompletionReason reason, EErrorReason errReason, const std::string& message);
 
