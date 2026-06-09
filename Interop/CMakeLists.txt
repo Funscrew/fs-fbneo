@@ -15,8 +15,8 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 add_library(NetcodeInterop SHARED
-    ../ggpo/src/lib/CReplayFile.cpp
     ../ggpo/src/lib/CReplayFile.h
+    ../ggpo/src/lib/CReplayFile.cpp
     ../ggpo/src/lib/game_input.h
     NetcodeInterop.cpp
     NetcodeInterop.h
