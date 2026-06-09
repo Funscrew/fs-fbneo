@@ -1,0 +1,5 @@
+.vs/
+bin/
+obj/
+/GGPOSharp/GGPOSharp.csproj.user
+/dist

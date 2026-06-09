@@ -1,4 +1,6 @@
 ﻿*.vcxproj.user
+*.csproj.user
+*.replay
 .vs
 .vscode
 projectfiles/visualstudio-2019/enc_temp_folder

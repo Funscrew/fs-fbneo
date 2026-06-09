@@ -1,0 +1,20 @@
+{
+  "profiles": {
+    "WSL": {
+      "commandName": "WSL2",
+      "distributionName": ""
+    },
+    "Echo-Client": {
+      "commandName": "Project",
+      "commandLineArgs": "input-echo --player 1 --name \"Echoman\""
+    },
+    "Replay-Appliance": {
+      "commandName": "Project",
+      "commandLineArgs": "replay-appliance --session-id \"12345\" --local-port 7002 --game-name \"test\" --game-version \"0.01\""
+    },
+    "Echo-Client-With-Replay": {
+      "commandName": "Project",
+      "commandLineArgs": "input-echo --player 1 --name \"Echoman\" --replay-options \"127.0.0.1:7002\" --session-id \"12345\""
+    }
+  }
+}

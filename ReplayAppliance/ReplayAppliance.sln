@@ -1,0 +1,31 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.13.35931.197
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReplayAppliance", "ReplayAppliance\ReplayAppliance.csproj", "{D0A4B766-9078-8760-3034-C4E61232984E}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ReplayApplianceTesters", "ReplayApplianceTesters\ReplayApplianceTesters.csproj", "{CCB2AD7D-27F5-0AE8-8123-D47B0C4766CA}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{D0A4B766-9078-8760-3034-C4E61232984E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{D0A4B766-9078-8760-3034-C4E61232984E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{D0A4B766-9078-8760-3034-C4E61232984E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{D0A4B766-9078-8760-3034-C4E61232984E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CCB2AD7D-27F5-0AE8-8123-D47B0C4766CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CCB2AD7D-27F5-0AE8-8123-D47B0C4766CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CCB2AD7D-27F5-0AE8-8123-D47B0C4766CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CCB2AD7D-27F5-0AE8-8123-D47B0C4766CA}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {3D846FE1-92ED-48A0-B894-303026683DAB}
+	EndGlobalSection
+EndGlobal
