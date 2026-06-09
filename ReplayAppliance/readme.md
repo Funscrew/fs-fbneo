@@ -1,6 +1,37 @@
-# GGPOSharp
-A C# implementation of the GPPO code that I found, and how it was integrated into fs-fbneo.
+# ReplayAppliance
+ReplayAppliance is the server application that is used to record P2P game sessions from fs-fbneo.
+It is a C# application that uses interop libs from the emulator.
+It builds and runs on Windows, Linux, and maybe MacOS? (untested)
 
+ReplayAppliance was adapted from the experimental code GGPOSharp, which contains a direct, mostly compatible C# port of the GPPO code from fs-fbneo.
+Future iterations of ReplayAppliance will get its netcode implementation directly from updated interop libs.
+
+
+## Build It!
+Before you run the application, you will need to build the interop libraries:
+The scripts are located in **build-scripts** and there is one for each supported platform / debug / release.
+Generate the flavor that is appropriate for your current task.
+
+**NOTE:** ReplayAppliance will not build if the libs aren't in the correct location.  This is on purpose as it allows flexibility when testing / debugging the application.  You are welcome to build + copy the libs by hand if you prefer.
+
+```
+# Choose one!
+
+build-windows-debug.bat
+build-windows-release.bat
+. build-linux-debug.sh      # NOT YET
+. build-linux-release.sh    # NOT YET
+```
+
+These scripts copy the lib files to the ReplayAppliance project which will then copy them to the correct location on build.
+
+
+
+
+
+
+## LEGACY README BELOW:
+Leaving this here for now as the notes were useful at one point in time.
 
 
 ## Flow:

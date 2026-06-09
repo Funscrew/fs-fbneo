@@ -14,4 +14,25 @@
     <PackageReference Include="drewCo.Tools" Version="1.4.0.6" />
   </ItemGroup>
 
+
+  <ItemGroup>
+    <Folder Include="libs\" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <None Update="libs\NetcodeInterop.dll">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="libs\NetcodeInterop.exp">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="libs\NetcodeInterop.lib">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="libs\NetcodeInterop.pdb">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
 </Project>
