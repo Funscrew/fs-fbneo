@@ -26,4 +26,24 @@
     <Using Include="NUnit.Framework" />
   </ItemGroup>
 
+  <Target Name="CopyLibs" AfterTargets="Build">
+    <!--Example of conditional includes....-->
+    <!--<ItemGroup Condition="'$(OS)' == 'Windows_NT'">
+      <NativeFiles Include="NativeLibs/win-x64/**/*.*" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(OS)' != 'Windows_NT'">
+      <NativeFiles Include="NativeLibs/linux-x64/**/*.*" />
+    </ItemGroup>-->
+
+    <ItemGroup>
+      <ExtraFiles Include="../libs/$(Configuration)/*.*" />
+    </ItemGroup>
+
+    <Copy
+      SourceFiles="@(ExtraFiles)"
+      DestinationFiles="@(ExtraFiles->'$(OutputPath)%(Filename)%(Extension)')"
+      SkipUnchangedFiles="true" />
+  </Target>
+
 </Project>

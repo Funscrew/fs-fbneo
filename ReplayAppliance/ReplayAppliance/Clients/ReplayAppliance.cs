@@ -53,12 +53,12 @@ namespace funscrew.Clients
         throw new InvalidOperationException("Invalid game version!");
       }
 
-      Recorder = new GameRecorder(new GameData()
+      Recorder = new GameRecorder(new CGameData()
       {
         GameName = ReplayOptions.GameName,
         GameVersion = ReplayOptions.GameVersion,
-        PlayerCount = ClientOptions.MaxPlayerCount,
-        TotalInputSize = ClientOptions.InputSize * ClientOptions.MaxPlayerCount
+        MaxPlayerCount = (UInt16)ClientOptions.MaxPlayerCount,
+        TotalInputSize = (UInt16)(ClientOptions.InputSize * ClientOptions.MaxPlayerCount)
       },
       ReplayOptions.DataDir,
       ClientOptions.SessionId

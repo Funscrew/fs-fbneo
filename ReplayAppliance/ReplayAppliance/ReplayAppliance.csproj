@@ -8,6 +8,12 @@
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
   </PropertyGroup>
 
+  <ItemGroup>
+    <Compile Remove="libs\**" />
+    <EmbeddedResource Remove="libs\**" />
+    <None Remove="libs\**" />
+  </ItemGroup>
+
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
@@ -15,24 +21,33 @@
   </ItemGroup>
 
 
-  <ItemGroup>
-    <Folder Include="libs\" />
-  </ItemGroup>
+  <!--Conditional Compilation Symbols-->
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
+    <DefineConstants>OS_WINDOWS</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
+    <DefineConstants>OS_LINUX</DefineConstants>
+  </PropertyGroup>
 
 
-  <ItemGroup>
-    <None Update="libs\NetcodeInterop.dll">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="libs\NetcodeInterop.exp">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="libs\NetcodeInterop.lib">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Update="libs\NetcodeInterop.pdb">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
+  <Target Name="CopyLibs" AfterTargets="Build">
+    <!--Example of conditional includes....-->
+    <!--<ItemGroup Condition="'$(OS)' == 'Windows_NT'">
+      <NativeFiles Include="NativeLibs/win-x64/**/*.*" />
+    </ItemGroup>
+
+    <ItemGroup Condition="'$(OS)' != 'Windows_NT'">
+      <NativeFiles Include="NativeLibs/linux-x64/**/*.*" />
+    </ItemGroup>-->
+
+    <ItemGroup>
+      <ExtraFiles Include="../libs/$(Configuration)/*.*" />
+    </ItemGroup>
+
+    <Copy
+      SourceFiles="@(ExtraFiles)"
+      DestinationFiles="@(ExtraFiles->'$(OutputPath)%(Filename)%(Extension)')"
+      SkipUnchangedFiles="true" />
+  </Target>
 
 </Project>

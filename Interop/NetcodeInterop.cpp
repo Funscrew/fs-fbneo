@@ -70,7 +70,10 @@ int ReplayFile_GetGameData(CReplayFile* file, CGameData& data) {
 API_EXPORT
 int ReplayFile_GetNextInput(CReplayFile* file, GameInput& input) {
   try {
-    file->GetNextInput(input);
+    bool hasInput = file->GetNextInput(input);
+    if (!hasInput) { 
+      return ERRORCODE_NO_GAMEINPUT;
+    }
     return ERRORCODE_OK;
   }
   catch (const std::exception& ex)
@@ -172,7 +175,7 @@ const int LastError(char* buffer, uint32_t bufferSize) {
     return -1;
 
   if (bufferSize < res) {
-    res = bufferSize - 1;
+    res = bufferSize;
   }
 
   memcpy(buffer, _LastError.c_str(), res);

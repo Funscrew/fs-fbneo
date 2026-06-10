@@ -35,10 +35,10 @@ namespace funscrewTesters
 
       const int INPUT_SIZE = 5;
 
-      var recorder = new GameRecorder(new GameData()
+      var recorder = new GameRecorder(new CGameData()
       {
         GameName = TEST_GAME_NAME,
-        PlayerCount = 2,
+        MaxPlayerCount = 2,
         TotalInputSize = 2 * INPUT_SIZE
       }, TEST_DATA_DIR, sessionId, true);
 
@@ -55,35 +55,40 @@ namespace funscrewTesters
       const int FRAME_COUNT = 50;
       for (int i = 0; i < FRAME_COUNT; i++)
       {
-        p1Input.frame = i;
+        int frameNumber = i + 1;
+        p1Input.frame = frameNumber;
         p1Input.data[0] = (byte)(i % 256);
 
-        p2Input.frame = i;
+        p2Input.frame = frameNumber;
         p2Input.data[0] = (byte)((i + 1) % 256);
 
         recorder.AddInput(0, ref p1Input);
         recorder.AddInput(1, ref p2Input);
 
         // Add some chitchat....
-        if (i % 11 == 0)
+        if (frameNumber % 11 == 0)
         {
-          recorder.AddChatSegment(new ChatData()
+          var chat1 = new CChatData()
           {
-            Frame = i,
+            Frame = frameNumber,
             Message = CHAT1_MSG,
-            FromPlayerIndex = 0
-          });
+            FromPlayerIndex = 0,
+            ToPlayerIndex = 1
+          };
+          recorder.AddChatSegment(ref chat1);
           ++chatsAdded;
         }
 
-        if (i % 17 == 0)
+        if (frameNumber % 17 == 0)
         {
-          recorder.AddChatSegment(new ChatData()
+          var chat2 = new CChatData()
           {
-            Frame = i,
+            Frame = frameNumber,
             Message = CHAT2_MSG,
-            FromPlayerIndex = 1
-          });
+            FromPlayerIndex = 1,
+            ToPlayerIndex = 0,
+          };
+          recorder.AddChatSegment(ref chat2);
           ++chatsAdded;
         }
 
@@ -104,8 +109,9 @@ namespace funscrewTesters
       // Then we will confirm that the frame numbers are correct, ordinal, and that the data is what we expect!
       for (int i = 0; i < FRAME_COUNT; i++)
       {
+        int frameNumber = i + 1;
         GameInput gi = allInputs[i];
-        Assert.That(gi.frame, Is.EqualTo(i), $"Incorrect frame # for index: {i}");
+        Assert.That(gi.frame, Is.EqualTo(frameNumber), $"Incorrect frame # for index: {i}");
 
         // Make sure that the data is correct...
         byte p1Data = gi.data[0];
@@ -114,8 +120,8 @@ namespace funscrewTesters
         byte ep1 = (byte)(i % 256);
         byte ep2 = (byte)((i + 1) % 265);
 
-        Assert.That(p1Data, Is.EqualTo(ep1), $"Invalid input information for p1 @ index: {i}!");
-        Assert.That(p2Data, Is.EqualTo(ep2), $"Invalid input information for p2 @ index: {i}!");
+        Assert.That(p1Data, Is.EqualTo(ep1), $"Invalid input information for p1 @ frame: {frameNumber}!");
+        Assert.That(p2Data, Is.EqualTo(ep2), $"Invalid input information for p2 @ frame: {frameNumber}!");
       }
     }
 

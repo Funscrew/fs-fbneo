@@ -3,7 +3,7 @@ using drewCo.Tools.Logging;
 using System.ComponentModel.DataAnnotations;
 using System.Runtime.InteropServices.Marshalling;
 
-namespace funscrew.Clients
+namespace funscrew
 {
   // ==============================================================================================================================
   /// <summary>
@@ -29,28 +29,32 @@ namespace funscrew.Clients
     /// <summary>
     /// Used to track what should be the expected starting frame on merge operations when a given buffer is empty!
     /// </summary>
-    private int SyncedBaseFrame = 0;
+    private int SyncedBaseFrame = 1;
 
     private EZQ<GameInput>[] PlayerBuffers = null!;
     private int[] BaseFrames = null!;
 
     private GameInput[] MergeBuffer = null;
 
-    private Stream DataStream = null!;
-    private GameData GameData = null!;
+    // private Stream DataStream = null!;
+    private CGameData GameData = default;
 
     private byte[] WriteBuffer = new byte[0x800];
 
-    public string FilePath { get; private set; } = null!;
+    //public string FilePath { get; private set; } = null!;
 
     public bool RecordingComplete { get; private set; } = false;
     public bool HasError { get { return ErrorReason != EErrorReason.None; } }
     public string? ErrorMessage { get; private set; } = null!;
     public EErrorReason ErrorReason { get; private set; }
 
+
+    private ReplayFile ReplayFile = null!;
+    public string FilePath { get { return ReplayFile.Path; }}
+
     // -----------------------------------------------------------------------------------------------------------------------
     // NOTE: In production environments, game data should not be allowed to be overwritten!
-    public GameRecorder(GameData gameData_, string dataDir_, UInt64 sessionId_, bool overwriteExisting = false)
+    public GameRecorder(CGameData gameData_, string dataDir_, UInt64 sessionId_, bool overwriteExisting = false)
     {
       GameData = gameData_;
       SessionId = sessionId_;
@@ -63,21 +67,20 @@ namespace funscrew.Clients
       }
 
       // Let's create the file.  If it already exists, then we have a problem / invalid session ID!
-      string path = Path.Combine(DataDir, SessionId + ".replay");
-      if (File.Exists(path) && !overwriteExisting)
+      string usePath = Path.Combine(DataDir, SessionId + ".replay");
+      if (File.Exists(usePath) && !overwriteExisting)
       {
         throw new InvalidOperationException($"Data file for session id: {SessionId} already exists!");
       }
 
       // TODO: This is where we will create the stream for where the file data will go.
-      CreateStream(path);
-      FilePath = path;
+      ReplayFile = new ReplayFile(usePath, GameData, null);
 
       BaseFrames = new int[MAX_PLAYERS];
       int len = BaseFrames.Length;
       for (int i = 0; i < len; i++)
       {
-        BaseFrames[i] = -1;
+        BaseFrames[i] = 0;
       }
       PlayerBuffers = new EZQ<GameInput>[MAX_PLAYERS];
       for (int i = 0; i < MAX_PLAYERS; i++)
@@ -90,168 +93,31 @@ namespace funscrew.Clients
     // -----------------------------------------------------------------------------------------------------------------------
     public void Dispose()
     {
-      CloseStream();
-    }
-
-    // -----------------------------------------------------------------------------------------------------------------------
-    private void CloseStream()
-    {
-      DataStream?.Dispose();
-      DataStream = null;
-    }
-
-    // -----------------------------------------------------------------------------------------------------------------------
-    public void Flush()
-    {
-      DataStream?.Flush();
-    }
-
-    // -----------------------------------------------------------------------------------------------------------------------
-    private void CreateStream(string path)
-    {
-      DataStream = File.Open(path, FileMode.Create, FileAccess.Write);
-      WriteHeader(DataStream);
-    }
-
-    // -----------------------------------------------------------------------------------------------------------------------
-    private void WriteHeader(Stream res)
-    {
-      // Write the data header.
-      // This indicates that it is a replay file, version 1
-      EZWriter.Write(res, ReplayFile.Preamble);
-      EZWriter.WriteBytes(res, new[] { (byte)1 });
-
-      // Now write the game data segment:
-      WriteGameDataSegment(this.GameData);
-
-    }
-
-    // -----------------------------------------------------------------------------------------------------------------------
-    private void CheckComplete()
-    {
-      if (this.RecordingComplete) { throw new InvalidOperationException("Recording is complete!  Can't write anymore!"); }
-    }
-
-    // -----------------------------------------------------------------------------------------------------------------------
-    private unsafe void WriteInputSegment(ref GameInput input)
-    {
-      CheckComplete();
-
-      long start = this.DataStream.Position;
-      int inputSize = this.GameData.TotalInputSize;
-      int segmentSize = inputSize + sizeof(int);
-
-      EZWriter.Write(DataStream, (byte)EDataSegmentType.InputData);
-      EZWriter.Write(DataStream, (UInt16)inputSize);
-      EZWriter.Write(DataStream, input.frame);
-
-      for (int i = 0; i < inputSize; i++)
-      {
-        WriteBuffer[i] = input.data[i];
-      }
-      DataStream.Write(WriteBuffer, 0, inputSize);
-
-      // Sanity Check!
-      long end = DataStream.Position;
-      long total = end - start;
-      int expectedSize = segmentSize + 3;
-      int expected = expectedSize;
-      if (total != expected)
-      {
-        throw new InvalidOperationException($"Data size mismatch on write: {total} - {expected}!");
-      }
-
-      Flush();
-    }
-
-    // -----------------------------------------------------------------------------------------------------------------------
-    private void WriteGameDataSegment(GameData gameData)
-    {
-      CheckComplete();
-
-      // V1 Segments are of the form:
-      // - Type (1B)
-      // - DataSize (2B)
-      // - Data (DataSize)
-      long start = DataStream.Position;
-
-      UInt16 segmentSize = GameData.DataSize;
-      EZWriter.Write(DataStream, (byte)EDataSegmentType.GameData);
-      EZWriter.Write(DataStream, segmentSize);
-
-      // And now for the data.....
-      {
-        int size = CopyFixedString(gameData.GameName, GameData.MAX_GAME_NAME_SIZE, WriteBuffer, 0);
-        DataStream.Write(WriteBuffer, 0, size);
-      }
-
-      {
-        int size = CopyFixedString(GameData.GameVersion, GameData.MAX_VERSION_SIZE, WriteBuffer, 0);
-        DataStream.Write(WriteBuffer, 0, size);
-      }
-
-      // EZWriter.Write(DataStream, gameData.GameVersion);
-      EZWriter.Write(DataStream, gameData.PlayerCount);
-      EZWriter.Write(DataStream, gameData.TotalInputSize);
-
-      // Sanity Check!
-      long end = DataStream.Position;
-      long total = end - start;
-      int expected = segmentSize + 3;
-      if (total != expected)
-      {
-        throw new InvalidOperationException($"Data size mismatch on write: {total} - {expected}!");
-      }
-
+      ReplayFile.Dispose();
     }
 
 
-    // -----------------------------------------------------------------------------------------------------------------------
-    private void WriteSegmentData(EDataSegmentType segmentType, Stream fromStream)
-    {
-      CheckComplete();
+    //// -----------------------------------------------------------------------------------------------------------------------
+    //// TODO: This belongs in tools somewhere.....
+    //private int CopyFixedString(string data, int maxSize, byte[] toBuffer, int offset)
+    //{
+    //  if (data.Length > maxSize)
+    //  {
+    //    throw new InvalidOperationException();
+    //  }
+    //  int len = data.Length;
+    //  int extra = maxSize - len;
+    //  for (int i = 0; i < len; i++)
+    //  {
+    //    toBuffer[offset + i] = (byte)data[i];
+    //  }
+    //  for (int i = 0; i < extra; i++)
+    //  {
+    //    toBuffer[len + i] = 0;
+    //  }
 
-      long start = this.DataStream.Position;
-      int segmentSize = (int)fromStream.Position;
-
-      EZWriter.Write(DataStream, (byte)segmentType);
-      EZWriter.Write(DataStream, (UInt16)segmentSize);
-      fromStream.Seek(0, SeekOrigin.Begin);
-      fromStream.CopyTo(this.DataStream);
-
-      // Sanity Check!
-      long end = DataStream.Position;
-      long total = end - start;
-      int expected = segmentSize + 3;
-      if (total != expected)
-      {
-        throw new InvalidOperationException($"Data size mismatch on write: {total} - {expected}!");
-      }
-
-      Flush();
-    }
-
-    // -----------------------------------------------------------------------------------------------------------------------
-    // TODO: This belongs in tools somewhere.....
-    private int CopyFixedString(string data, int maxSize, byte[] toBuffer, int offset)
-    {
-      if (data.Length > maxSize)
-      {
-        throw new InvalidOperationException();
-      }
-      int len = data.Length;
-      int extra = maxSize - len;
-      for (int i = 0; i < len; i++)
-      {
-        toBuffer[offset + i] = (byte)data[i];
-      }
-      for (int i = 0; i < extra; i++)
-      {
-        toBuffer[len + i] = 0;
-      }
-
-      return maxSize;
-    }
+    //  return maxSize;
+    //}
 
     // -----------------------------------------------------------------------------------------------------------------------
     /// <summary>
@@ -261,64 +127,65 @@ namespace funscrew.Clients
     /// </summary>
     public void CompleteReplay(int frame, ECompletionReason reason, EErrorReason errReason, string? message)
     {
-      CheckComplete();
+      ReplayFile.CompleteWrite(frame, reason, errReason, string.Empty);
+      //CheckComplete();
 
-      // TODO: Some kind of sanity check for the frame #?
-      const int COMPLETE_MSG_LEN = 64;
-      string useMsg = message == null ? string.Empty : StringTools.Truncate(message, COMPLETE_MSG_LEN);
+      //// TODO: Some kind of sanity check for the frame #?
+      //const int COMPLETE_MSG_LEN = 64;
+      //string useMsg = message == null ? string.Empty : StringTools.Truncate(message, COMPLETE_MSG_LEN);
 
-      using (var ms = new MemoryStream(0x100))
-      {
-        // NOTE: In a perfect world we use our own write buffer.
-        EZWriter.Write(ms, (byte)reason);
-        EZWriter.Write(ms, (byte)errReason);
-        EZWriter.Write(ms, frame);
+      //using (var ms = new MemoryStream(0x100))
+      //{
+      //  // NOTE: In a perfect world we use our own write buffer.
+      //  EZWriter.Write(ms, (byte)reason);
+      //  EZWriter.Write(ms, (byte)errReason);
+      //  EZWriter.Write(ms, frame);
 
-        CopyFixedString(useMsg, COMPLETE_MSG_LEN, WriteBuffer, 0);
-        ms.Write(WriteBuffer, 0, COMPLETE_MSG_LEN);
+      //  CopyFixedString(useMsg, COMPLETE_MSG_LEN, WriteBuffer, 0);
+      //  ms.Write(WriteBuffer, 0, COMPLETE_MSG_LEN);
 
-        // Write the end code so that we know that the file is actually completed correctly.
-        EZWriter.Write(ms, ReplayFile.Footer);
+      //  // Write the end code so that we know that the file is actually completed correctly.
+      //  EZWriter.Write(ms, ReplayFile.Footer);
 
-        WriteSegmentData(EDataSegmentType.Complete, ms);
+      //  WriteSegmentData(EDataSegmentType.Complete, ms);
 
-        // We will put the total file size at the end, as a kind of checksum, I guess...
-        long finalSize = (int)(DataStream.Position + sizeof(long));
-        EZWriter.Write(DataStream, finalSize);
-      }
+      //  // We will put the total file size at the end, as a kind of checksum, I guess...
+      //  long finalSize = (int)(DataStream.Position + sizeof(long));
+      //  EZWriter.Write(DataStream, finalSize);
+      //}
 
-      CloseStream();
+      //CloseStream();
 
       RecordingComplete = true;
     }
 
     // -----------------------------------------------------------------------------------------------------------------------
-    public void AddChatSegment(ChatData chat)
+    public void AddChatSegment(ref CChatData chat)
     {
-      CheckComplete();
-
       if (string.IsNullOrWhiteSpace(chat.Message)) { return; }
-      chat.Message = StringTools.Truncate(chat.Message, ChatData.CHAT_DATA_MAX);
+      chat.Message = StringTools.Truncate(chat.Message, CChatData.CHAT_DATA_MAX);
 
-      int segmentSize = chat.Message.Length + sizeof(int) + sizeof(int);
+      ReplayFile.AddChat(ref chat);
 
-      long start = DataStream.Position;
+      //int segmentSize = chat.Message.Length + sizeof(int) + sizeof(int);
 
-      EZWriter.Write(DataStream, (byte)EDataSegmentType.ChatData);
-      EZWriter.Write(DataStream, (UInt16)segmentSize);
-      EZWriter.Write(DataStream, chat.FromPlayerIndex);
-      EZWriter.Write(DataStream, chat.ToPlayerIndex);
-      EZWriter.RawString(DataStream, chat.Message);
+      //long start = DataStream.Position;
 
-      long end = DataStream.Position;
-      long total = end - start;
-      int expected = segmentSize + 3;
-      if (total != expected)
-      {
-        throw new InvalidOperationException($"Data size mismatch on write: {total} - {expected}!");
-      }
+      //EZWriter.Write(DataStream, (byte)EDataSegmentType.ChatData);
+      //EZWriter.Write(DataStream, (UInt16)segmentSize);
+      //EZWriter.Write(DataStream, chat.FromPlayerIndex);
+      //EZWriter.Write(DataStream, chat.ToPlayerIndex);
+      //EZWriter.RawString(DataStream, chat.Message);
 
-      DataStream.Flush();
+      //long end = DataStream.Position;
+      //long total = end - start;
+      //int expected = segmentSize + 3;
+      //if (total != expected)
+      //{
+      //  throw new InvalidOperationException($"Data size mismatch on write: {total} - {expected}!");
+      //}
+
+      //DataStream.Flush();
     }
 
     // -----------------------------------------------------------------------------------------------------------------------
@@ -460,106 +327,80 @@ namespace funscrew.Clients
       }
 
       // Write that data to disk!
-      WriteInputSegment(ref merged);
+      ReplayFile.AddInput(ref merged);
+      // WriteInputSegment(ref merged);
 
       // Add it to the active window of inputs (which are used for live playback)
       this.MergedInputs.Push(merged);
     }
   }
 
-  // ==============================================================================================================================
-  public class ChatData
-  {
-    public const int CHAT_DATA_MAX = 128;
+  //// ==============================================================================================================================
+  //public class ChatData
+  //{
+  //  public const int CHAT_DATA_MAX = 128;
 
-    public int FromPlayerIndex { get; set; }
-    /// <summary>
-    /// What frame was the message sent on?
-    /// </summary>
-    public int Frame { get; set; }
-    public string Message { get; set; } = null!;
+  //  public int FromPlayerIndex { get; set; }
+  //  /// <summary>
+  //  /// What frame was the message sent on?
+  //  /// </summary>
+  //  public int Frame { get; set; }
+  //  public string Message { get; set; } = null!;
 
-    /// <summary>
-    /// Determines who we are sending the message to,
-    /// use -1 for all players.
-    /// </summary>
-    public int ToPlayerIndex { get; private set; } = -1;
-  }
+  //  /// <summary>
+  //  /// Determines who we are sending the message to,
+  //  /// use -1 for all players.
+  //  /// </summary>
+  //  public int ToPlayerIndex { get; private set; } = -1;
+  //}
 
-  // ==============================================================================================================================
-  public class GameData
-  {
-    public const int MAX_GAME_NAME_SIZE = 32;
-    public const int MAX_VERSION_SIZE = 16;
+  //// ==============================================================================================================================
+  //public class GameData
+  //{
+  //  public const int MAX_GAME_NAME_SIZE = 32;
+  //  public const int MAX_VERSION_SIZE = 16;
 
-    /// <summary>
-    /// Name of the game.
-    /// </summary>
-    [Required]
-    public string GameName { get; set; } = default!;
+  //  /// <summary>
+  //  /// Name of the game.
+  //  /// </summary>
+  //  [Required]
+  //  public string GameName { get; set; } = default!;
 
-    /// <summary>
-    /// This should be a bitfield (or 8 char string) or whatever to represent the version of
-    /// a game (major, minor, revision, etc.).  Implementation defined!
-    /// </summary>
-    [Required]
-    [MaxLength(MAX_VERSION_SIZE)]
-    public string GameVersion { get; set; } = "<n/a>";
+  //  /// <summary>
+  //  /// This should be a bitfield (or 8 char string) or whatever to represent the version of
+  //  /// a game (major, minor, revision, etc.).  Implementation defined!
+  //  /// </summary>
+  //  [Required]
+  //  [MaxLength(MAX_VERSION_SIZE)]
+  //  public string GameVersion { get; set; } = "<n/a>";
 
-    /// <summary>
-    /// How many people are playing.
-    /// </summary>
-    public int PlayerCount { get; set; }
+  //  /// <summary>
+  //  /// How many people are playing.
+  //  /// </summary>
+  //  public int PlayerCount { get; set; }
 
-    /// <summary>
-    /// Size of inputs for all players.
-    /// </summary>
-    public int TotalInputSize { get; set; }
+  //  /// <summary>
+  //  /// Size of inputs for all players.
+  //  /// </summary>
+  //  public int TotalInputSize { get; set; }
 
-    public static ushort DataSize { get; } = GameData.MAX_GAME_NAME_SIZE + MAX_VERSION_SIZE + sizeof(int) + sizeof(int);
-  }
+  //  public static ushort DataSize { get; } = GameData.MAX_GAME_NAME_SIZE + MAX_VERSION_SIZE + sizeof(int) + sizeof(int);
+  //}
 
-  // ==============================================================================================================================
-  public enum EErrorReason
-  {
-    None = 0,
-    /// <summary>
-    /// This happens when one or more input buffrers are full and we try to add another.
-    /// The main reason for this happening is that one or more clients are disconnected / not sending packets.
-    /// </summary>
-    InputBufferFull
-  }
-
-  // ==============================================================================================================================
-  public enum ECompletionReason
-  {
-    Invalid = 0,
-
-    /// <summary>
-    /// One or more players sent a proper disconnect signal.
-    /// </summary>
-    NormalDisconnect,
-
-    /// <summary>
-    /// Some other error.
-    /// </summary>
-    Error
-  }
-
-  // ==============================================================================================================================
-  /// <summary>
-  /// What types of data segments are we going to write into our replay files?
-  /// </summary>
-  public enum EDataSegmentType
-  {
-    Invalid = 0,
-    GameData,
-    InputData,
-    ChatData,
-    /// <summary>
-    /// A recording session is completed.  See 'ECompletionReasons' for more information.
-    /// </summary>
-    Complete,
-  }
+  //// ==============================================================================================================================
+  ///// <summary>
+  ///// What types of data segments are we going to write into our replay files?
+  ///// </summary>
+  //public enum EDataSegmentType
+  //{
+  //  Invalid = 0,
+  //  GameData,
+  //  InputData,
+  //  ChatData,
+  //  /// <summary>
+  //  /// A recording session is completed.  See 'ECompletionReasons' for more information.
+  //  /// </summary>
+  //  Complete,
+  //}
 
 }
