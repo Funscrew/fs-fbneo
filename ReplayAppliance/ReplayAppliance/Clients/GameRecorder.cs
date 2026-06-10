@@ -1,7 +1,5 @@
 ﻿using drewCo.Tools;
 using drewCo.Tools.Logging;
-using System.ComponentModel.DataAnnotations;
-using System.Runtime.InteropServices.Marshalling;
 
 namespace funscrew
 {
@@ -166,26 +164,6 @@ namespace funscrew
       chat.Message = StringTools.Truncate(chat.Message, CChatData.CHAT_DATA_MAX);
 
       ReplayFile.AddChat(ref chat);
-
-      //int segmentSize = chat.Message.Length + sizeof(int) + sizeof(int);
-
-      //long start = DataStream.Position;
-
-      //EZWriter.Write(DataStream, (byte)EDataSegmentType.ChatData);
-      //EZWriter.Write(DataStream, (UInt16)segmentSize);
-      //EZWriter.Write(DataStream, chat.FromPlayerIndex);
-      //EZWriter.Write(DataStream, chat.ToPlayerIndex);
-      //EZWriter.RawString(DataStream, chat.Message);
-
-      //long end = DataStream.Position;
-      //long total = end - start;
-      //int expected = segmentSize + 3;
-      //if (total != expected)
-      //{
-      //  throw new InvalidOperationException($"Data size mismatch on write: {total} - {expected}!");
-      //}
-
-      //DataStream.Flush();
     }
 
     // -----------------------------------------------------------------------------------------------------------------------
@@ -217,12 +195,7 @@ namespace funscrew
         // TODO: Log this, we may not actually need it...
         return false;
       }
-      //if (buf.Size > 0)
-      //{
-      //  var f = buf.Front();
-      //  if (f.frame == input.frame) { return false; }
-      //  // startFrame = f.frame;
-      //}
+
       if (input.frame != startFrame + 1)
       {
         // TODO: Close the recording here, properly!
@@ -258,10 +231,6 @@ namespace funscrew
           {
             throw new InvalidOperationException($"Invalid (back) frame number at player index: {i}!  Should be {startMergeFrame}!");
           }
-          //// if (this.PlayerBuffers[i].Back().frame != startMergeFrame)
-          //{
-          //  throw new InvalidOperationException($"Invalid (back) frame number at player index: {i}!  Should be {startMergeFrame}!");
-          //}
         }
 
         // Nothing left to confirm!
@@ -334,73 +303,5 @@ namespace funscrew
       this.MergedInputs.Push(merged);
     }
   }
-
-  //// ==============================================================================================================================
-  //public class ChatData
-  //{
-  //  public const int CHAT_DATA_MAX = 128;
-
-  //  public int FromPlayerIndex { get; set; }
-  //  /// <summary>
-  //  /// What frame was the message sent on?
-  //  /// </summary>
-  //  public int Frame { get; set; }
-  //  public string Message { get; set; } = null!;
-
-  //  /// <summary>
-  //  /// Determines who we are sending the message to,
-  //  /// use -1 for all players.
-  //  /// </summary>
-  //  public int ToPlayerIndex { get; private set; } = -1;
-  //}
-
-  //// ==============================================================================================================================
-  //public class GameData
-  //{
-  //  public const int MAX_GAME_NAME_SIZE = 32;
-  //  public const int MAX_VERSION_SIZE = 16;
-
-  //  /// <summary>
-  //  /// Name of the game.
-  //  /// </summary>
-  //  [Required]
-  //  public string GameName { get; set; } = default!;
-
-  //  /// <summary>
-  //  /// This should be a bitfield (or 8 char string) or whatever to represent the version of
-  //  /// a game (major, minor, revision, etc.).  Implementation defined!
-  //  /// </summary>
-  //  [Required]
-  //  [MaxLength(MAX_VERSION_SIZE)]
-  //  public string GameVersion { get; set; } = "<n/a>";
-
-  //  /// <summary>
-  //  /// How many people are playing.
-  //  /// </summary>
-  //  public int PlayerCount { get; set; }
-
-  //  /// <summary>
-  //  /// Size of inputs for all players.
-  //  /// </summary>
-  //  public int TotalInputSize { get; set; }
-
-  //  public static ushort DataSize { get; } = GameData.MAX_GAME_NAME_SIZE + MAX_VERSION_SIZE + sizeof(int) + sizeof(int);
-  //}
-
-  //// ==============================================================================================================================
-  ///// <summary>
-  ///// What types of data segments are we going to write into our replay files?
-  ///// </summary>
-  //public enum EDataSegmentType
-  //{
-  //  Invalid = 0,
-  //  GameData,
-  //  InputData,
-  //  ChatData,
-  //  /// <summary>
-  //  /// A recording session is completed.  See 'ECompletionReasons' for more information.
-  //  /// </summary>
-  //  Complete,
-  //}
 
 }

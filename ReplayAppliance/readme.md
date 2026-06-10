@@ -8,21 +8,19 @@ Future iterations of ReplayAppliance will get its netcode implementation directl
 
 
 ## Build It!
-Before you run the application, you will need to build the interop libraries:
-The scripts are located in **build-scripts** and there is one for each supported platform.
-Generate the flavor that is appropriate for your current task.
-
-**NOTE:** ReplayAppliance will not build if the libs aren't in the correct location.  This is on purpose as it allows flexibility when testing / debugging the application.  You are welcome to build + copy the libs by hand if you prefer.
+The application and test code contain a set of libs for Debug and Release builds, however, if you need to experiment with new features, fix bugs, etc. you will need to
+rebuild the libs as you make updates.
+There are a set of scripts included for the platform of your choice and they are located in **./build-scripts**.
 
 ```
 # Choose one!
 
 build-windows.bat
 . build-linux.sh      # NOT YET
-. build-macos.sh       # MAYBE NEVER?
+. build-macos.sh      # MAYBE NEVER?
 ```
 
-These scripts copy the lib files to the ReplayAppliance project which will then copy them to the correct location on build.
+These scripts copy the library files to **./ReplayAppliance/libs** and they will be copied to the correct location on build via targets defined in the .csproj file(s).
 
 
 
