@@ -305,6 +305,7 @@ bool __cdecl ggpo_begin_game_callback(const char* name)
 
   if (!kNetSpectator)
   {
+    // NOTE: Find out why there are specific savestates for ranked games?
     // ranked savestate
     if (iRanked) {
       _stprintf(tfilename, _T("savestates\\%s_fbneo_ranked.fs"), tname);
@@ -321,6 +322,7 @@ bool __cdecl ggpo_begin_game_callback(const char* name)
       }
     }
 
+    // NOTE: This is data that will have to be sent to the ReplayAppliance?  At least the game name?
     // regular savestate
     _stprintf(tfilename, _T("savestates\\%s_fbneo.fs"), tname);
     if (FindFirstFile(tfilename, &fd) != INVALID_HANDLE_VALUE) {

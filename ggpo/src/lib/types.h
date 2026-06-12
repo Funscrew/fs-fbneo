@@ -52,7 +52,7 @@ typedef int int32;
 /*
  * Macros
  */
-// NOTE: This assert will always 'abort' and is not meant to be disabled in Release builds.
+// NOTE: This assert will always crash the program.  It isn't really an assert!
 #define ASSERT(condition)                                   \
    do {                                                     \
       if (!(condition)) {                                   \

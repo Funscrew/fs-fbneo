@@ -9,6 +9,7 @@
 #include "GGPOEndpoint.h"
 #include "bitvector.h"
 #include "backends/GGPOSession.h"
+#include <stdexcept>
 
  // OPTIONS: These should all be configurable at some point....
 static const int SYNC_PACKETS_COUNT = 5;
@@ -93,6 +94,10 @@ void GGPOEndpoint::Init(GGPOSession* client_, Udp* udp,
   _peer_addr.sin_family = AF_INET;
   _peer_addr.sin_port = htons(port);
   inet_pton(AF_INET, ip, &_peer_addr.sin_addr.s_addr);
+
+  if (!_peer_addr.sin_addr.s_addr) { 
+    throw std::runtime_error("Invalid peer address!");
+  }
 
   do {
     _magic_number = (uint16)rand();
@@ -836,7 +841,8 @@ void GGPOEndpoint::PumpSendQueue()
     }
     else
     {
-      ASSERT(entry.dest_addr.sin_addr.s_addr);
+      // NOTE: This is checked when we construct the endpoint.
+      // ASSERT(entry.dest_addr.sin_addr.s_addr);
 
       int packetSize = entry.msg->PacketSize();
       _udp->SendTo((char*)entry.msg, packetSize, 0,

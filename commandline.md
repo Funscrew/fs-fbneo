@@ -28,6 +28,11 @@ Here is an example command line of connecting to a ReplayAppliance:
 ```
 
 
+### Test EchoClient
+```
+--rom sfiii3nr1 direct -l localhost:7001 -r localhost:7000 --player 1 --name "Screwie" --delay 1
+```
+
 ## Debugging - Quickstart
 Install a copy of fightcade + any ROMS you want to work with if you haven't already.  Then, copy the content from __&lt;fightcadeinstalldirectory&gt;emulator\fbneo__ to the folder: __&lt;fs-fbneo-repo-directory&gt;projectfiles\visualstudio-2022\Debug__.
 
