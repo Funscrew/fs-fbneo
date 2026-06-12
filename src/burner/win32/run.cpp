@@ -308,15 +308,15 @@ int RunFrame(int bDraw, int bPause, bool updateNetInputs)
     return 1;
   }
 
+  UpdateInputs(bPause, updateNetInputs);
+
   // nCurrentFrame
-  if (RecordMem)  {
+  if (RecordMem) {
     if (MemRecorder)
     {
-      MemRecorder->AddMemory(nCurrentFrame, nullptr, 0);
+      //  MemRecorder->AddMemory(nCurrentFrame, nullptr, 0);
     }
   }
-
-  UpdateInputs(bPause, updateNetInputs);
 
   // Render frame with video or audio
   if (bDraw) {
@@ -384,18 +384,21 @@ bool UpdateInputs(int bPause, bool updateNetInputs)
     GetInput(false);						// Update burner inputs, but not game inputs
   }
   else {
-    // NOTE: These counters should not be updated as part of the input system!
+    // NOTE: These counters should probably not be updated as part of the input system!
     nFramesEmulated++;
     nCurrentFrame++;
 
-    // int packedInputSize = -1;
-    int packedInputSize = PackGameInputs();
+    // HACK: This should be setup when the rest of the input system
+    // is initialized.
+    if (TotalInputSize == 0) {
+      TotalInputSize = PackGameInputs();
+    }
 
     if (kNetGame) {
       if (updateNetInputs) {
         GetInput(true);						// Update inputs
         VidDisplayInputs(0, 0);
-        if (NetworkGetInput(packedInputSize)) {	// Synchronize input with Network
+        if (NetworkGetInput(TotalInputSize)) {	// Synchronize input with Network
           VidDisplayInputs(1, 1);
           DetectFreeze();
           return 1;
@@ -405,7 +408,7 @@ bool UpdateInputs(int bPause, bool updateNetInputs)
       }
       else {
         VidDisplayInputs(0, 3);
-        if (NetworkGetInput(packedInputSize)) {
+        if (NetworkGetInput(TotalInputSize)) {
           VidDisplayInputs(1, 1);
           DetectFreeze();
           return 1;
@@ -439,7 +442,8 @@ bool UpdateInputs(int bPause, bool updateNetInputs)
     }
 
     if (nReplayStatus == REPLAY_STATUS_RECORD) {
-      RecordInput(packedInputSize);     // Write input to file
+      int inputSize = PackGameInputs();
+      RecordInput(inputSize);     // Write input to file
     }
   }
 }
@@ -451,8 +455,8 @@ int RunIdle()
     AudSoundCheck();
   }
 
-  if (RecordMem) { 
-    if (MemRecorder) { 
+  if (RecordMem) {
+    if (MemRecorder) {
       // TODO: We will do an area scan + use the callback for the memrecorder here...
       // MemRecorder
     }

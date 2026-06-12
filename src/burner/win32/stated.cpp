@@ -29,6 +29,11 @@ static void MakeOfn(TCHAR* pszFilter)
 // REFACTOR: bSave is a boolean value that indicates you are saving or not, but you are actually saving OR loading.  This should proabably be an enum!
 int StatedAuto(int bSave)
 {
+  // I don't see the point in saving/loading some hunk of ram when the ROM starts + stops.
+  // If it is some kind of 'pick up where you left off' kind of feature, it either isn't working
+  // as expected, or it needs to be updated.
+  return 0;
+  
 	static TCHAR szName[MAX_PATH] = _T("");
 	int nRet;
 

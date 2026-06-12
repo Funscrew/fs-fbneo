@@ -515,6 +515,8 @@ extern EReplayStatus nReplayStatus;
 extern bool bReplayReadOnly;
 extern bool bReplayFrameCounterDisplay;
 extern INT32 movieFlags;
+extern uint32_t TotalInputSize;
+
 void RecordInput(int packedInputSize);
 int ReplayInput();
 int StartRecord();

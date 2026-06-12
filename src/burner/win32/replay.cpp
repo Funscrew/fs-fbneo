@@ -33,6 +33,10 @@ INT32 movieFlags = 0;
 // bool bStartFromReset = true;
 TCHAR szCurrentMovieFilename[MAX_PATH] = _T("");      // TODO: Convert to ASCII for linux compatibility
 UINT32 nTotalFrames = 0;
+
+// REFACTOR: This data is double dipped, sometimes it is for replays, and sometimes it isn't.
+// It should be 100% related to replays, but also, we don't really need to know b/c the replay frame IS the current frame.
+// There is a better way to represent this information, basically.
 UINT32 nReplayCurrentFrame = 0;
 
 #define MOVIE_FLAG_FROM_POWERON (1<<1)
@@ -265,21 +269,21 @@ INT32 ReplayInput()
   struct BurnInputInfo bii;
   memset(&bii, 0, sizeof(bii));
 
-  // Just to be safe, restore the inputs to the known correct settings.
-  // Just to be safe?  I guess there is some concern that some other step in the process
-  // is corrupting the inputs, but.... we are setting them again in the next block.....
-  // This code may not be needed...
-  for (UINT32 i = 0; i < nGameInpCount; i++) {
-    BurnDrvGetInputInfo(&bii, i);
-    if (bii.pVal) {
-      if (bii.nType & BIT_GROUP_ANALOG) {
-        *bii.pShortVal = nPrevInputs[i];
-      }
-      else {
-        *bii.pVal = nPrevInputs[i];
-      }
-    }
-  }
+  //// Just to be safe, restore the inputs to the known correct settings.
+  //// Just to be safe?  I guess there is some concern that some other step in the process
+  //// is corrupting the inputs, but.... we are setting them again in the next block.....
+  //// This code may not be needed...
+  //for (UINT32 i = 0; i < nGameInpCount; i++) {
+  //  BurnDrvGetInputInfo(&bii, i);
+  //  if (bii.pVal) {
+  //    if (bii.nType & BIT_GROUP_ANALOG) {
+  //      *bii.pShortVal = nPrevInputs[i];
+  //    }
+  //    else {
+  //      *bii.pVal = nPrevInputs[i];
+  //    }
+  //  }
+  //}
 
   // Now read all inputs that need to change from the replay file.
   // nCurrentFrame
