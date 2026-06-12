@@ -23,7 +23,9 @@
     <ClInclude Include="..\..\ggpo\src\include\ggponet.h" />
     <ClInclude Include="..\..\ggpo\src\include\ggpo_perfmon.h" />
     <ClInclude Include="..\..\src\burner\burner.h" />
+    <ClInclude Include="..\..\src\burner\CMemRecorder.h" />
     <ClInclude Include="..\..\src\burner\dynhuff.h" />
+    <ClInclude Include="..\..\src\burner\EZStream.h" />
     <ClInclude Include="..\..\src\burner\gameinp.h" />
     <ClInclude Include="..\..\src\burner\GUIDComparer.h" />
     <ClInclude Include="..\..\src\burner\ioapi.h" />
@@ -340,10 +342,12 @@
     <ClInclude Include="..\..\src\intf\video\win32\vid_overlay.h" />
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\burner\CMemRecorder.cpp" />
     <ClCompile Include="..\..\src\burner\conc.cpp" />
     <ClCompile Include="..\..\src\burner\cong.cpp" />
     <ClCompile Include="..\..\src\burner\dat.cpp" />
     <ClCompile Include="..\..\src\burner\dynhuff.cpp" />
+    <ClCompile Include="..\..\src\burner\EZStream.cpp" />
     <ClCompile Include="..\..\src\burner\gamc.cpp" />
     <ClCompile Include="..\..\src\burner\gami.cpp" />
     <ClCompile Include="..\..\src\burner\image.cpp" />

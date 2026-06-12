@@ -958,6 +958,12 @@
     <ClInclude Include="..\..\src\dep\libs\CLI11\CLI11.hpp">
       <Filter>libs\CLI11</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\burner\CMemRecorder.h">
+      <Filter>burner</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\burner\EZStream.h">
+      <Filter>burner</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\burn\burn.cpp">
@@ -4238,6 +4244,12 @@
     </ClCompile>
     <ClCompile Include="..\..\src\generated\m68kops.c">
       <Filter>generated</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\burner\CMemRecorder.cpp">
+      <Filter>burner</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\burner\EZStream.cpp">
+      <Filter>burner</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>

@@ -86,6 +86,7 @@ INT32 DDCore_Init();
 // #define POST_INITIALISE_MESSAGE { debugPrintf(_T("*** (re-) initialising - %s %i\n"), _T(__FILE__), __LINE__); PostMessage(NULL, WM_APP + 0, 0, 0); }
 #define POST_INITIALISE_MESSAGE PostMessage(NULL, WM_APP + 0, 0, 0)
 
+class CMemRecorder;
 struct GGPOLogOptions;
 
 // Command line stuff.  Not a huge fan of this header file being a huge dumping ground.....
@@ -503,6 +504,11 @@ void QuarkUpdateStats(double fps);
 void QuarkRecordAVIReplay();
 void QuarkFinishReplay();
 void QuarkDisconnect();
+
+// run.cpp : Memory Options
+extern bool RecordMem;
+extern std::string MemFilePath;
+extern CMemRecorder* MemRecorder;
 
 // replay.cpp
 extern EReplayStatus nReplayStatus;

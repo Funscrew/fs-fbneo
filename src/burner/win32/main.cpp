@@ -30,6 +30,7 @@ bool bDisableDebugConsole = true;
 #include "version.h"
 #include "CLI11.hpp"
 #include "../../ggpo/src/lib/log.h"
+#include "CMemRecorder.h"
 
 HINSTANCE hAppInst = NULL;			// Application Instance
 HANDLE hMainThread;
@@ -59,6 +60,12 @@ bool bMonitorAutoCheck = true;
 bool bKeypadVolume = true;
 bool bFixDiagonals = false;
 int nEnableSOCD = 0;
+
+
+bool RecordMem = false;
+std::string MemFilePath;
+CMemRecorder* MemRecorder = nullptr;
+
 
 // Used for the load/save dialog in commdlg.h (savestates, input replay, wave logging)
 // REFACTOR / HACK:
@@ -1004,6 +1011,12 @@ int ProcessCommandLine(LPSTR lpCmdLine)
   app.add_option("--rom", romName, "Name of ROM to load");
   app.add_option("--lua", scriptName, "LUA script file to execute.");
 
+
+  std::string memOptions = "";
+  app.add_option("--mem", memOptions, "Option to save memory to disk for future analysis.  Use the form: '<pathspec>:<what(all|nvram|etc...>' (NOTE: Not fully implemented, more docs to come!)");
+
+
+
   bool resFlag = false;
   bool screenFlag = false;
   // app.add_flag("--rec", recordFlag, "Record replay.");
@@ -1147,7 +1160,6 @@ int ProcessCommandLine(LPSTR lpCmdLine)
   }
   else if (load->parsed())
   {
-
     if (!std::filesystem::exists(loadPath))
     {
       // TODO: Standard error dialog.
@@ -1195,6 +1207,26 @@ int ProcessCommandLine(LPSTR lpCmdLine)
         return 1;
       }
     }
+  }
+
+  // Enable memory recording / snapshot.
+  if (memOptions != "") {
+    RecordMem = true;
+
+    // MemFilePath = memOptions;
+    // Make the folder, etc.  TODO: This will use the memOptions in the future.
+    CreateDirectory(_T("mem"), nullptr);
+
+    MemRecorder = new CMemRecorder(memOptions.data(), ERecordOptions::All);
+
+
+    // NOTE: This is where we would 
+    //// TEMP: Let's assume a dir, and make a sequential file name.
+    //WIN32_FIND_DATA wfd;
+    //memset(&wfd, 0, sizeof(WIN32_FIND_DATA));
+    //wchar_t szFindPath[MAX_PATH] = L"mem\\*.mem";
+    //HANDLE hFind = FindFirstFile(szFindPath, &wfd);
+
   }
 
   POST_INITIALISE_MESSAGE;

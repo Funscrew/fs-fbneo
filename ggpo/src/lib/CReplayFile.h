@@ -1,4 +1,8 @@
+// TODO: Let's move this to the main emulator project in the future!
 #pragma once
+
+#ifndef CREPLAYFILE_H
+#define CREPLAYFILE_H
 
 #include <filesystem>
 #include <string>
@@ -269,3 +273,7 @@ private:
   void CloseStream();
 
 };
+
+
+#endif
+

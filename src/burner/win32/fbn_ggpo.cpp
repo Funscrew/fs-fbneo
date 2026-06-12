@@ -603,11 +603,10 @@ void ParseAddress(const char* addr, char* host, UINT16* port)
 // ----------------------------------------------------------------------------------------------------------------------------------------------
 int InitDirectConnection(DirectConnectionOptions& ops, GGPOLogOptions& logOps)
 {
-
   Utils::InitLogger(logOps);
 
   const UINT16 DEFAULT_LOCAL_PORT = 7000;
-  const UINT16 DEFAULT_REMOTE_PORT = 7000;
+  const UINT16 DEFAULT_REMOTE_PORT = 7001;
 
   // Let's parse out the ips/ports...
   char remoteIP[MAX_HOST];

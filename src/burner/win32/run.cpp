@@ -1,6 +1,7 @@
 // Run module
 #include "burner.h"
 #include <string.h>
+#include "CMemRecorder.h"
 
 int bRunPause = 0;
 int bAltPause = 0;
@@ -288,6 +289,7 @@ void RunaheadSaveState()
   bRunaheadFrame = 0;
 }
 
+// ------------------------------------------------------------------------------------------------------------------------------------
 void RunaheadLoadState()
 {
   bRunaheadFrame = 1;
@@ -304,6 +306,14 @@ int RunFrame(int bDraw, int bPause, bool updateNetInputs)
 {
   if (!bDrvOkay) {
     return 1;
+  }
+
+  // nCurrentFrame
+  if (RecordMem)  {
+    if (MemRecorder)
+    {
+      MemRecorder->AddMemory(nCurrentFrame, nullptr, 0);
+    }
   }
 
   UpdateInputs(bPause, updateNetInputs);
@@ -439,6 +449,13 @@ int RunIdle()
 {
   if (bAudPlaying) {
     AudSoundCheck();
+  }
+
+  if (RecordMem) { 
+    if (MemRecorder) { 
+      // TODO: We will do an area scan + use the callback for the memrecorder here...
+      // MemRecorder
+    }
   }
 
   // Render loop with sound

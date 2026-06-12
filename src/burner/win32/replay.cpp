@@ -21,6 +21,7 @@ wchar_t wszStartupGame[MAX_PATH];
 wchar_t wszAuthorInfo[MAX_METADATA - 64];
 
 
+
 EReplayStatus nReplayStatus = REPLAY_STATUS_NONE; // 1 record, 2 replay, 0 nothing
 bool bReplayReadOnly = false;
 bool bReplayShowMovement = false;

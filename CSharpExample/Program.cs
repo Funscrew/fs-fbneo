@@ -22,7 +22,6 @@ internal class Program
     IntPtr state = IntPtr.Zero;
 
     string testPath = "test-replay-file.replay";
-    //var usePath = Encoding.UTF8.GetBytes(testPath);
 
     const int TOTAL_INPUT_SIZE = 10;
     const int MAX_PLAYERS = 2;

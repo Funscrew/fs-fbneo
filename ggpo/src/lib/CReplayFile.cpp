@@ -1,14 +1,8 @@
 #include "CReplayFile.h"
+#include "../../../src/burner/EZStream.h"
 
-#include <string>
 #include <sstream>
 #include <vector>
-
-#define WDATA(x) EZStream::Write(_Stream, x)
-#define RDATA(x) EZStream::Read(_Stream, x);
-
-#define WDATA2(stream, x) EZStream::Write(stream, x)
-#define RDATA2(stream, x) EZStream::Read(stream, x);
 
 using namespace std;
 
@@ -22,69 +16,6 @@ using namespace std;
 #define MEMCPY(dest, destSize, src, srcSize) memcpy(dest, src, srcSize)
 #endif
 
-namespace EZStream
-{
-  template <typename T>
-  void Write(ostream& stream, const T& value)
-  {
-    stream.write(reinterpret_cast<const char*>(&value), sizeof(T));
-  }
-
-  void Write(ostream& stream, const uint8_t data)
-  {
-    stream.write(reinterpret_cast<const char*>(&data), static_cast<streamsize>(1));
-  }
-
-  // ----------------------------------------------------------------------------------------------------
-  void Write(ostream& stream, const uint8_t* data, size_t size) { 
-    stream.write(reinterpret_cast<const char*>(data), static_cast<streamsize>(size));
-  }
-  
-  // ----------------------------------------------------------------------------------------------------
-  void Write(ostream& stream, const vector<uint8_t>& bytes)
-  {
-    stream.write(reinterpret_cast<const char*>(bytes.data()), static_cast<streamsize>(bytes.size()));
-  }
-
-  // ----------------------------------------------------------------------------------------------------
-  void WriteRawString(ostream& stream, const string& value)
-  {
-    stream.write(value.data(), static_cast<streamsize>(value.size()));
-  }
-
-  // ----------------------------------------------------------------------------------------------------
-  void ReadRawString(istream& stream, string& value, size_t size)
-  {
-    char* buffer = new char[size + 1];
-    stream.read(buffer, size);
-    buffer[size] = 0;
-
-    value.assign(buffer);
-    delete[](buffer);
-  }
-
-  // ----------------------------------------------------------------------------------------------------
-  template <typename T>
-  void Read(istream& stream, T& value)
-  {
-    stream.read(reinterpret_cast<char*>(&value), sizeof(T));
-  }
-
-  // ----------------------------------------------------------------------------------------------------
-  void ReadBytes(istream& stream, uint8_t* buffer, int count) {
-    //if (stream.tellg() + count > stream.) {
-    //  throw std::runtime_error("can't read past end of stream!");
-    //}
-    stream.read(reinterpret_cast<char*>(buffer), count);
-  }
-
-  // ----------------------------------------------------------------------------------------------------
-  uint8_t ReadUint8(istream& stream) {
-    uint8_t res = 0;
-    stream.read(reinterpret_cast<char*>(&res), 1);
-    return res;
-  }
-}
 
 namespace ReplayData
 {
