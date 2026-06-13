@@ -63,6 +63,8 @@ public class ReplayApplianceOptions : ClientOptions
 [Verb("input-echo")]
 public class InputEchoOptions : ClientOptions
 {
+  [Option("game-name", Required = true, HelpText = "The name of the game that we are playing.")]
+  public string GameName { get; set; }
 
   [Option("player", HelpText = "The player number: 1, 2, etc.")]
   public byte PlayerNumber { get; set; }

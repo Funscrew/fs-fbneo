@@ -102,6 +102,8 @@ public class GGPOClient : IGGPOClient, IDisposable
     UDP?.Dispose();
   }
 
+  public string GameName { get { return this.ClientOptions.GameName; } }
+
   // ----------------------------------------------------------------------------------------
   public virtual void DisconnectAll()
   {
@@ -930,8 +932,9 @@ public class GGPOClientOptions
   private const int MAX_PLAYER_COUNT = 4;
 
   // ----------------------------------------------------------------------------------------
-  public GGPOClientOptions(byte playerIndex_, int localPort_, UInt32 clientVersion_, UInt64 sessionId_)
+  public GGPOClientOptions(string gameName_, byte playerIndex_, int localPort_, UInt32 clientVersion_, UInt64 sessionId_)
   {
+    GameName = gameName_;
     PlayerIndex = playerIndex_;
     LocalPort = localPort_;
     ClientVersion = clientVersion_;
@@ -950,6 +953,8 @@ public class GGPOClientOptions
       ReplayTimeout = replayTimeout;
     }
   }
+
+  public string GameName { get; set; }
 
   /// <summary>
   /// Index of the player, coresponding to 0 == player 1, 1 == player 2, etc.
@@ -1020,5 +1025,6 @@ public interface IGGPOClient : SimTimer
   UInt32 ClientVersion { get; }
   string LocalPlayerName { get; }
   int CurrentFrame { get; }
+  string GameName { get; }
 }
 

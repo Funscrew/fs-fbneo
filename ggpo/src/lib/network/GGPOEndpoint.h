@@ -121,6 +121,7 @@ public:
   void SetDisconnectNotifyStart(int timeout);
 
   void SetPlayerName(char* playerName_);
+  void SetGameName(char* gameName_);
 
   inline uint8_t PlayerIndex() const { return _playerIndex; }
   inline void PlayerIndex(uint8_t value) { _playerIndex = value; }
@@ -263,7 +264,7 @@ protected:
 
   // Your name.  This will be exchanged with other peers on sync.
   char _playerName[MAX_NAME_SIZE];
-
+  char _gameName[MAX_NAME_SIZE];
 };
 
 #endif

@@ -61,6 +61,10 @@ GGPOEndpoint::GGPOEndpoint() :
   memset(_playerName, 0, MAX_NAME_SIZE);
 }
 
+void GGPOEndpoint::SetGameName(char* gameName_) { 
+  strcpy_s(_gameName, gameName_);
+}
+
 // ----------------------------------------------------------------------------------------------------------
 void GGPOEndpoint::SetPlayerName(char* playerName_) {
   strcpy_s(_playerName, playerName_);
@@ -530,6 +534,7 @@ bool GGPOEndpoint::OnSyncRequest(UdpMsg* msg, int len)
   // --> We should include whatever extra client/game specific data is needed for the specific game.
 
   strcpy_s(reply->u.sync_reply.playerName, _playerName);
+  strcpy_s(reply->u.sync_reply.gameName, _gameName);
 
   SendMsg(reply);
   return true;
@@ -555,6 +560,13 @@ bool GGPOEndpoint::OnSyncReply(UdpMsg* msg, int len)
     evt.u.connected.player_index = msg->u.sync_reply.player_index;
     evt.u.connected.delay = msg->u.sync_reply.delay;
     evt.u.connected.runahead = msg->u.sync_reply.runahead;
+
+
+    // Do we need to do something about setting player names here?
+    if (strcmp(_gameName, msg->u.sync_reply.gameName))
+    {
+      throw std::runtime_error("remote game name is not the same as local game name!");
+    }
 
     QueueEvent(evt);
 

@@ -4,6 +4,7 @@
 namespace funscrew;
 
 // ==============================================================================================================
+[Obsolete("Everything will eventually be converted to UTF 8!  These will go away!")]
 public static unsafe class AnsiHelpers
 {
   // ------------------------------------------------------------------------------------

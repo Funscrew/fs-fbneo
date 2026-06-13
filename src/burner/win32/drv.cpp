@@ -245,7 +245,7 @@ int DrvInit(int nDrvNum, bool bRestore)
 
   // NOTE: We call this b/c we need the data that it provides so we can 'pack inputs' for
   // replays and whatnot.
-  NetworkInitInput();
+  TotalInputSize = NetworkInitInput();
 
 	bSaveRAM = false;
 	if (kNetGame) {

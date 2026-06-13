@@ -24,7 +24,7 @@ Use --i <replayid> to specify the replay id.  Each replay id should be unique.
 
 Here is an example command line of connecting to a ReplayAppliance:
 ```
---rom sfiii3nr1 direct -l 127.0.0.1:7000 -r 127.0.0.1:7001 --player 2 --name "Screwie" --delay 0 -s 127.0.0.1:7002 -i 12345
+--rom sfiii3nr1 direct -l 127.0.0.1:7000 -r 127.0.0.1:7001 --player 2 --name "Screwie" --delay 1 -s 127.0.0.1:7002 -i 12345
 ```
 
 

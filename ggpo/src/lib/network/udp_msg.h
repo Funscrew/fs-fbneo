@@ -67,6 +67,7 @@ struct UdpMsg
       // uint8_t is_ready;                 // readiness flag.  This is used when we are also trying to sync to a replay endpoint.
 
       char playerName[MAX_NAME_SIZE];   /* The name of the player we synced to: */
+      char gameName[MAX_NAME_SIZE];     // Name of the game.  This is a little hack so we can create file names for replay state.
     } sync_reply;
 
     struct {

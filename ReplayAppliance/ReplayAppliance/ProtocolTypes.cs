@@ -148,6 +148,30 @@ public unsafe struct SyncReply
   //public byte is_ready;           // Readiness flag, used in the context of hooking up to a replay client.
 
   public fixed byte playerName[GGPOConsts.MAX_NAME_SIZE];
+  public fixed byte gameName[GGPOConsts.MAX_NAME_SIZE];
+
+  // --------------------------------------------------------------------------------------------------------------
+  public string GetGameName()
+  {
+    fixed (byte* p = gameName)
+    {
+      return StringHelpers.ReadUtf8String(p, GGPOConsts.MAX_NAME_SIZE);
+    }
+  }
+
+  // --------------------------------------------------------------------------------------------------------------
+  public void SetGameName(string name)
+  {
+    // TODO: This needs to be converted to utf8??  think about it.....
+    var value = Encoding.Default.GetBytes(name);
+    fixed (byte* p = gameName)
+    {
+      for (int i = 0; i < value.Length; i++)
+      {
+        gameName[i] = (byte)value[i];
+      }
+    }
+  }
 
   // --------------------------------------------------------------------------------------------------------------
   public string GetPlayerName()

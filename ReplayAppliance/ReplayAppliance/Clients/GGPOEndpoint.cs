@@ -4,6 +4,8 @@ using System.Diagnostics;
 using System.Runtime.CompilerServices;
 using drewCo.Tools.Logging;
 using Microsoft.VisualBasic;
+using System.Text;
+using drewCo.Tools;
 
 namespace funscrew;
 
@@ -900,13 +902,14 @@ public class GGPOEndpoint
     // Only remote endpoints will be receiving sync requests.  Therefore the player name
     // that we send over the wire should be that of the local player name.
     reply.u.sync_reply.SetPlayerName(Client.LocalPlayerName);
+    reply.u.sync_reply.SetGameName(Client.GameName);
 
     SendMsg(ref reply);
     return true;
   }
 
   // ------------------------------------------------------------------------
-  private bool OnSyncReply(ref UdpMsg msg, int msgLen)
+  private unsafe bool OnSyncReply(ref UdpMsg msg, int msgLen)
   {
     if (_current_state != EClientState.Syncing)
     {
@@ -934,6 +937,16 @@ public class GGPOEndpoint
 
       // Set the player name on the endpoint.
       this.SetPlayerName(pn);
+
+      // Check the game name!  It needs to match!
+      fixed (byte* p = msg.u.sync_reply.gameName)
+      {
+        string checkName = funscrew.StringHelpers.ReadUtf8String(p, GGPOConsts.MAX_NAME_SIZE);
+        if (checkName != Client.GameName)
+        {
+          throw new InvalidOperationException($"remote game name does not match local game name! {checkName} : {Client.GameName}");
+        }
+      }
 
       QueueEvent(evt);
 

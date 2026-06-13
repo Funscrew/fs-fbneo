@@ -30,7 +30,7 @@ class ReplayEndpoint;
 // ==========================================================================================================
 class Peer2PeerBackend : public GGPOSession, IPollSink, Udp::Callbacks {
 public:
-  Peer2PeerBackend(GGPOSessionCallbacks* cb, const char* gamename, uint16 localport, char* remoteIp, uint16 remotePort, uint8_t playerIndex, std::string playerName, uint32_t client_version, char* replayIp, uint16 replayPort, uint64_t sessionId_);
+  Peer2PeerBackend(GGPOSessionCallbacks* cb, const char* gameName_, uint16 localport, char* remoteIp, uint16 remotePort, uint8_t playerIndex, std::string playerName, uint32_t client_version, char* replayIp, uint16 replayPort, uint64_t sessionId_);
   virtual ~Peer2PeerBackend();
 
 
@@ -82,6 +82,8 @@ protected:
   GGPOEndpoint* LocalPlayer = nullptr;
   //GGPOEndpoint* ReplayAppliance = nullptr;
   //GGPOEndpoint* RemotePlayer = nullptr;
+
+  char _GameName[MAX_NAME_SIZE];
 
 protected:
   GGPOSessionCallbacks  _callbacks;

@@ -21,7 +21,7 @@ static const int DEFAULT_DISCONNECT_NOTIFY_START = NEVER_TIMEOUT;
 
 // ----------------------------------------------------------------------------------------------------------
 Peer2PeerBackend::Peer2PeerBackend(GGPOSessionCallbacks* cb,
-  const char* gamename,
+  const char* gameName_,
   uint16 localport,
   char* remoteIp,
   uint16 remotePort,
@@ -40,6 +40,12 @@ Peer2PeerBackend::Peer2PeerBackend(GGPOSessionCallbacks* cb,
   _client_version(clientVersion),
   _sessionId(sessionId_)
 {
+  size_t len = strlen(gameName_);
+  if (len >= MAX_NAME_SIZE - 1) {
+    throw std::runtime_error("Game name is too long!");
+  }
+  strcpy(_GameName, gameName_);
+
   _callbacks = *cb;
   _synchronizing = true;
   _next_recommended_sleep = 0;
@@ -88,7 +94,7 @@ Peer2PeerBackend::Peer2PeerBackend(GGPOSessionCallbacks* cb,
   /*
    * Preload the ROM
    */
-  _callbacks.begin_game(gamename);
+  _callbacks.begin_game(gameName_);
 
   SetDisconnectTimeout(DEFAULT_DISCONNECT_TIMEOUT);
   SetDisconnectNotifyStart(DEFAULT_DISCONNECT_TIMEOUT);
@@ -354,6 +360,7 @@ GGPOEndpoint* Peer2PeerBackend::AddReplayAppliance(GGPOPlayer* player, int repla
   replayEp->SetDisconnectTimeout(_disconnect_timeout);
   replayEp->SetDisconnectNotifyStart(_disconnect_notify_start);
   replayEp->SetPlayerName(_PlayerNames[_playerIndex]);
+  replayEp->SetGameName(_GameName);
   replayEp->SetSessionId(sessionId);
   replayEp->SetIsReplayClient(true);
   replayEp->Synchronize();
@@ -382,6 +389,7 @@ void Peer2PeerBackend::AddRemotePlayer(GGPOPlayer* player, uint64_t sessionId) /
   ep->SetDisconnectTimeout(_disconnect_timeout);
   ep->SetDisconnectNotifyStart(_disconnect_notify_start);
   ep->SetPlayerName(_PlayerNames[_playerIndex]);
+  ep->SetGameName(_GameName);
   ep->SetSessionId(sessionId);
   ep->Synchronize();
 
@@ -504,7 +512,7 @@ void Peer2PeerBackend::PollUdpProtocolEvents(void)
 }
 
 // ----------------------------------------------------------------------------------------------------------
-void Peer2PeerBackend::OnUdpProtocolPeerEvent(UdpEvent& evt,  GGPOEndpoint* endpoint)
+void Peer2PeerBackend::OnUdpProtocolPeerEvent(UdpEvent& evt, GGPOEndpoint* endpoint)
 {
   // TODO: Handle disconnect datagrams.
   // --> NOTE: We will support a real disconnect type message in a future version of the protocol.
@@ -532,17 +540,17 @@ void Peer2PeerBackend::OnUdpProtocolPeerEvent(UdpEvent& evt,  GGPOEndpoint* endp
     }
     break;
 
-    case UdpEvent::Datagram:
-      if (evt.u.datagram.code == DATAGRAM_CODE_DISCONNECT) { 
-        // The given endpoint is indicating that it wants to disconnect.
-        // For now, I think that we will only care about the case where it is a replay appliance...
-        if (endpoint->IsReplayClient()) { 
+  case UdpEvent::Datagram:
+    if (evt.u.datagram.code == DATAGRAM_CODE_DISCONNECT) {
+      // The given endpoint is indicating that it wants to disconnect.
+      // For now, I think that we will only care about the case where it is a replay appliance...
+      if (endpoint->IsReplayClient()) {
 
-          // Effectively disconnect the endpoint so it no longer sends / receives data...
-          endpoint->DisconnectEx(0, false);
-        }
+        // Effectively disconnect the endpoint so it no longer sends / receives data...
+        endpoint->DisconnectEx(0, false);
       }
-      break;
+    }
+    break;
 
   case UdpEvent::Disconnected:
     DisconnectPlayer(playerIndex);
