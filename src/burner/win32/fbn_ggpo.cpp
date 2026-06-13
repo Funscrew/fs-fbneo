@@ -210,7 +210,7 @@ bool __cdecl ggpo_on_event_callback(GGPOEvent* info)
   case GGPO_EVENTCODE_SYNCHRONIZING_WITH_PEER:
     //_stprintf(status, _T("Synchronizing with Peer (%d/%d)..."), info->u.synchronizing.count, info->u.synchronizing.total);
     VidOverlaySetSystemMessage(_T("Synchronizing with Peer..."));
-    VidSSetSystemMessage(_T("Synchronizing with Peer..."));
+    // VidSSetSystemMessage(_T("Synchronizing with Peer..."));
     break;
 
   case GGPO_EVENTCODE_RUNNING: {

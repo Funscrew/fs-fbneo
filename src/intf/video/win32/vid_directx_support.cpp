@@ -1945,7 +1945,8 @@ int VidSNewJoystickMsg(const TCHAR* pText, int nRGB, int nDuration, int nLineNo)
 
 int VidSNewShortMsg(const TCHAR* pText, int nRGB, int nDuration, int nPriority)	// int nRGB = 0, int nDuration = 0, int nPriority = 5
 {
-  // DO NOTHING!
+  // DO NOTHING!  
+  // I am 99 % sure that this video overlay / messaging system is not used with DX.
   return 0;
 
 	// If a message with a higher priority is being displayed, exit.

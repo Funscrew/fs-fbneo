@@ -1,4 +1,5 @@
 #include "burner.h"
+#include <stdexcept>
 
 const int MAXPLAYER = 4;
 
@@ -278,9 +279,9 @@ int NetworkGetInput(int size)
   // int i, j;
 
   // HACK for calls from initialization type code.
-  if (size == -1) {
-    size = PackGameInputs();
-  }
+  // if (size == -1) { throw std::runtime_error("fail!"); }
+  //  size = PackGameInputs();
+  //}
 
   //struct BurnInputInfo bii;
   //memset(&bii, 0, sizeof(bii));
@@ -337,6 +338,9 @@ int NetworkGetInput(int size)
 
   //// k is the size in bytes of all inputs for one player
   //int k = j + 1;
+
+
+  size = PackGameInputs();
 
   // Send the control block to the Network DLL & retrieve all controls
   int playerInputSize = size / nMaxPlayers;

@@ -302,21 +302,23 @@ void RunaheadLoadState()
 // ------------------------------------------------------------------------------------------------------------------------------------
 // With or without sound, run one frame.
 // If bDraw is true, it's the last frame before we are up to date, and so we should draw the screen
+// REFACTOR: Make this a boolean function.
+// REFACTOR: Actually, make a it a void function b/c callers never care about the output.
 int RunFrame(int bDraw, int bPause, bool updateNetInputs)
 {
   if (!bDrvOkay) {
     return 1;
   }
 
-  UpdateInputs(bPause, updateNetInputs);
-
+  bool updated = UpdateInputs(bPause, updateNetInputs);
+  if (!updated) { return 1; }
   // nCurrentFrame
-  if (RecordMem) {
-    if (MemRecorder)
-    {
-      //  MemRecorder->AddMemory(nCurrentFrame, nullptr, 0);
-    }
-  }
+  //if (RecordMem) {
+  //  if (MemRecorder)
+  //  {
+  //    //  MemRecorder->AddMemory(nCurrentFrame, nullptr, 0);
+  //  }
+  //}
 
   // Render frame with video or audio
   if (bDraw) {
@@ -377,6 +379,7 @@ int RunFrame(int bDraw, int bPause, bool updateNetInputs)
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------
+// Returns a flag that tells us if the inputs were updated or not.
 bool UpdateInputs(int bPause, bool updateNetInputs)
 {
 
@@ -401,7 +404,7 @@ bool UpdateInputs(int bPause, bool updateNetInputs)
         if (NetworkGetInput(TotalInputSize)) {	// Synchronize input with Network
           VidDisplayInputs(1, 1);
           DetectFreeze();
-          return 1;
+          return false;
         }
         VidDisplayInputs(1, 2);
         DetectTurbo();
@@ -411,7 +414,7 @@ bool UpdateInputs(int bPause, bool updateNetInputs)
         if (NetworkGetInput(TotalInputSize)) {
           VidDisplayInputs(1, 1);
           DetectFreeze();
-          return 1;
+          return false;
         }
         VidDisplayInputs(1, 4);
       }
@@ -425,7 +428,7 @@ bool UpdateInputs(int bPause, bool updateNetInputs)
           bAppDoFastToggled = 0;  // Disable FFWD
           MenuEnableItems();
           InputSetCooperativeLevel(false, false);
-          return 0;
+          return true;
         }
       }
       else {
@@ -446,6 +449,8 @@ bool UpdateInputs(int bPause, bool updateNetInputs)
       RecordInput(inputSize);     // Write input to file
     }
   }
+
+  return true;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------------------
