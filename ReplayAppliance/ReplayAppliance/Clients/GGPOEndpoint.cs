@@ -935,6 +935,10 @@ public class GGPOEndpoint
       evt.u.connected.delay = msg.u.sync_reply.delay;
       evt.u.connected.runahead = msg.u.sync_reply.runahead;
 
+      if (msg.u.sync_reply.player_index == this.PlayerIndex) { 
+        throw new InvalidOperationException("The other player is using the same index as you!");
+      }
+
       // Set the player name on the endpoint.
       this.SetPlayerName(pn);
 

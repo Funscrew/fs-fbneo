@@ -6,7 +6,7 @@
     },
     "Echo-Client": {
       "commandName": "Project",
-      "commandLineArgs": "input-echo --game-name \"sfiii3nr1\" --player 1 --name \"Echoman\" --session-id 12345"
+      "commandLineArgs": "input-echo --game-name \"sfiii3nr1\" --player 2 --name \"Echoman\" --session-id 12345"
     },
     "Replay-Appliance": {
       "commandName": "Project",
