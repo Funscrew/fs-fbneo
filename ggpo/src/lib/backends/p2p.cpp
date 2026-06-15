@@ -118,7 +118,7 @@ Peer2PeerBackend::Peer2PeerBackend(GGPOSessionCallbacks* cb,
       memcpy(&ipa, remoteIp, (std::min)(ARRAYSIZE(ipa), strlen(remoteIp) + 1));
       p.u.remote.port = remotePort;
     }
-    p.player_index = i;
+    p.player_index = i; //_playerIndex == 0 ? 1 : 0; //  i;
     //p.size = sizeof(GGPOPlayer);
 
     AddPlayer(&p);

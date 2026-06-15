@@ -523,7 +523,7 @@ bool GGPOEndpoint::OnSyncRequest(UdpMsg* msg, int len)
   UdpMsg* reply = new UdpMsg(UdpMsg::SyncReply);
   reply->u.sync_reply.random_reply = msg->u.sync_request.random_request;
   reply->u.sync_reply.client_version = _client_version;
-  reply->u.sync_reply.player_index = _playerIndex;
+  reply->u.sync_reply.player_index = _playerIndex; // (uint8_t)(_playerIndex == 0 ? 1 :0);        // Indicate the local player index.
   reply->u.sync_reply.delay = _delay;
   reply->u.sync_reply.runahead = _runahead;
 
@@ -561,6 +561,9 @@ bool GGPOEndpoint::OnSyncReply(UdpMsg* msg, int len)
     evt.u.connected.delay = msg->u.sync_reply.delay;
     evt.u.connected.runahead = msg->u.sync_reply.runahead;
 
+    if (msg->u.sync_reply.player_index == _playerIndex) {
+      throw std::runtime_error("The other player is using the same index as you!");
+    }
 
     // Do we need to do something about setting player names here?
     if (strcmp(_gameName, msg->u.sync_reply.gameName))

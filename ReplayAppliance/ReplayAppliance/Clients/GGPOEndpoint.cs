@@ -889,7 +889,7 @@ public class GGPOEndpoint
     UdpMsg reply = new UdpMsg(EMsgType.SyncReply);
     reply.u.sync_reply.random_reply = msg.u.sync_request.random_request;
     reply.u.sync_reply.client_version = this.Client.ClientVersion;
-    reply.u.sync_reply.player_index = this.PlayerIndex;
+    reply.u.sync_reply.player_index = this.PlayerIndex; // (byte)(this.PlayerIndex == 0 ? 1 : 0;
     reply.u.sync_reply.isReplayEndpoint = (byte)(this.IsReplayClient ? 1 : 0);
     reply.u.sync_reply.delay = Options.Delay;
     reply.u.sync_reply.runahead = Options.Runahead;

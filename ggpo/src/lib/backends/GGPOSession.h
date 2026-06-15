@@ -47,7 +47,7 @@ protected:
   uint16_t _ReplayPort = 0;
   IN_ADDR _ReplayAddr;
 
-  char _PlayerNames[2][MAX_NAME_SIZE];
+  char _PlayerNames[2][MAX_NAME_SIZE] = {};
 
 };
 
