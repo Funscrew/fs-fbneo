@@ -10,7 +10,7 @@
     },
     "Replay-Appliance": {
       "commandName": "Project",
-      "commandLineArgs": "replay-appliance --session-id \"12345\" --local-port 7002 --game-name \"sfiii3rn1\" --game-version \"0.01\""
+      "commandLineArgs": "replay-appliance --session-id \"12345\" --local-port 7002 --game-name \"sfiii3nr1\" --game-version \"0.01\""
     },
     "Echo-Client-With-Replay": {
       "commandName": "Project",

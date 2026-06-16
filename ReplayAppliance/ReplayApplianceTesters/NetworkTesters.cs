@@ -29,7 +29,7 @@ namespace funscrewTesters
       const string P2_NAME = "Archie";
       TestContext context = CreateTestContext(P1_NAME, P2_NAME);
 
-      var ops = new GGPOClientOptions(0, REPLAY_APPLIANCE_PORT, Defaults.PROTOCOL_VERSION, context.SessionId);
+      var ops = new GGPOClientOptions("test-game", 0, REPLAY_APPLIANCE_PORT, Defaults.PROTOCOL_VERSION, context.SessionId);
       ops.Callbacks = CreateDefaultCallbacks();
 
       var cbh = new CallbackHandler();
@@ -94,7 +94,7 @@ namespace funscrewTesters
       const string P2_NAME = "Archie";
       TestContext context = CreateTestContext(P1_NAME, P2_NAME);
 
-      var ops = new GGPOClientOptions(0, REPLAY_APPLIANCE_PORT, Defaults.PROTOCOL_VERSION, context.SessionId);
+      var ops = new GGPOClientOptions("test-game",0, REPLAY_APPLIANCE_PORT, Defaults.PROTOCOL_VERSION, context.SessionId);
       ops.Callbacks = CreateDefaultCallbacks();
 
       var cbh = new CallbackHandler();

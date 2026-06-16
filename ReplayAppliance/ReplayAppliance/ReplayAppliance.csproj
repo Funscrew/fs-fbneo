@@ -6,6 +6,7 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+    <RootNamespace>funscrew</RootNamespace>
   </PropertyGroup>
 
   <ItemGroup>
@@ -44,10 +45,7 @@
       <ExtraFiles Include="../libs/$(Configuration)/*.*" />
     </ItemGroup>
 
-    <Copy
-      SourceFiles="@(ExtraFiles)"
-      DestinationFiles="@(ExtraFiles->'$(OutputPath)%(Filename)%(Extension)')"
-      SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(ExtraFiles)" DestinationFiles="@(ExtraFiles->'$(OutputPath)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

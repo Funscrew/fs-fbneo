@@ -929,7 +929,8 @@ public class GGPOClient : IGGPOClient, IDisposable
 public class GGPOClientOptions
 {
   private const int DEFAULT_INPUT_SIZE = 5;   // This is for 3rd strike.
-  private const int MAX_PLAYER_COUNT = 4;
+  private const int MAX_PLAYER_COUNT = 4;     // NOTE: This should be 2, but that will make trouble!
+  private const int DEFAULT_PLAYER_COUNT = 2;
 
   // ----------------------------------------------------------------------------------------
   public GGPOClientOptions(string gameName_, byte playerIndex_, int localPort_, UInt32 clientVersion_, UInt64 sessionId_)
@@ -962,7 +963,7 @@ public class GGPOClientOptions
   public byte PlayerIndex { get; set; }
   public int LocalPort { get; set; } = Defaults.LOCAL_PORT;
   public int InputSize { get; set; } = DEFAULT_INPUT_SIZE;
-  public int MaxPlayerCount { get; set; } = MAX_PLAYER_COUNT;
+  public int MaxPlayerCount { get; set; } = DEFAULT_PLAYER_COUNT;
   public GGPOSessionCallbacks Callbacks { get; set; } = null!;
 
   /// <summary>

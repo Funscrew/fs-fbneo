@@ -21,7 +21,7 @@ namespace funscrew.Clients
 
     public List<string> Errors { get; private set; } = new List<string>();
 
-    public GameRecorder Recorder { get ; private set; }
+    public GameRecorder Recorder { get; private set; }
 
     // --------------------------------------------------------------------------------------------------------------------------
     public ReplayAppliance(GGPOClientOptions ggpoOps_, ReplayApplianceOptions ops_, IUdpBlaster udp_, SimTimer clock_)
@@ -53,13 +53,15 @@ namespace funscrew.Clients
         throw new InvalidOperationException("Invalid game version!");
       }
 
-      Recorder = new GameRecorder(new CGameData()
+      var gameData = new CGameData()
       {
         GameName = ReplayOptions.GameName,
         GameVersion = ReplayOptions.GameVersion,
         MaxPlayerCount = (UInt16)ClientOptions.MaxPlayerCount,
         TotalInputSize = (UInt16)(ClientOptions.InputSize * ClientOptions.MaxPlayerCount)
-      },
+      };
+
+      Recorder = new GameRecorder(gameData,
       ReplayOptions.DataDir,
       ClientOptions.SessionId
       );
@@ -69,7 +71,8 @@ namespace funscrew.Clients
     protected override void HandleDisconnect(GGPOEndpoint endpoint)
     {
       base.HandleDisconnect(endpoint);
-      if (endpoint.IsDisconnected) { 
+      if (endpoint.IsDisconnected)
+      {
         Log.Info("A player disconnected.... wrapping up....");
       }
     }

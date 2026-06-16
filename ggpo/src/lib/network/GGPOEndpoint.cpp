@@ -61,7 +61,7 @@ GGPOEndpoint::GGPOEndpoint() :
   memset(_playerName, 0, MAX_NAME_SIZE);
 }
 
-void GGPOEndpoint::SetGameName(char* gameName_) { 
+void GGPOEndpoint::SetGameName(char* gameName_) {
   strcpy_s(_gameName, gameName_);
 }
 
@@ -99,7 +99,7 @@ void GGPOEndpoint::Init(GGPOSession* client_, Udp* udp,
   _peer_addr.sin_port = htons(port);
   inet_pton(AF_INET, ip, &_peer_addr.sin_addr.s_addr);
 
-  if (!_peer_addr.sin_addr.s_addr) { 
+  if (!_peer_addr.sin_addr.s_addr) {
     throw std::runtime_error("Invalid peer address!");
   }
 
@@ -561,8 +561,11 @@ bool GGPOEndpoint::OnSyncReply(UdpMsg* msg, int len)
     evt.u.connected.delay = msg->u.sync_reply.delay;
     evt.u.connected.runahead = msg->u.sync_reply.runahead;
 
-    if (msg->u.sync_reply.player_index == _playerIndex) {
-      throw std::runtime_error("The other player is using the same index as you!");
+    if (!this->IsReplayClient())
+    {
+      if (msg->u.sync_reply.player_index == _playerIndex) {
+        throw std::runtime_error("The other player is using the same index as you!");
+      }
     }
 
     // Do we need to do something about setting player names here?

@@ -48,6 +48,9 @@ public class Program
   {
     InitLogging();
 
+    //var sp = new SessionPrimer();
+    //var nextId = sp.GetNextSessionID();
+
     Log.Info("Welcome to GGPOSharp");
 
     int res = Parser.Default.ParseArguments<InputEchoOptions,
@@ -265,7 +268,8 @@ public class Program
 
             // HACK: We are going to auto-change the remote player index here if it is incorrect!
             // Keep in mind that this really only supports two players total, so it is OK!
-            if (rOps.PlayerNumber == cliOps.PlayerNumber) { 
+            if (rOps.PlayerNumber == cliOps.PlayerNumber)
+            {
               rOps.PlayerNumber = (byte)(cliOps.PlayerNumber == 1 ? 2 : 1);
             }
 

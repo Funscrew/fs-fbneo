@@ -97,7 +97,7 @@ namespace funscrewTesters
       if (callbacks == null) { callbacks = CreateDefaultCallbacks(); }
 
       var udp = new SimUdp(local.Host, local.Port, local.TimeSource, msgQueue, SIM_PING, SIM_JITTER);
-      var clientOps = new GGPOClientOptions(local.PlayerIndex, local.Port, Defaults.PROTOCOL_VERSION, sessionId);
+      var clientOps = new GGPOClientOptions("test-game",local.PlayerIndex, local.Port, Defaults.PROTOCOL_VERSION, sessionId);
 
       clientOps.IdleTimeout = 0;
       clientOps.Callbacks = callbacks;
