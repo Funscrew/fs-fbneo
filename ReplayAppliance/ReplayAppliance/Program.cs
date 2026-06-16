@@ -4,11 +4,12 @@ using drewCo.Tools.Logging;
 using funscrew.Clients;
 using System.Runtime.InteropServices;
 using System.Diagnostics;
+using System.Net.WebSockets;
 
 namespace funscrew;
 
 // ========================================================================================================
-public class Program
+public partial class Program
 {
   enum EMode
   {
@@ -51,8 +52,9 @@ public class Program
 
     Log.Info("Welcome to ReplayAppliance");
 
-    int res = Parser.Default.ParseArguments<ReplayOptions, InputEchoOptions,
+    int res = Parser.Default.ParseArguments<SessionRequestOptions, ReplayOptions, InputEchoOptions,
                                             ReplayApplianceOptions>(args).MapResult(
+                                            (SessionRequestOptions ops) => TestSessionRequest(ops),
                                             (ReplayOptions ops) => RunReplayAppliance(ops),
                                             (InputEchoOptions ops) => RunEchoClient(ops),
                                             (ReplayApplianceOptions ops) => SetupClientOptions(ops),
@@ -139,6 +141,34 @@ public class Program
       }
 
     }
+  }
+
+
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private static int TestSessionRequest(SessionRequestOptions ops)
+  {
+    var sr = new SessionRequester(ops);
+
+    try
+    {
+      Log.Info("Requesting a session!");
+      var response = sr.RequestSession();
+
+      Log.Info("Got the response!");
+
+      Log.Info($"Code is: {response.Code}");
+      Log.Info($"Session ID is: {response.SessionId}");
+    }
+    catch (Exception ex)
+    {
+      Log.Exception(ex);
+      return -1;
+    }
+
+
+
+    return 0;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------

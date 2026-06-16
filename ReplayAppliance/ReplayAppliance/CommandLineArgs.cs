@@ -2,6 +2,25 @@
 
 namespace funscrew;
 
+using milliseconds = System.Int32;
+
+
+// ==============================================================================================================================
+/// <summary>
+/// Not really a first class feauture of the application, rather a place to put some example code for its operation.
+/// </summary>
+[Verb("session-request")]
+public class SessionRequestOptions
+{
+  [Option("host", Required = true, HelpText = "Host address to make the request on.")]
+  public string Host { get; set; } = "localhost";
+
+  [Option("port", Required = true, HelpText = "(TCP) Port to listen on for session start requests.")]
+  public int Port { get; set; } = SessionPrimerOptions.DEFAULT_PORT;
+
+  public milliseconds Timeout { get; set; } = 1;
+}
+
 // ==============================================================================================================================
 [Verb("replay-appliance-ex")]
 public class ReplayOptions

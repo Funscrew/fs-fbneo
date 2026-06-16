@@ -5,16 +5,6 @@ using System.Text;
 
 namespace funscrew;
 
-// ==============================================================================================================================
-public class SessionPrimerOptions
-{
-  public const int DEFAULT_PORT = 5000;
-
-  /// <summary>
-  /// The port to listen on.
-  /// </summary>
-  public int Port { get; set; } = DEFAULT_PORT;
-}
 
 // ==============================================================================================================================
 /// <summary>
@@ -25,12 +15,10 @@ public class SessionPrimer : IDisposable
   private object IDLock = new object();
   private UInt64 LastSessionID = 0;
 
-
   public SessionPrimerOptions Options { get; private set; }
 
   private CancellationTokenSource CTSource = default!;
   private CancellationToken CancelToken = default!;
-  //  private TcpClient client = null!;
   private TcpListener Listener = null!;
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -39,6 +27,8 @@ public class SessionPrimer : IDisposable
     Options = options_;
     CTSource = new CancellationTokenSource();
     CancelToken = CTSource.Token;
+
+    GetNextSessionID();
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -78,7 +68,8 @@ public class SessionPrimer : IDisposable
             Log.Info($"Received: {request}");
 
             // Send JSON response
-            string responseJson = @"{ ""data"": ""x"" }";
+            // TODO: We will get the session ID + indicate to the replay handler that connections will be incoming.
+            string responseJson = @"--START--{""data"": ""x"" }--END--";
             byte[] responseBytes = Encoding.UTF8.GetBytes(responseJson);
 
             stream.Write(responseBytes, 0, responseBytes.Length);
@@ -151,4 +142,16 @@ public class SessionPrimer : IDisposable
     }
   }
 
+}
+
+
+// ==============================================================================================================================
+public class SessionPrimerOptions
+{
+  public const int DEFAULT_PORT = 5000;
+
+  /// <summary>
+  /// The port to listen on.
+  /// </summary>
+  public int Port { get; set; } = DEFAULT_PORT;
 }

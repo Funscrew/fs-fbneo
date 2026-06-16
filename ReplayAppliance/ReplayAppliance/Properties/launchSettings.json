@@ -19,6 +19,10 @@
     "Replay": {
       "commandName": "Project",
       "commandLineArgs": "replay-appliance-ex --request-port 5000 --replay-port 7002"
+    },
+    "Session Request": {
+      "commandName": "Project",
+      "commandLineArgs": "session-request --host \"localhost\" --port \"5000\""
     }
   }
 }
