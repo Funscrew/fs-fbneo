@@ -15,6 +15,10 @@
     "Echo-Client-With-Replay": {
       "commandName": "Project",
       "commandLineArgs": "input-echo --game-name \"sfiii3nr1\" --player 1 --name \"Echoman\" --replay-options \"127.0.0.1:7002\" --session-id \"12345\""
+    },
+    "Replay": {
+      "commandName": "Project",
+      "commandLineArgs": "replay-appliance-ex --request-port 5000 --replay-port 7002"
     }
   }
 }

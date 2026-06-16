@@ -1,13 +1,21 @@
 ﻿using CommandLine;
-using System;
-using System.Collections.Generic;
-using System.ComponentModel.DataAnnotations;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace funscrew;
 
+// ==============================================================================================================================
+[Verb("replay-appliance-ex")]
+public class ReplayOptions
+{
+  // REFACTOR: This should live somewhere else....
+  public const int DEFAULT_PORT = 7002;
+
+  [Option("request-port", Required = true, HelpText = "(TCP) Port to listen on for session start requests.")]
+  public int RequestPort { get; set; } = SessionPrimerOptions.DEFAULT_PORT;
+
+  [Option("replay-port", Required = true, HelpText = "(UDP) Port where replay data will be sent.")]
+  public int ReplayPort { get; set; } = DEFAULT_PORT;
+
+}
 
 // ==============================================================================================================================
 public abstract class ClientOptions

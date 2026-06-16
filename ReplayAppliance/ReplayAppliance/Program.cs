@@ -2,8 +2,8 @@
 using drewCo.Tools;
 using drewCo.Tools.Logging;
 using funscrew.Clients;
-using System.Diagnostics;
 using System.Runtime.InteropServices;
+using System.Diagnostics;
 
 namespace funscrew;
 
@@ -48,22 +48,26 @@ public class Program
   {
     InitLogging();
 
-    //var sp = new SessionPrimer();
-    //var nextId = sp.GetNextSessionID();
 
-    Log.Info("Welcome to GGPOSharp");
+    Log.Info("Welcome to ReplayAppliance");
 
-    int res = Parser.Default.ParseArguments<InputEchoOptions,
+    int res = Parser.Default.ParseArguments<ReplayOptions, InputEchoOptions,
                                             ReplayApplianceOptions>(args).MapResult(
+                                            (ReplayOptions ops) => RunReplayAppliance(ops),
                                             (InputEchoOptions ops) => RunEchoClient(ops),
                                             (ReplayApplianceOptions ops) => SetupClientOptions(ops),
                                             errs => 1);
+
+
+    // TEMP: ?
+    return res;
 
     if (res != 0)
     {
       return res;
     }
 
+    // NOTE: This is pretty much how echo client / replay appliance would work.
     InitializeClient();
 
     // Game loop:
@@ -135,6 +139,32 @@ public class Program
       }
 
     }
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private static int RunReplayAppliance(ReplayOptions ops)
+  {
+
+    var spOps = new SessionPrimerOptions() { Port = ops.RequestPort };
+    var sp = new SessionPrimer(spOps);
+
+    Console.CancelKeyPress += (s, e) =>
+    {
+      sp.EndListen();
+    };
+
+    Task serverTask = sp.BeginListen();
+    serverTask.Wait();
+
+    // Thread.Sleep(5000);
+
+    // This would be the end of the program....
+    // sp.EndListen();
+
+    //Log.Info("complete!");
+    //Console.ReadKey();
+
+    return 0;
   }
 
 
