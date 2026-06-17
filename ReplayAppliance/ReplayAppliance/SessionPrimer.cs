@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
 
 namespace funscrew;
 
@@ -10,8 +11,11 @@ namespace funscrew;
 /// <summary>
 /// SessionPrimer is responsible for generating and reporting session ids, and getting the system setup to receive the connections.
 /// </summary>
+/// REFACTOR: 'FrontDoor' or similar....
 public class SessionPrimer : IDisposable
 {
+  public const UInt64 TEST_SESSION_ID = 12345;
+
   private object IDLock = new object();
   private UInt64 LastSessionID = 0;
 
@@ -69,7 +73,17 @@ public class SessionPrimer : IDisposable
 
             // Send JSON response
             // TODO: We will get the session ID + indicate to the replay handler that connections will be incoming.
-            string responseJson = @"--START--{""data"": ""x"" }--END--";
+            var id = GetNextSessionID();
+
+            var response = new SessionRequestResponse()
+            {
+              Code = SessionRequestResponse.CODE_OK,
+              Message = string.Empty,
+              SessionId = id
+            };
+            string responseContent = JsonSerializer.Serialize(response);
+
+            string responseJson = $"--START--{responseContent}--END--";
             byte[] responseBytes = Encoding.UTF8.GetBytes(responseJson);
 
             stream.Write(responseBytes, 0, responseBytes.Length);

@@ -1,5 +1,9 @@
-﻿using System.Net.Sockets;
+﻿using System;
+using System.ComponentModel.DataAnnotations;
+using System.Net.Sockets;
 using System.Text;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace funscrew;
 
@@ -15,15 +19,28 @@ public class SessionRequester
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public SessionRequestResult RequestSession()
+  public SessionRequestResponse RequestSession()
   {
 
-    using (var client = new TcpClient(Options.Host, Options.Port))
+    using (var client = new TcpClient(AddressFamily.InterNetwork))
     {
+      client.Connect(Options.Host, Options.Port);
+
       client.ReceiveTimeout = Options.Timeout;
       using (var stream = client.GetStream())
       {
-        var toSend = Encoding.UTF8.GetBytes("--BEGIN--TEST!--END--");
+
+        var args = new SessionRequestArgs()
+        {
+          GameName = Options.GameName,
+          GameVersion = Options.GameVersion,
+          MaxPlayerCount = Options.MaxPlayerCount,
+          TotalInputSize = Options.TotalInputSize,
+          PlayerNames = (from x in Options.PlayerNames.Split(",") select x.Trim()).ToArray()
+        };
+        string argsString = System.Text.Json.JsonSerializer.Serialize(args);
+
+        var toSend = Encoding.UTF8.GetBytes($"--BEGIN--{argsString}--END--");
         stream.Write(toSend.AsSpan());
 
         // Let's get the response.....
@@ -35,9 +52,9 @@ public class SessionRequester
         // Read bytes....
         while (true)
         {
-            int size = stream.Read(buffer, 0, buffer.Length);
-            string nextChunk = Encoding.UTF8.GetString(buffer, 0, size);
-            allData += nextChunk;
+          int size = stream.Read(buffer, 0, buffer.Length);
+          string nextChunk = Encoding.UTF8.GetString(buffer, 0, size);
+          allData += nextChunk;
 
           // TOOD: We have to interpret the data...
           if (allData.Length > MAX_LENGTH)
@@ -48,21 +65,41 @@ public class SessionRequester
           {
             // TODO: We will deserialize the response.
             // This is the end of the response!
-            break;
-            int x = 10;
+            if (!allData.StartsWith("--START--"))
+            {
+              throw new InvalidOperationException("Invalid request data (header)!");
+            }
+
+            var checkSize = ("--START--".Length) + ("--END--".Length);
+            string responseData = allData.Substring("--START--".Length, allData.Length - checkSize);
+
+            var res = JsonSerializer.Deserialize<SessionRequestResponse>(responseData);
+            if (res == null) {
+              throw new InvalidOperationException("Could not deserialize response data into the correct type!");
+            }
+
+            return res;
           }
-            // if (allData.Length > 1000) { return; }
         }
 
       }
     }
 
-    return new SessionRequestResult() { Code = 1, Message = "Not Complete!" };
   }
 }
 
+// ==============================================================================================================================
+public class SessionRequestArgs
+{
+  public string GameName { get; set; }
+  public string GameVersion { get; set; }
+  public uint16_t MaxPlayerCount = 0;
+  public uint16_t TotalInputSize = 0;
+  public string[] PlayerNames { get; set; }
+}
+
 // ============================================================================================================================
-public class SessionRequestResult
+public class SessionRequestResponse
 {
   public const int CODE_OK = 0;
 

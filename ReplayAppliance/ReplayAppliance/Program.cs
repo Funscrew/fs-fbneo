@@ -158,6 +158,7 @@ public partial class Program
       Log.Info("Got the response!");
 
       Log.Info($"Code is: {response.Code}");
+      Log.Info($"Message is: {(response.Message == null ? "<null>" : response.Message == string.Empty ? "<empty>" : response.Message)}");
       Log.Info($"Session ID is: {response.SessionId}");
     }
     catch (Exception ex)

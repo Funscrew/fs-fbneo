@@ -10,7 +10,7 @@ using milliseconds = System.Int32;
 /// Not really a first class feauture of the application, rather a place to put some example code for its operation.
 /// </summary>
 [Verb("session-request")]
-public class SessionRequestOptions
+public class SessionRequestOptions 
 {
   [Option("host", Required = true, HelpText = "Host address to make the request on.")]
   public string Host { get; set; } = "localhost";
@@ -18,7 +18,22 @@ public class SessionRequestOptions
   [Option("port", Required = true, HelpText = "(TCP) Port to listen on for session start requests.")]
   public int Port { get; set; } = SessionPrimerOptions.DEFAULT_PORT;
 
-  public milliseconds Timeout { get; set; } = 1;
+  [Option("timeout", Required = false, HelpText = "Request timeout.")]
+  public milliseconds Timeout { get; set; } = 5000;
+
+
+  // NOTE: These could all be CLI args if we care / want to do extra testing or whatever...
+  // Game Options.
+  public uint16_t MaxPlayerCount { get; set; } = 2;
+  public uint16_t TotalInputSize { get; set; } = 10;
+  public string GameName { get; set; } = "sfiii3nr1";
+  public string GameVersion { get; set; } = "0.5a";
+
+  /// <summary>
+  /// Comma seperated list of player names in the same player order.  i.e. index 0 == player index 0
+  /// </summary>
+  public string PlayerNames { get; set; } = "Echoman,Screwie";
+
 }
 
 // ==============================================================================================================================

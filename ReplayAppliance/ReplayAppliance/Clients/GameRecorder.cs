@@ -58,9 +58,9 @@ namespace funscrew
       SessionId = sessionId_;
       DataDir = dataDir_;
 
-      if (SessionId == SessionService.TEST_SESSION_ID)
+      if (SessionId == SessionPrimer.TEST_SESSION_ID)
       {
-        Log.Debug($"Magic session id: {SessionService.TEST_SESSION_ID} was used, replay overwrite is enabled!");
+        Log.Debug($"Magic session id: {SessionPrimer.TEST_SESSION_ID} was used, replay overwrite is enabled!");
         overwriteExisting = true;
       }
 
