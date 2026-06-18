@@ -16,7 +16,7 @@ public class GGPOClient : IGGPOClient, IDisposable
 
   public IUdpBlaster UDP { get; private set; } = null!;
 
-  private SimTimer Clock = null!;
+  private IClockSource Clock = null!;
   public int CurTime { get { return Clock.CurTime; } }
 
   public UInt32 ClientVersion { get { return this.ClientOptions.ClientVersion; } }
@@ -62,7 +62,7 @@ public class GGPOClient : IGGPOClient, IDisposable
   public int CurrentFrame { get { return this._sync.GetFrameCount(); } }
 
   // ----------------------------------------------------------------------------------------
-  public GGPOClient(GGPOClientOptions options_, IUdpBlaster udp_, SimTimer clock_)
+  public GGPOClient(GGPOClientOptions options_, IUdpBlaster udp_, IClockSource clock_)
   {
     ClientOptions = options_;
 
@@ -1002,7 +1002,7 @@ public static class Defaults
 
 
 // ==========================================================================================
-public interface SimTimer
+public interface IClockSource
 {
   /// <summary>
   /// The current time in Milliseconds
@@ -1012,7 +1012,7 @@ public interface SimTimer
 
 
 // ==============================================================================================================================
-public class ClockTimer : SimTimer
+public class ClockTimer : IClockSource
 {
   private Stopwatch Clock = Stopwatch.StartNew();
   public int CurTime { get { return (int)Clock.ElapsedMilliseconds; } }
@@ -1020,7 +1020,7 @@ public class ClockTimer : SimTimer
 
 
 // ==========================================================================================
-public interface IGGPOClient : SimTimer
+public interface IGGPOClient : IClockSource
 {
   IUdpBlaster UDP { get; }
   UInt32 ClientVersion { get; }

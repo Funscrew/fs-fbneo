@@ -1,4 +1,5 @@
 ﻿using drewCo.Tools.Logging;
+using funscrew.Clients;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -24,13 +25,15 @@ public class SessionPrimer : IDisposable
   private CancellationTokenSource CTSource = default!;
   private CancellationToken CancelToken = default!;
   private TcpListener Listener = null!;
+  private ReplayAppliance ReplayAppliance = null!;
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public SessionPrimer(SessionPrimerOptions options_)
+  public SessionPrimer(SessionPrimerOptions options_, ReplayAppliance replayAppliance_)
   {
     Options = options_;
     CTSource = new CancellationTokenSource();
     CancelToken = CTSource.Token;
+    ReplayAppliance = replayAppliance_;
 
     GetNextSessionID();
   }
@@ -44,7 +47,7 @@ public class SessionPrimer : IDisposable
   // --------------------------------------------------------------------------------------------------------------------------
   public Task BeginListen()
   {
-    Log.Info($"Now listening for session requests on port {Options.Port}");
+    Log.Info($"The front door is open on port {Options.Port}");
 
 
     var res = Task.Factory.StartNew(() =>
@@ -117,11 +120,10 @@ public class SessionPrimer : IDisposable
     return res;
   }
 
-
   // --------------------------------------------------------------------------------------------------------------------------
   public void EndListen()
   {
-    Log.Info("Session primer is shutting down....");
+    Log.Info("The front door is closing....");
 
     if (!CancelToken.IsCancellationRequested)
     {

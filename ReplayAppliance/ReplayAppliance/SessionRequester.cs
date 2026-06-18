@@ -30,7 +30,7 @@ public class SessionRequester
       using (var stream = client.GetStream())
       {
 
-        var args = new SessionRequestArgs()
+        var args = new SessionOptions()
         {
           GameName = Options.GameName,
           GameVersion = Options.GameVersion,
@@ -38,7 +38,7 @@ public class SessionRequester
           TotalInputSize = Options.TotalInputSize,
           PlayerNames = (from x in Options.PlayerNames.Split(",") select x.Trim()).ToArray()
         };
-        string argsString = System.Text.Json.JsonSerializer.Serialize(args);
+        string argsString = JsonSerializer.Serialize(args);
 
         var toSend = Encoding.UTF8.GetBytes($"--BEGIN--{argsString}--END--");
         stream.Write(toSend.AsSpan());
@@ -89,7 +89,7 @@ public class SessionRequester
 }
 
 // ==============================================================================================================================
-public class SessionRequestArgs
+public class SessionOptions
 {
   public string GameName { get; set; }
   public string GameVersion { get; set; }

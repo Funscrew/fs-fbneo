@@ -8,14 +8,14 @@ namespace funscrewTesters
   // ==================================================================================================================
   public class SimUdp : IUdpBlaster
   {
-    public funscrew.SimTimer TimeSource { get; private set; }
+    public funscrew.IClockSource TimeSource { get; private set; }
     public TestMessageQueue MsgQueue { get; private set; }
 
     public uint AvgPing { get; set; }
     public uint PingJitter { get; set; }
 
     // ----------------------------------------------------------------------------------------------------------------
-    public SimUdp(string host_, int port_, funscrew.SimTimer timeSource_, TestMessageQueue msgQueue_, uint avgPing_, uint pingJitter_ = 0)
+    public SimUdp(string host_, int port_, funscrew.IClockSource timeSource_, TestMessageQueue msgQueue_, uint avgPing_, uint pingJitter_ = 0)
     {
       Host = host_;
       Port = port_;

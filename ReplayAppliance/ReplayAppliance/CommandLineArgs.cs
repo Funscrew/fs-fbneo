@@ -49,6 +49,11 @@ public class ReplayOptions
   [Option("replay-port", Required = true, HelpText = "(UDP) Port where replay data will be sent.")]
   public int ReplayPort { get; set; } = DEFAULT_PORT;
 
+
+  /// <summary>
+  /// Where will the data for the replays be stored?
+  /// </summary>
+  public string ReplayDataDir { get; set; } = "replay-data";
 }
 
 // ==============================================================================================================================

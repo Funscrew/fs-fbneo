@@ -37,9 +37,15 @@ namespace funscrew
 
     public HashSet<SocketAddress> Blacklist { get; private set; } = new HashSet<SocketAddress>();
 
+    /// <summary>
+    /// Is set, receive operations are blocking.
+    /// </summary>
+    /// <remarks>Not the same as the socket blocking.</remarks>
+    public bool IsBlocking { get; private set; } = false;
+
     // ------------------------------------------------------------------------------------------------------------
-    public UdpBlaster(int localPort)
-        : this(localPort, IPAddress.Any)
+    public UdpBlaster(int localPort, bool isBlocking = false)
+        : this(localPort, IPAddress.Any, isBlocking)
     { }
 
     // ------------------------------------------------------------------------------------------------------------
@@ -56,10 +62,11 @@ namespace funscrew
 
     // ------------------------------------------------------------------------------------------------------------
     // Use port zero (0) to use an ephemeral port.
-    public UdpBlaster(int localPort, IPAddress localAddress)
+    public UdpBlaster(int localPort, IPAddress localAddress, bool isBlocking = false)
     {
       Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
       Socket.Blocking = true;
+      IsBlocking = true;
 
       IPEndPoint bindEndPoint = new IPEndPoint(localAddress, localPort);
       Socket.Bind(bindEndPoint);
@@ -143,17 +150,6 @@ namespace funscrew
       return sent;
     }
 
-    //// ------------------------------------------------------------------------------------------
-    //public int Send(byte[] buffer, IPEndPoint remoteEndPoint)
-    //{
-    //  if (buffer == null)
-    //  {
-    //    throw new ArgumentNullException(nameof(buffer));
-    //  }
-
-    //  return Send(buffer, buffer.Length, remoteEndPoint);
-    //}
-
     // ------------------------------------------------------------------------------------------
     public int Receive(byte[] buffer, ref EndPoint remote)
     {
@@ -163,7 +159,7 @@ namespace funscrew
       }
 
       // EndPoint any = Remote; //new IPEndPoint(IPAddress.IPv6Any, 0);
-      if (Socket.Available > 0)
+      if (IsBlocking || Socket.Available > 0)
       {
         int read = Socket.ReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref remote);
 
@@ -178,23 +174,7 @@ namespace funscrew
 
       // Nothing!
       return 0;
-      // lol wh
-      // at?
-      //IPEndPoint ep = (IPEndPoint)any;
-      //if (ep.Address.IsIPv4MappedToIPv6)
-      //{
-      //  ep = new IPEndPoint(ep.Address.MapToIPv4(), ep.Port);
-      //}
-
-      //remoteEndPoint = ep;
-      // return read;
     }
-
-    //// ------------------------------------------------------------------------------------------
-    //public int Receive(byte[] buffer, out IPEndPoint remoteEndPoint)
-    //{
-    //  return Receive(buffer, out remoteEndPoint);
-    //}
 
     // ------------------------------------------------------------------------------------------
     public void SetReceiveTimeout(int milliseconds)

@@ -11,6 +11,7 @@ namespace funscrew;
 // ========================================================================================================
 public partial class Program
 {
+  [Obsolete("will be removed.")]
   enum EMode
   {
     Invalid = 0,
@@ -18,6 +19,7 @@ public partial class Program
     Replay
   }
 
+  [Obsolete("will be removed.")]
   private static EMode ClientMode = EMode.Invalid;
 
   [DllImport("winmm.dll", EntryPoint = "timeBeginPeriod")]
@@ -176,16 +178,46 @@ public partial class Program
   private static int RunReplayAppliance(ReplayOptions ops)
   {
 
+
+    Log.Info("Setting up replay appliance...");
+
+    //// CLIOptions = ops;
+
+    //ClientOptions = new GGPOClientOptions(ops.GameName, 0, ops.LocalPort, ops.ProtocolVersion, ops.SessionId)
+    //{
+    //  Callbacks = new GGPOSessionCallbacks()
+    //  {
+    //    begin_game = OnBeginGame,
+    //    free_buffer = OnFreeBuffer,
+    //    on_event = OnEvent,
+    //    rollback_frame = OnRollback,
+    //    save_game_state = SaveGameState,
+    //    load_game_state = LoadGameState
+    //  }
+    //};
+
+    //ClientMode = EMode.Replay;
+
+    var udp = new UdpBlaster(ops.ReplayPort);
+    ReplayAppliance replayAppliance = new ReplayAppliance(ops, udp, new ClockTimer());
+
+
     var spOps = new SessionPrimerOptions() { Port = ops.RequestPort };
-    var sp = new SessionPrimer(spOps);
+    var sp = new SessionPrimer(spOps, replayAppliance);
 
     Console.CancelKeyPress += (s, e) =>
     {
       sp.EndListen();
+      // replayAppliance.Shutdown();
     };
 
-    Task serverTask = sp.BeginListen();
-    serverTask.Wait();
+    Task frontDoorTask = sp.BeginListen();
+
+    //Task applianceTask = replayAppliance.BeginUpdateLoop();
+    //var all = new[] { serverTask, applianceTask };
+    //Task.WaitAll(all);
+
+    frontDoorTask.Wait();
 
     // Thread.Sleep(5000);
 
@@ -217,8 +249,11 @@ public partial class Program
   }
 
   // ------------------------------------------------------------------------------------------------------
+  [Obsolete("we aren't going to use this anymore....sooon")]
   private static unsafe int SetupClientOptions(ReplayApplianceOptions ops)
   {
+    throw new NotSupportedException("This isn't supported anymore!");
+
     Log.Info("Setting up replay appliance...");
 
     CLIOptions = ops;
@@ -299,7 +334,7 @@ public partial class Program
           FileTools.CreateDirectory(cliOps.DataDir);
 
           var udp = new UdpBlaster(ClientOptions.LocalPort);
-          Client = new ReplayAppliance(ClientOptions, cliOps, udp, new ClockTimer());
+          Client = new ReplayAppliance_LEGACY(ClientOptions, cliOps, udp, new ClockTimer());
           Client.Lock();
           // NOTE: Remotes are setup inside of the client.
         }

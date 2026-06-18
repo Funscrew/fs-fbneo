@@ -122,7 +122,7 @@ namespace funscrewTesters
   public class SimGGPOClient : GGPOClient
   {
     // --------------------------------------------------------------------------------------------------------------------------
-    public SimGGPOClient(GGPOClientOptions options_, IUdpBlaster udp_, funscrew.SimTimer clock_)
+    public SimGGPOClient(GGPOClientOptions options_, IUdpBlaster udp_, funscrew.IClockSource clock_)
       : base(options_, udp_, clock_)
     { }
 
