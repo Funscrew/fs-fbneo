@@ -17,7 +17,8 @@ namespace funscrew.Clients
   {
     public static int MAX_ACKS = 0x100;
 
-    private ReplayAppliance Appliance = null;
+    // private ReplayAppliance Appliance = null;
+    private ReplaySession Session = null!;
 
     /// <summary>
     /// The acks that we still need to send out.
@@ -25,10 +26,10 @@ namespace funscrew.Clients
     private RingBuffer<GameInput> _PendingAcks = null!;
 
     // --------------------------------------------------------------------------------------------------------------------------  
-    public ReplayEndpoint(IGGPOClient client_, GGPOEndpointOptions ops_, ConnectStatus[] localConnectStatus_)
+    public ReplayEndpoint(ReplaySession session_, IGGPOClient client_, GGPOEndpointOptions ops_, ConnectStatus[] localConnectStatus_)
       : base(client_, ops_, localConnectStatus_)
     {
-      this.Appliance = this.Client as ReplayAppliance;
+      this.Session = session_;
       _PendingAcks = new RingBuffer<GameInput>(MAX_ACKS);
     }
 
@@ -56,9 +57,9 @@ namespace funscrew.Clients
         _last_acked_input = _PendingAcks.Front();
         _PendingAcks.Pop();
 
-        if (this.Appliance != null)
+        if (this.Session!= null)
         {
-          this.Appliance.MergeInput(ref _last_acked_input, this.PlayerIndex);
+          this.Session.MergeInput(ref _last_acked_input, this.PlayerIndex);
         }
       }
 

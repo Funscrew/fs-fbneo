@@ -12,15 +12,30 @@ namespace funscrew
     int Receive(byte[] receiveBuffer, ref EndPoint remoteEP);
 
     /// <returns>The number of bytes that were sent.</returns>
-    int Send(byte[] sendBuffer, int packetSize, SocketAddress useRemote);
+    int Send(byte[] sendBuffer, int packetSize, EndPoint useRemote);
 
     /// <summary>
     /// Set of addresses that we will not send or receive data from.  In the case of receiving,
     /// the client will filter those packets and return 0.
     /// </summary>
-    HashSet<SocketAddress> Blacklist { get; }
-    void AddToBlacklist(SocketAddress address);
-    void RemoveFromBlacklist(SocketAddress address);
+    HashSet<UInt64> Blacklist { get; }
+    void AddToBlacklist(UInt64 address);
+    void RemoveFromBlacklist(UInt64 address);
+
+    bool IsBlocking { get; }
+
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    /// <summary>
+    /// Get a hash for the address + the port, NOT just the address.
+    /// </summary>
+    public static ulong GetAddrHash(IPEndPoint receivedFrom)
+    {
+      UInt64 res = (ulong)(receivedFrom.GetHashCode()) << 16;
+      res |= (uint16_t)receivedFrom.Port;   // lol, of course it is an int.  Thanks M$!
+
+      return res;
+    }
   }
 
   // ========================================================================================================================
@@ -35,7 +50,7 @@ namespace funscrew
     // OPTIONS:
     const int RECEIVE_BUFFER_SIZE = 8192;
 
-    public HashSet<SocketAddress> Blacklist { get; private set; } = new HashSet<SocketAddress>();
+    public HashSet<UInt64> Blacklist { get; private set; } = new HashSet<UInt64>();
 
     /// <summary>
     /// Is set, receive operations are blocking.
@@ -49,13 +64,13 @@ namespace funscrew
     { }
 
     // ------------------------------------------------------------------------------------------------------------
-    public void AddToBlacklist(SocketAddress at)
+    public void AddToBlacklist(UInt64 at)
     {
       Blacklist.Add(at);
     }
 
     // ------------------------------------------------------------------------------------------------------------
-    public void RemoveFromBlacklist(SocketAddress at)
+    public void RemoveFromBlacklist(UInt64 at)
     {
       Blacklist.Remove(at);
     }
@@ -126,9 +141,10 @@ namespace funscrew
     }
 
     // ------------------------------------------------------------------------------------------
-    public int Send(byte[] buffer, int size, SocketAddress remoteEndPoint)
+    public int Send(byte[] buffer, int size, EndPoint remoteEndPoint)
     {
-      if (this.Blacklist.Contains(remoteEndPoint)) { return 0; }
+      var hash = IUdpBlaster.GetAddrHash((IPEndPoint)remoteEndPoint);
+      if (this.Blacklist.Contains(hash)) { return 0; }
 
       if (buffer == null)
       {
@@ -164,7 +180,8 @@ namespace funscrew
         int read = Socket.ReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref remote);
 
         // TODO: This will create garbage.  Probably not the end of the world tho?
-        if (Blacklist.Contains(remote.Serialize()))
+        var hash = IUdpBlaster.GetAddrHash((IPEndPoint)remote);
+        if (Blacklist.Contains(hash))
         {
           return 0;
         }
