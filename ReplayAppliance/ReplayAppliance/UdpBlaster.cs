@@ -29,9 +29,9 @@ namespace funscrew
     /// <summary>
     /// Get a hash for the address + the port, NOT just the address.
     /// </summary>
-    public static ulong GetAddrHash(IPEndPoint receivedFrom)
+    public static AddrHash GetAddrHash(IPEndPoint receivedFrom)
     {
-      UInt64 res = (ulong)(receivedFrom.GetHashCode()) << 16;
+      AddrHash res = (uint64_t)(receivedFrom.GetHashCode()) << 16;
       res |= (uint16_t)receivedFrom.Port;   // lol, of course it is an int.  Thanks M$!
 
       return res;

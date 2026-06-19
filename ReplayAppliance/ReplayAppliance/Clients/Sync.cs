@@ -226,7 +226,7 @@ public class Sync
   }
 
   // ------------------------------------------------------------------------------------------------------------------------
-  internal unsafe void CheckSimulation(int timeout)
+  internal unsafe void CheckSimulation()
   {
     // throw new NotImplementedException();
     int seek_to;

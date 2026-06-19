@@ -77,14 +77,14 @@ public class GGPOClient : IGGPOClient, IDisposable
       _local_connect_status[i].last_frame = -1;
     }
 
-    var ops = new SyncOptions()
+    var SyncOps = new SyncOptions()
     {
       callbacks = ClientOptions.Callbacks,
       input_size = ClientOptions.InputSize,
       num_players = 2,
       num_prediction_frames = GGPOConsts.MAX_PREDICTION_FRAMES
     };
-    _sync = new Sync(_local_connect_status, ops);
+    _sync = new Sync(_local_connect_status, SyncOps);
 
     _callbacks = ClientOptions.Callbacks;
 
@@ -278,7 +278,7 @@ public class GGPOClient : IGGPOClient, IDisposable
 
     if (!_synchronizing)
     {
-      _sync.CheckSimulation(timeout);
+      _sync.CheckSimulation();
 
       // notify all of our endpoints of their local frame number for their
       // next connection quality report
@@ -621,7 +621,7 @@ public class GGPOClient : IGGPOClient, IDisposable
   }
 
   // ----------------------------------------------------------------------------------------------------------
-  protected virtual void OnUdpProtocolPeerEvent(ref UdpEvent evt, GGPOEndpoint endpoint) //  byte playerIndex)
+  protected virtual void OnUdpProtocolPeerEvent(ref UdpEvent evt, GGPOEndpoint endpoint)
   {
     var playerIndex = endpoint.PlayerIndex;
 

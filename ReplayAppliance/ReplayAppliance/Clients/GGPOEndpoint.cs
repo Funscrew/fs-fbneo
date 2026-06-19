@@ -143,11 +143,16 @@ public class GGPOEndpoint
   /// Session Id, which corresponds to unix time in milliseconds.
   /// Only used in replay contexts.
   /// </summary>
-  private UInt64 SessionId = 0;
+  public UInt64 SessionId { get; set; } = 0;
 
   public byte PlayerIndex { get { return Options.PlayerIndex; } }
   public bool IsLocalPlayer { get { return Options.IsLocal; } }
   public bool IsReplayClient { get { return Options.IsReplayClient; } }
+
+  /// <summary>
+  /// This is used on the replay appliance.
+  /// </summary>
+  public AddrHash AddressHash { get; set; }
 
   // -------------------------------------------------------------------------------------
   public GGPOEndpoint(IGGPOClient client_, GGPOEndpointOptions ops_, ConnectStatus[] localConnectStatus_)

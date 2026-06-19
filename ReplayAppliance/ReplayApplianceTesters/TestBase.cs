@@ -71,7 +71,7 @@ namespace funscrewTesters
     // --------------------------------------------------------------------------------------------------------------------------
     protected ulong GetNextSessionId()
     {
-      var ss = new SessionService();
+      var ss = new SessionPrimer;
       ulong res = ss.GetNextSessionId();
       return res;
     }
