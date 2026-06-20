@@ -26,8 +26,8 @@ namespace funscrew.Clients
     private RingBuffer<GameInput> _PendingAcks = null!;
 
     // --------------------------------------------------------------------------------------------------------------------------  
-    public ReplayEndpoint(ReplaySession session_, IGGPOClient client_, GGPOEndpointOptions ops_, ConnectStatus[] localConnectStatus_)
-      : base(client_, ops_, localConnectStatus_)
+    public ReplayEndpoint(ReplaySession session_, GGPOEndpointOptions ops_, ConnectStatus[] localConnectStatus_)
+      : base(session_, ops_, localConnectStatus_)
     {
       this.Session = session_;
       _PendingAcks = new RingBuffer<GameInput>(MAX_ACKS);

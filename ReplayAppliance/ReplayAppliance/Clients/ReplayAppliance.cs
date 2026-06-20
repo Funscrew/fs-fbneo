@@ -45,11 +45,11 @@ public class ReplayAppliance
   private IClockSource Clock = null!;
   public IUdpBlaster UDP { get; private set; } = null!;
 
-  private ConnectStatus[] LocalConnectStatus = null!;
+  // private ConnectStatus[] LocalConnectStatus = null!;
 
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public ReplayAppliance(ReplayOptions ops_, IUdpBlaster udp_, IClockSource clock_, ConnectStatus[] localConnectStatus_)
+  public ReplayAppliance(ReplayOptions ops_, IUdpBlaster udp_, IClockSource clock_)
   {
     Options = ops_;
     UDP = udp_;
@@ -58,7 +58,7 @@ public class ReplayAppliance
       throw new InvalidOperationException("ReplayAppliance requires a blocking IUdpBlaster instance!");
     }
     Clock = clock_;
-    LocalConnectStatus = localConnectStatus_;
+   // LocalConnectStatus = localConnectStatus_;
 
     CancelToken = CTSource.Token;
 
@@ -116,7 +116,7 @@ public class ReplayAppliance
         load_game_state = NoOp_LoadGame,
       };
 
-      var session = new ReplaySession(sessionId, LocalConnectStatus, recorder, sessionOps, callbacks);
+      var session = new ReplaySession(sessionId, recorder, sessionOps, callbacks);
       ActiveSessions.Add(sessionId, session);
 
 
@@ -245,7 +245,7 @@ public class ReplayAppliance
 
     // NOTE: We may not want to send out the sync request immediately on these endpoints?
     // Nah -> it should be OK that they bounce around.....
-    var res = new ReplayEndpoint(replaySesh, this, ops, LocalConnectStatus);
+    var res = new ReplayEndpoint(replaySesh, ops, LocalConnectStatus);
     res.AddressHash = IUdpBlaster.GetAddrHash(from);
 
     replaySesh.AddConnection(res);
@@ -333,31 +333,31 @@ public class ReplayAppliance
   //  );
   //}
 
-  // --------------------------------------------------------------------------------------------------------------------------
-  protected override void HandleDisconnect(GGPOEndpoint endpoint)
-  {
-    base.HandleDisconnect(endpoint);
-    if (endpoint.IsDisconnected)
-    {
-      Log.Info("A player disconnected.... wrapping up....");
-    }
-  }
+  //// --------------------------------------------------------------------------------------------------------------------------
+  //protected override void HandleDisconnect(GGPOEndpoint endpoint)
+  //{
+  //  base.HandleDisconnect(endpoint);
+  //  if (endpoint.IsDisconnected)
+  //  {
+  //    Log.Info("A player disconnected.... wrapping up....");
+  //  }
+  //}
 
-  // --------------------------------------------------------------------------------------------------------------------------
-  public override void DisconnectAll()
-  {
-    base.DisconnectAll();
+  //// --------------------------------------------------------------------------------------------------------------------------
+  //public override void DisconnectAll()
+  //{
+  //  base.DisconnectAll();
 
-    this.AllConnected = false;
-    this.ConnectedPlayerIndexes.Clear();
-  }
+  //  this.AllConnected = false;
+  //  this.ConnectedPlayerIndexes.Clear();
+  //}
 
 
-  // --------------------------------------------------------------------------------------------------------------------------
-  public GGPOEndpoint GetEndpoint(int index)
-  {
-    return _endpoints[index];
-  }
+  //// --------------------------------------------------------------------------------------------------------------------------
+  //public GGPOEndpoint GetEndpoint(int index)
+  //{
+  //  return _endpoints[index];
+  //}
 
   //// --------------------------------------------------------------------------------------------------------------------------
   //protected override void DeliverMessage(ref UdpMsg msg, int received, EndPoint receivedFrom)
@@ -434,14 +434,14 @@ public class ReplayAppliance
 
   //}
 
-  // --------------------------------------------------------------------------------------------------------------------------
-  protected override int PollPlayers(int current_frame)
-  {
-    // Replay appliance doesn't really do anything at this point, tho maybe this is where
-    // we do stuff like confim inputs or whatever.....?
-    // return base.PollPlayers(current_frame);
-    return current_frame;
-  }
+  //// --------------------------------------------------------------------------------------------------------------------------
+  //protected override int PollPlayers(int current_frame)
+  //{
+  //  // Replay appliance doesn't really do anything at this point, tho maybe this is where
+  //  // we do stuff like confim inputs or whatever.....?
+  //  // return base.PollPlayers(current_frame);
+  //  return current_frame;
+  //}
 
   // --------------------------------------------------------------------------------------------------------------------------
   private void AddError(string msg)
@@ -450,29 +450,29 @@ public class ReplayAppliance
     this.Errors.Add(msg);
   }
 
-  // --------------------------------------------------------------------------------------------------------------------------
-  protected override void CheckInitialSync()
-  {
-    if (_synchronizing)
-    {
-      int epLen = _endpoints.Count;
-      if (epLen < 2) { return; }
+  //// --------------------------------------------------------------------------------------------------------------------------
+  //protected override void CheckInitialSync()
+  //{
+  //  if (_synchronizing)
+  //  {
+  //    int epLen = _endpoints.Count;
+  //    if (epLen < 2) { return; }
 
-      for (int i = 0; i < epLen; i++)
-      {
-        var ep = _endpoints[i];
-        if (!ep.IsSynchronized() && !_local_connect_status[ep.PlayerIndex].disconnected)
-        {
-          return;
-        }
-      }
+  //    for (int i = 0; i < epLen; i++)
+  //    {
+  //      var ep = _endpoints[i];
+  //      if (!ep.IsSynchronized() && !_local_connect_status[ep.PlayerIndex].disconnected)
+  //      {
+  //        return;
+  //      }
+  //    }
 
-      GGPOEvent info = new GGPOEvent();
-      info.event_code = EEventCode.GGPO_EVENTCODE_RUNNING;
-      _callbacks.on_event(ref info);
-      _synchronizing = false;
-    }
-  }
+  //    GGPOEvent info = new GGPOEvent();
+  //    info.event_code = EEventCode.GGPO_EVENTCODE_RUNNING;
+  //    _callbacks.on_event(ref info);
+  //    _synchronizing = false;
+  //  }
+  //}
 
   //// --------------------------------------------------------------------------------------------------------------------------
   //private GGPOEndpoint AddReplayEndpoint(string remoteHost, int remotePort, UdpMsg msg)

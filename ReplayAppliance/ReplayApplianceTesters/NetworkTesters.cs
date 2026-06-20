@@ -107,7 +107,7 @@ namespace funscrewTesters
         GameVersion = "0.0.1",
       };
       var blaster = new SimUdp(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT, context.TimeSource, context.MsgQueue, SIM_PING, SIM_JITTER);
-      var replayAppliance = new ReplayAppliance(ops, replayOps, blaster, context.TimeSource);
+      var replayAppliance = new ReplayAppliance(ops, replayOps, blaster);
 
       context.SetReplayAppliance(replayAppliance);
 

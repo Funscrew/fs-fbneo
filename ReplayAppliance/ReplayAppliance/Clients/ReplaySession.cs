@@ -32,7 +32,9 @@ public class ReplaySession : IGGPOClient
 
   private object ConnectionLock = new object();
 
-  private ConnectStatus[] LocalConnectStatus = null!;
+  // Long term we aren't going to keep the 'local connect status' stuff around, so we can just hack this number into it....
+  const int LEGACY_MAX_PLAYERS = 4;
+  private ConnectStatus[] LocalConnectStatus = new ConnectStatus[LEGACY_MAX_PLAYERS];
 
   private Sync Sync = null!; //new Sync()
   private GGPOSessionCallbacks Callbacks = null!;
@@ -53,10 +55,9 @@ public class ReplaySession : IGGPOClient
   public bool IsSyncing { get; private set; } = true;
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public ReplaySession(UInt64 sessionId_, ConnectStatus[] localConnectStatus_, GameRecorder recorder_, SessionOptions sessOps_, GGPOSessionCallbacks callbacks_)
+  public ReplaySession(UInt64 sessionId_, GameRecorder recorder_, SessionOptions sessOps_, GGPOSessionCallbacks callbacks_)
   {
     SessionId = sessionId_;
-    LocalConnectStatus = localConnectStatus_;
     Recorder = recorder_;
     SessionArgs = sessOps_;
     Callbacks = callbacks_;
@@ -71,8 +72,16 @@ public class ReplaySession : IGGPOClient
       num_prediction_frames = GGPOConsts.MAX_PREDICTION_FRAMES
     };
 
+    int len = LocalConnectStatus.Length;
+    for (int i = 0; i < len; i++)
+    {
+      LocalConnectStatus[i].last_frame = 0;
+      LocalConnectStatus[i].disconnected = false;
+    }
+
     // NOTE: Not really sure what we are syncing in this context?
     Sync = new Sync(LocalConnectStatus, syncOps);
+
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
