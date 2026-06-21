@@ -36,34 +36,21 @@ namespace funscrewTesters
       var cbh = new CallbackHandler();
       ops.Callbacks.on_event = cbh.OnEvent;
 
-      //var replayOps = new ReplayApplianceOptions()
-      //{
-      //  SessionId = context.SessionId,       // TODO: Resolve a valid replay ID!
-      //  GameName = "Test_Game_1",
-      //  GameVersion = "0.1",
-      //};
-      var replayOps = new ReplayOptions() {
-      ReplayDataDir = "replay-data",
-      ReplayPort= REPLAY_APPLIANCE_PORT,
-      RequestPort = REQUEST_PORT                 
-      };
 
-      var blaster = new SimUdp(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT, context.TimeSource, context.MsgQueue, SIM_PING, SIM_JITTER);
-      var replayAppliance = new SimReplayAppliance(ops, replayOps, blaster, context.TimeSource);
+      ReplayAppliance replayAppliance = CreateTestReplayAppliance(context);
+      var spOps = new SessionPrimerOptions()
+      {
+        Port = FRONT_DOOR_PORT,
+      };
+      var frontDoor = new SimSessionPrimer(spOps, replayAppliance);
+      SessionOptions sessOps = CreateDefaultSessionOptions(context);
+      ReplaySession rpSess = frontDoor.BeginSession(SessionPrimer.TEST_SESSION_ID, sessOps);
+
+      context.SetSessionPrimer(frontDoor);
       context.SetReplayAppliance(replayAppliance);
 
-      var spOPs = new SessionPrimerOptions() { 
-      };
-      var sp = new SessionPrimer(spOPs, replayAppliance);
-
-      sp
-
-      var sessionID = replayAppliance
-      replayAppliance.BeginSession(
-
-
       // We will connect only one player at this time, and run the system for a bit.
-      var p1 = context.Player1Client;
+      GGPOClient p1 = context.Player1Client;
       p1.AddReplayAppliance(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT, REPLAY_APPLIANCE_TIMEOUT);
 
 
@@ -72,8 +59,9 @@ namespace funscrewTesters
 
       const int STARTUP_TIME = 100;
       context.RunGame(STARTUP_TIME);
+
       Assert.That(replayAppliance.Errors.Count, Is.EqualTo(0), "There should be no listed errors!");
-      Assert.That(replayAppliance.ClientCount, Is.EqualTo(1), "There should be one connected client!");
+      Assert.That(rpSess.ClientCount, Is.EqualTo(1), "There should be one connected client!");
 
       // We want to get a count for the number of times that we have sent inputs to the remote.
       // We should not have any until everything is all synced up....
@@ -84,15 +72,12 @@ namespace funscrewTesters
       context.RunGame(SIM_TIME);
 
       // Show that there are no longer any connections....
-      Assert.IsTrue(replayAppliance.IsComplete, "The appliance should be in the complete state.");
-      Assert.That(replayAppliance.ClientCount, Is.EqualTo(0), "There should no longer be any connected clients!");
+      Assert.IsTrue(rpSess.IsComplete, "The session should be in the complete state.");
+      Assert.That(rpSess.ClientCount, Is.EqualTo(0), "There should no longer be any connected clients!");
 
-      var recorder = replayAppliance.Recorder;
+      var recorder = rpSess.Recorder;
       Assert.IsTrue(recorder.RecordingComplete, "The recording should be marked as complete!");
       Assert.IsTrue(recorder.HasError, "The recorder should be marked as having an error!");
-
-
-      // 
 
     }
 
@@ -110,25 +95,22 @@ namespace funscrewTesters
       const string P2_NAME = "Archie";
       TestContext context = CreateTestContext(P1_NAME, P2_NAME);
 
-      var ops = new GGPOClientOptions("test-game",0, REPLAY_APPLIANCE_PORT, Defaults.PROTOCOL_VERSION, context.SessionId);
+      var ops = new GGPOClientOptions("test-game", 0, REPLAY_APPLIANCE_PORT, Defaults.PROTOCOL_VERSION, context.SessionId);
       ops.Callbacks = CreateDefaultCallbacks();
 
       var cbh = new CallbackHandler();
       ops.Callbacks.on_event = cbh.OnEvent;
 
-      var replayOps = new ReplayApplianceOptions()
+      ReplayAppliance replayAppliance = CreateTestReplayAppliance(context);
+      var spOps = new SessionPrimerOptions()
       {
-        SessionId = context.SessionId,
-        GameName = "TestGame",
-        GameVersion = "0.0.1",
+        Port = FRONT_DOOR_PORT,
       };
-      var blaster = new SimUdp(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT, context.TimeSource, context.MsgQueue, SIM_PING, SIM_JITTER);
-      var replayAppliance = new SimReplayAppliance(ops, replayOps, blaster, new SimClock);
-      
-      var frontDoor = new SessionPrimer(new SessionPrimerOptions() { 
-        Port = REPLAY_APPLIANCE_PORT,
-      }, replayAppliance);
+      var frontDoor = new SimSessionPrimer(spOps, replayAppliance);
+      SessionOptions sessOps = CreateDefaultSessionOptions(context);
+      ReplaySession rpSess = frontDoor.BeginSession(SessionPrimer.TEST_SESSION_ID, sessOps);
 
+      context.SetSessionPrimer(frontDoor);
       context.SetReplayAppliance(replayAppliance);
 
       // Each of the players will need to send their data to the replay appliance.
@@ -146,7 +128,7 @@ namespace funscrewTesters
       Assert.That(replayAppliance.Errors.Count, Is.EqualTo(0), "There should be no listed errors!");
 
       // At this point we should have two connected clients on the replay appliance.
-      Assert.That(replayAppliance.ClientCount, Is.EqualTo(2), "There should be two connected clients!");
+      Assert.That(rpSess.ClientCount, Is.EqualTo(2), "There should be two connected clients!");
 
       // Make sure that the players are synced up as well as the GGPO client itself.
       var remote1 = context.Player1Client.GetRemotePlayer();
@@ -158,10 +140,10 @@ namespace funscrewTesters
       Assert.That(remote2._current_state, Is.EqualTo(EClientState.Running));
 
       // Confirm that both of the endpoints are syned.
-      var rc1 = replayAppliance.GetEndpoint(0);
+      var rc1 = rpSess.GetEndpoint(0);
       Assert.NotNull(rc1);
 
-      var rc2 = replayAppliance.GetEndpoint(1);
+      var rc2 = rpSess.GetEndpoint(1);
       Assert.NotNull(rc2);
 
       Assert.That(rc1._current_state, Is.EqualTo(EClientState.Running), "Client 1 should be synced!");

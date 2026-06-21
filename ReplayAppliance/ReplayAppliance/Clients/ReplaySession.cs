@@ -22,7 +22,7 @@ public class ReplaySession : IGGPOClient
 
   public EReplaySessionState State { get; private set; } = EReplaySessionState.Invalid;
 
-  private int ConnectedCount = 0;
+  public int ClientCount { get ; private set; }=  0;
   public GGPOEndpoint[] Endpoints = new GGPOEndpoint[MAX_PLAYERS_EVER];
 
   public bool IsComplete { get; private set; } = false;
@@ -85,6 +85,14 @@ public class ReplaySession : IGGPOClient
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
+  public GGPOEndpoint GetEndpoint(int index) { 
+    if (index >= ClientCount) { 
+      throw new ArgumentOutOfRangeException($"Invalid {nameof(index)}!");
+    }
+    return Endpoints[index];
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
   public void AddConnection(GGPOEndpoint endpoint)
   {
     lock (ConnectionLock)
@@ -94,7 +102,7 @@ public class ReplaySession : IGGPOClient
         throw new InvalidOperationException($"Session ids do not match! {this.SessionId}:{endpoint.SessionId}");
       }
 
-      if (ConnectedCount >= SessionArgs.MaxPlayerCount)
+      if (ClientCount >= SessionArgs.MaxPlayerCount)
       {
         throw new InvalidOperationException("Max number of players have already been added!");
       }
@@ -107,10 +115,10 @@ public class ReplaySession : IGGPOClient
       }
 
       // OK we are all good!
-      this.Endpoints[ConnectedCount] = endpoint;
-      ++ConnectedCount;
+      this.Endpoints[ClientCount] = endpoint;
+      ++ClientCount;
 
-      if (ConnectedCount == SessionArgs.MaxPlayerCount)
+      if (ClientCount == SessionArgs.MaxPlayerCount)
       {
         this.State = EReplaySessionState.Active;
       }
@@ -122,7 +130,7 @@ public class ReplaySession : IGGPOClient
   {
     lock (ConnectionLock)
     {
-      int len = ConnectedCount;
+      int len = ClientCount;
       for (int i = 0; i < len; i++)
       {
         Endpoints[i].Disconnect(curFrame);
@@ -152,7 +160,7 @@ public class ReplaySession : IGGPOClient
   // --------------------------------------------------------------------------------------------------------------------------
   internal void DeliverMessage(ref UdpMsg msg, int received, IPEndPoint receivedFrom)
   {
-    int epCount = ConnectedCount;
+    int epCount = ClientCount;
     for (int i = 0; i < epCount; i++)
     {
       var ep = Endpoints[i]; // _endpoints[i];
@@ -171,7 +179,7 @@ public class ReplaySession : IGGPOClient
   /// </summary>
   internal void DoPoll()
   {
-    for (int i = 0; i < ConnectedCount; i++)
+    for (int i = 0; i < ClientCount; i++)
     {
       Endpoints[i].OnLoopPoll();
     }
@@ -187,7 +195,7 @@ public class ReplaySession : IGGPOClient
       int current_frame = Sync.GetFrameCount();
 
 
-      for (int i = 0; i < ConnectedCount; i++)
+      for (int i = 0; i < ClientCount; i++)
       {
         Endpoints[i].SetLocalFrameNumber(current_frame);
       }
@@ -243,7 +251,7 @@ public class ReplaySession : IGGPOClient
   {
 
     var evt = new UdpEvent();
-    for (UInt16 i = 0; i < ConnectedCount; i++)
+    for (UInt16 i = 0; i < ClientCount; i++)
     {
       var ep = Endpoints[i];
 
@@ -429,7 +437,7 @@ public class ReplaySession : IGGPOClient
     {
       // Check to see if everyone is now synchronized.  If so,
       // go ahead and tell the client that we're ok to accept input.
-      int epLen = ConnectedCount;
+      int epLen = ClientCount;
       for (i = 0; i < epLen; i++)
       {
         var ep = Endpoints[i];

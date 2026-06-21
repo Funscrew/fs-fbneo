@@ -1,5 +1,6 @@
 ﻿
 using System.Diagnostics;
+using System.Net;
 
 namespace funscrewTesters
 {
@@ -15,6 +16,8 @@ namespace funscrewTesters
     // NOTE: We shouldn't expect to see a huge number of entries in this as we will
     // tend to receive them in order, and will remove all messages that have been received, etc.
     private List<SimUdpMessage> MsgQueue = new List<SimUdpMessage>();
+
+    // TODO: Let's make unique IPEndpoint instances for each of the addresses that are listed.
 
     // ----------------------------------------------------------------------------------------------------------------
     /// <summary>
@@ -68,12 +71,19 @@ public class SimUdpMessage
 {
   public const int MAX_MSG_SIZE = 1024;
 
+  public IPEndPoint From { get; set; }
+  public IPEndPoint To { get; set; }
+
   // This is where the data originally came from.
+  [Obsolete("We will replace this with 'From'")]
   public string SrcHost { get; set; }
+  [Obsolete("We will replace this with 'From'")]
   public int SrcPort { get; set; }
 
   // NOTE: Host + port are used for sending the message to the correct place...
+  [Obsolete("We will replace this with 'To'")]
   public string DestHost { get; set; }
+  [Obsolete("We will replace this with 'To'")]
   public int DestPort { get; set; }
 
   public byte[] Data { get; set; } = null;

@@ -45,9 +45,6 @@ public class ReplayAppliance
   private IClockSource Clock = null!;
   public IUdpBlaster UDP { get; private set; } = null!;
 
-  // private ConnectStatus[] LocalConnectStatus = null!;
-
-
   // --------------------------------------------------------------------------------------------------------------------------
   public ReplayAppliance(ReplayOptions ops_, IUdpBlaster udp_, IClockSource clock_)
   {
@@ -71,7 +68,7 @@ public class ReplayAppliance
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public unsafe void BeginSession(UInt64 sessionId, SessionOptions sessionOps)
+  public unsafe ReplaySession BeginSession(UInt64 sessionId, SessionOptions sessionOps)
   {
     Log.Info($"Starting new session with id: {sessionId}...");
     lock (SessionLock)
@@ -119,18 +116,15 @@ public class ReplayAppliance
       var session = new ReplaySession(sessionId, recorder, sessionOps, callbacks);
       ActiveSessions.Add(sessionId, session);
 
-
-    }
-
-
+      return session;
+   }
   }
 
-  private byte[] _ReceiveBuffer = new byte[4096];
 
   // --------------------------------------------------------------------------------------------------------------------------
+  private byte[] _ReceiveBuffer = new byte[4096];
   public Task BeginUpdateLoop()
   {
-    // TODO: Some kind of 'heartbeat' signal to keep the loop inside moving along.
     var res = Task.Factory.StartNew(() =>
     {
 
@@ -149,6 +143,10 @@ public class ReplayAppliance
 
         UdpMsg msg = new UdpMsg();
         UdpMsg.FromBytes(_ReceiveBuffer, ref msg, received);
+
+        if (msg.header.type == EMsgType.Heartbeat) { 
+          goto lblReceiveData;
+        }
 
         ReplaySession? sess = DeliverMessage(ref msg, received, (IPEndPoint)ep);
         if (sess == null)
@@ -246,7 +244,7 @@ public class ReplayAppliance
     // NOTE: We may not want to send out the sync request immediately on these endpoints?
     // Nah -> it should be OK that they bounce around.....
     var connectStatus = new ConnectStatus[GGPOConsts.MAX_PLAYERS];
-    var res = new ReplayEndpoint(replaySesh, ops, LocalConnectStatus);
+    var res = new ReplayEndpoint(replaySesh, ops, connectStatus);
     res.AddressHash = IUdpBlaster.GetAddrHash(from);
 
     replaySesh.AddConnection(res);

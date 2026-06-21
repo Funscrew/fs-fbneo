@@ -1082,10 +1082,6 @@ public class GGPOEndpoint
     // Or we could use a span?
     // byte[] toSend = new byte[4200];
     UdpMsg.ToBytes(msg, _SendBuffer, packetSize);
-    // Client.Send(toSend, packetSize);
-
-
-    // Client.Send(toSend, packetSize, Remote);
     Client.UDP.Send(_SendBuffer, packetSize, RemoteEP);
   }
 

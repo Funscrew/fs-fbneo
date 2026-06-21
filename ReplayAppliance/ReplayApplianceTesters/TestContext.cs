@@ -9,11 +9,12 @@ namespace funscrewTesters
     const int TIME_INTERVAL = 1;
     const int FRAME_INTERVAL = 16;
 
-    public SimClock TimeSource { get; private set; }
+    public SimClock Clock { get; private set; }
     public TestMessageQueue MsgQueue { get; private set; }
     private List<GGPOClient> AllClients = new List<GGPOClient>();
     private List<byte[]> InputBuffers = new List<byte[]>();
     public ReplayAppliance? ReplayAppliance { get; private set; } = null;
+    public SessionPrimer? SessionPrimer { get; private set; } = null;
 
     public int LastFrame {get; private set; } = -1;
 
@@ -23,7 +24,7 @@ namespace funscrewTesters
     public TestContext(ulong sessionId_, SimClock timeSource_, TestMessageQueue msgQueue_, IList<GGPOClient> allClients_, IList<byte[]> inputBuffers_, ReplayAppliance? replay_ = null)
     {
       SessionId = sessionId_;
-      TimeSource = timeSource_;
+      Clock = timeSource_;
       MsgQueue = msgQueue_;
       AllClients.AddRange(allClients_);
       InputBuffers.AddRange(inputBuffers_);
@@ -36,6 +37,12 @@ namespace funscrewTesters
     public GGPOEndpoint Player1 { get { return AllClients[1].GetRemotePlayer(); } }
     public GGPOEndpoint Player2 { get { return AllClients[0].GetRemotePlayer(); } }
 
+    // --------------------------------------------------------------------------------------------------------------------------
+    // TEMP: We will use a contructor based version later....  maybe....
+    public void SetSessionPrimer(SessionPrimer primer_)
+    {
+      this.SessionPrimer = primer_;
+    }
 
     // --------------------------------------------------------------------------------------------------------------------------
     // TEMP: We will use a contructor based version later....  maybe....
@@ -53,13 +60,18 @@ namespace funscrewTesters
       //  const int MAX_FRAMES = 50;
       for (int curTime = 0; curTime < totalTime; curTime++)
       {
-        TimeSource.AddTime(TIME_INTERVAL);
+        Clock.AddTime(TIME_INTERVAL);
 
-
-        if (ReplayAppliance != null)
-        {
-          ReplayAppliance.DoPoll(0);
+        if (SessionPrimer != null) {
+          // Send the heartbeat signal...
+          (SessionPrimer as SimSessionPrimer)?.SendHeartbeat();
+        // SessionPrimer.
         }
+      
+        //if (ReplayAppliance != null)
+        //{
+        //  ReplayAppliance.DoPoll(0);
+        //}
 
         if (curTime % FRAME_INTERVAL == 0)
         {

@@ -27,7 +27,8 @@ struct UdpMsg
     QualityReply = 5,
     KeepAlive = 6,
     InputAck = 7,
-    Datagram = 8      // REFACTOR: -> 'Datagram' -> update related nomeclature too!
+    Datagram = 8,  
+    Heartbeat = 9
   };
 
   // This struct saves us one byte of space.

@@ -23,7 +23,7 @@ namespace funscrew
     void RemoveFromBlacklist(UInt64 address);
 
     bool IsBlocking { get; }
-
+    IPEndPoint Endpoint { get; }
 
     // --------------------------------------------------------------------------------------------------------------------------
     /// <summary>
@@ -35,6 +35,15 @@ namespace funscrew
       res |= (uint16_t)receivedFrom.Port;   // lol, of course it is an int.  Thanks M$!
 
       return res;
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    public static AddrHash GetAddrHash(EndPoint receivedFrom)
+    {
+      var ip  = receivedFrom as IPEndPoint;
+      if (ip == null) { throw new ArgumentException($"{nameof(receivedFrom)} is not an {nameof(IPEndPoint)} instance!"); }
+
+      return GetAddrHash(ip);
     }
   }
 
@@ -51,6 +60,8 @@ namespace funscrew
     const int RECEIVE_BUFFER_SIZE = 8192;
 
     public HashSet<UInt64> Blacklist { get; private set; } = new HashSet<UInt64>();
+
+    public IPEndPoint Endpoint { get; private set; }
 
     /// <summary>
     /// Is set, receive operations are blocking.
@@ -85,6 +96,7 @@ namespace funscrew
 
       IPEndPoint bindEndPoint = new IPEndPoint(localAddress, localPort);
       Socket.Bind(bindEndPoint);
+      Endpoint = bindEndPoint;
 
       // Suppress WSAECONNRESET (“connection forcibly closed”) on Windows for UDP.
       TryDisableConnReset();
@@ -247,6 +259,7 @@ namespace funscrew
     //}
   }
 
+  // ==============================================================================================================================
   public static class UdpHelpers
   {
     public static IPEndPoint Endpoint(string host, int port)

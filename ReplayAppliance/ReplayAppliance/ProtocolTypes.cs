@@ -80,7 +80,10 @@ public enum EMsgType : byte
   QualityReply = 5,
   KeepAlive = 6,
   InputAck = 7,
-  Datagram = 8
+  Datagram = 8,
+
+  // Internal signaling mechanism.
+  Heartbeat = 9
 };
 
 // ================================================================================================================

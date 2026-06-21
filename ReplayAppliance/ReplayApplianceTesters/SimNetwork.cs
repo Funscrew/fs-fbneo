@@ -1,4 +1,6 @@
 ﻿using funscrew;
+using NUnit.Framework.Internal.Commands;
+using System;
 using System.Net;
 using System.Runtime.Intrinsics.Arm;
 
@@ -13,12 +15,18 @@ namespace funscrewTesters
 
     public uint AvgPing { get; set; }
     public uint PingJitter { get; set; }
+    public bool IsBlocking { get; private set; }
+    public IPEndPoint Endpoint { get; private set; }
 
     // ----------------------------------------------------------------------------------------------------------------
     public SimUdp(string host_, int port_, funscrew.IClockSource timeSource_, TestMessageQueue msgQueue_, uint avgPing_, uint pingJitter_ = 0)
     {
       Host = host_;
       Port = port_;
+
+      var addr = IPAddress.Parse(Host);
+      Endpoint = new IPEndPoint(addr, Port);
+
       TimeSource = timeSource_;
       MsgQueue = msgQueue_;
 
@@ -32,17 +40,17 @@ namespace funscrewTesters
     // NOTE: This does matter as it is how we are going to track the replays...
     public int Port { get; private set; }
 
-    // 
-    public HashSet<SocketAddress> Blacklist { get; private set; } = new HashSet<SocketAddress>();
+    // TODO: We need a real blacklisting tool where it is easier to add / remove stuff.....
+    public HashSet<UInt64> Blacklist { get; private set; } = new HashSet<UInt64>();
 
     // ------------------------------------------------------------------------------------------------------------
-    public void AddToBlacklist(SocketAddress at)
+    public void AddToBlacklist(UInt64 at)
     {
       Blacklist.Add(at);
     }
 
     // ------------------------------------------------------------------------------------------------------------
-    public void RemoveFromBlacklist(SocketAddress at)
+    public void RemoveFromBlacklist(UInt64 at)
     {
       Blacklist.Remove(at);
     }
@@ -50,6 +58,9 @@ namespace funscrewTesters
     // ----------------------------------------------------------------------------------------------------------------
     public int Receive(byte[] receiveBuffer, ref EndPoint remoteEP)
     {
+      // TODO: Implement blocking logic...
+      if (this.IsBlocking) { throw new NotImplementedException(); }
+
       SimUdpMessage? msg = MsgQueue.GetNextMessage(this);
       if (msg == null)
       {
@@ -57,9 +68,10 @@ namespace funscrewTesters
       }
 
       // TODO: This is going to create a lot of garbage.....
-      remoteEP = new IPEndPoint(IPAddress.Parse(msg.SrcHost), msg.SrcPort);
+      // I'm thinking the message queue tracks the host/port for the clients in a better way.....
+      //remoteEP = new IPEndPoint(IPAddress.Parse(msg.SrcHost), msg.SrcPort);
       // TODO: This will make extra garbage too.....
-      if (Blacklist.Contains(remoteEP.Serialize()))
+      if (Blacklist.Contains(IUdpBlaster.GetAddrHash(remoteEP)))
       {
         return 0;
       }
@@ -73,13 +85,15 @@ namespace funscrewTesters
     }
 
     // ----------------------------------------------------------------------------------------------------------------
-    public int Send(byte[] sendBuffer, int packetSize, SocketAddress useRemote)
+    public int Send(byte[] sendBuffer, int packetSize, EndPoint useRemote)
     {
       // NOTE: This is a very roundabout way to get the host + address from 'useRemote'
       // There is very likely a better way to do this...
-      var ep = new IPEndPoint(IPAddress.Any, 0);
-      var x = ep.Create(useRemote);
-      IPEndPoint ipEndPoint = (IPEndPoint)x;
+      //var ep = new IPEndPoint(IPAddress.Any, 0);
+      //var x = ep.Create(useRemote);
+      //IPEndPoint ipEndPoint = (IPEndPoint)x;
+      var ipEndPoint = useRemote as IPEndPoint;
+      if (ipEndPoint == null) {  throw new ArgumentException($"{nameof(useRemote)} must be an {nameof(IPEndPoint)} instance!"); }
 
       string useHost = ipEndPoint.Address.ToString();
       int usePort = ipEndPoint.Port;
@@ -91,9 +105,11 @@ namespace funscrewTesters
         Data = CopyBytes(sendBuffer, packetSize),
         ReceiveTime = (int)(TimeSource.CurTime + usePing),
 
+        From = this.Endpoint,
         SrcHost = this.Host,
         SrcPort = this.Port,
 
+        To = ipEndPoint,
         DestHost = useHost,
         DestPort = usePort
       };

@@ -1,5 +1,6 @@
 ﻿using drewCo.Tools.Logging;
 using funscrew;
+using funscrew.Clients;
 
 namespace funscrewTesters
 {
@@ -115,6 +116,37 @@ namespace funscrewTesters
       res.AddRemotePlayer(remoteOps);
 
       return res;
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    protected ReplayAppliance CreateTestReplayAppliance(TestContext context)
+    {
+      var replayOps = new ReplayOptions()
+      {
+        ReplayDataDir = "replay-data",
+        ReplayPort = REPLAY_APPLIANCE_PORT,
+        RequestPort = FRONT_DOOR_PORT
+      };
+      var blaster = new SimUdp(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT, context.Clock, context.MsgQueue, SIM_PING, SIM_JITTER);
+      var res = new SimReplayAppliance(replayOps, blaster, context.Clock);
+
+      return res; 
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    protected SessionOptions CreateDefaultSessionOptions(TestContext context)
+    {
+
+      // Begin a replay session (this simulates a client starting the session via frontdoor service)
+      return new SessionOptions()
+      {
+        Clock = context.Clock,
+        GameName = "sfiii3nr1",
+        GameVersion = "0.0.0",
+        MaxPlayerCount = 2,
+        PlayerNames = new[] { "Joe", "Archie" },
+        TotalInputSize = 10
+      };
     }
   }
 

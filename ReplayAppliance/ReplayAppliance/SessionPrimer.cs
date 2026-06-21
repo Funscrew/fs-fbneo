@@ -21,7 +21,7 @@ public class SessionPrimer : IDisposable
   private CancellationTokenSource CTSource = default!;
   private CancellationToken CancelToken = default!;
   private TcpListener Listener = null!;
-  private ReplayAppliance ReplayAppliance = null!;
+  protected ReplayAppliance ReplayAppliance = null!;
   private SessionIDGenerator IDGenerator = new SessionIDGenerator();
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -110,9 +110,10 @@ public class SessionPrimer : IDisposable
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  protected void BeginSession(ulong id, SessionOptions sessOps)
+  protected ReplaySession BeginSession(ulong id, SessionOptions sessOps)
   {
-    this.ReplayAppliance.BeginSession(id, sessOps);
+    ReplaySession res = this.ReplayAppliance.BeginSession(id, sessOps);
+    return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
