@@ -245,6 +245,7 @@ public class ReplayAppliance
 
     // NOTE: We may not want to send out the sync request immediately on these endpoints?
     // Nah -> it should be OK that they bounce around.....
+    var connectStatus = new ConnectStatus[GGPOConsts.MAX_PLAYERS];
     var res = new ReplayEndpoint(replaySesh, ops, LocalConnectStatus);
     res.AddressHash = IUdpBlaster.GetAddrHash(from);
 

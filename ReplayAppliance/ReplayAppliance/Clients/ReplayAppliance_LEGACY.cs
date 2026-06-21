@@ -133,7 +133,8 @@ public class ReplayAppliance_LEGACY : GGPOClient
       // We don't want to receive from this endpoint anymore.....
       // How can we block receiving?
       AddError($"Connection attempt with invalid session id! ({ReplayOptions.SessionId}-{msg.u.sync_request.session_id}) [adding to blacklist]");
-      UDP.AddToBlacklist(ipa);
+      throw new InvalidOperationException("this doesn't exist anymore!");
+      // UDP.AddToBlacklist(ipa);
       return null;
     }
 
@@ -144,7 +145,8 @@ public class ReplayAppliance_LEGACY : GGPOClient
     if (ConnectedPlayerIndexes.Contains(pi))
     {
       AddError($"The player with index: {pi} has already been connected! [adding to blacklist]");
-      UDP.AddToBlacklist(ipa);
+      throw new InvalidOperationException("this doesn't exist anymore!");
+      // UDP.AddToBlacklist(ipa);
       return null;
     }
 
@@ -325,7 +327,8 @@ public class ReplayEndpoint_LEGACY : GGPOEndpoint
 
       if (this.Appliance != null)
       {
-        this.Appliance.MergeInput(ref _last_acked_input, this.PlayerIndex);
+        throw new InvalidOperationException("this doesn't exist anymore!");        
+        // this.Appliance.MergeInput(ref _last_acked_input, this.PlayerIndex);
       }
     }
 

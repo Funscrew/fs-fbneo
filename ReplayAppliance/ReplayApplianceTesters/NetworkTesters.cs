@@ -2,6 +2,7 @@ using drewCo.Tools;
 using funscrew;
 using funscrew.Clients;
 using System.Net.Mime;
+using System.Net.WebSockets;
 
 namespace funscrewTesters
 {
@@ -35,16 +36,31 @@ namespace funscrewTesters
       var cbh = new CallbackHandler();
       ops.Callbacks.on_event = cbh.OnEvent;
 
-      var replayOps = new ReplayApplianceOptions()
-      {
-        SessionId = context.SessionId,       // TODO: Resolve a valid replay ID!
-        GameName = "Test_Game_1",
-        GameVersion = "0.1",
+      //var replayOps = new ReplayApplianceOptions()
+      //{
+      //  SessionId = context.SessionId,       // TODO: Resolve a valid replay ID!
+      //  GameName = "Test_Game_1",
+      //  GameVersion = "0.1",
+      //};
+      var replayOps = new ReplayOptions() {
+      ReplayDataDir = "replay-data",
+      ReplayPort= REPLAY_APPLIANCE_PORT,
+      RequestPort = REQUEST_PORT                 
       };
+
       var blaster = new SimUdp(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT, context.TimeSource, context.MsgQueue, SIM_PING, SIM_JITTER);
       var replayAppliance = new SimReplayAppliance(ops, replayOps, blaster, context.TimeSource);
-
       context.SetReplayAppliance(replayAppliance);
+
+      var spOPs = new SessionPrimerOptions() { 
+      };
+      var sp = new SessionPrimer(spOPs, replayAppliance);
+
+      sp
+
+      var sessionID = replayAppliance
+      replayAppliance.BeginSession(
+
 
       // We will connect only one player at this time, and run the system for a bit.
       var p1 = context.Player1Client;
@@ -107,7 +123,11 @@ namespace funscrewTesters
         GameVersion = "0.0.1",
       };
       var blaster = new SimUdp(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT, context.TimeSource, context.MsgQueue, SIM_PING, SIM_JITTER);
-      var replayAppliance = new ReplayAppliance(ops, replayOps, blaster);
+      var replayAppliance = new SimReplayAppliance(ops, replayOps, blaster, new SimClock);
+      
+      var frontDoor = new SessionPrimer(new SessionPrimerOptions() { 
+        Port = REPLAY_APPLIANCE_PORT,
+      }, replayAppliance);
 
       context.SetReplayAppliance(replayAppliance);
 
@@ -218,7 +238,7 @@ namespace funscrewTesters
       ulong sessId = GetNextSessionId();
 
       // This is how we actually move the messages around....
-      var timeSource = new SimTimer();
+      var timeSource = new SimClock();
       var testQueue = new TestMessageQueue();
 
       var ops1 = new TestPlayerOptions()

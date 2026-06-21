@@ -9,7 +9,7 @@ namespace funscrewTesters
     const int TIME_INTERVAL = 1;
     const int FRAME_INTERVAL = 16;
 
-    public SimTimer TimeSource { get; private set; }
+    public SimClock TimeSource { get; private set; }
     public TestMessageQueue MsgQueue { get; private set; }
     private List<GGPOClient> AllClients = new List<GGPOClient>();
     private List<byte[]> InputBuffers = new List<byte[]>();
@@ -20,7 +20,7 @@ namespace funscrewTesters
     public ulong SessionId { get; private set; }
 
     // --------------------------------------------------------------------------------------------------------------------------
-    public TestContext(ulong sessionId_, SimTimer timeSource_, TestMessageQueue msgQueue_, IList<GGPOClient> allClients_, IList<byte[]> inputBuffers_, ReplayAppliance? replay_ = null)
+    public TestContext(ulong sessionId_, SimClock timeSource_, TestMessageQueue msgQueue_, IList<GGPOClient> allClients_, IList<byte[]> inputBuffers_, ReplayAppliance? replay_ = null)
     {
       SessionId = sessionId_;
       TimeSource = timeSource_;

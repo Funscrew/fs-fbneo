@@ -26,6 +26,7 @@ namespace funscrewTesters
 
     public const string REPLAY_APPLIANCE_HOST = "10.25.199.123";
     public const int REPLAY_APPLIANCE_PORT = 7003;
+    public const int FRONT_DOOR_PORT = 5000;         // NOTE: This is the port that the 'front door' listens on.
 
     public const int REPLAY_APPLIANCE_TIMEOUT = 5000;
 
@@ -71,8 +72,8 @@ namespace funscrewTesters
     // --------------------------------------------------------------------------------------------------------------------------
     protected ulong GetNextSessionId()
     {
-      var ss = new SessionPrimer;
-      ulong res = ss.GetNextSessionId();
+      var sidGen = new SessionIDGenerator();
+      var res = sidGen.GetNextSessionID();
       return res;
     }
 

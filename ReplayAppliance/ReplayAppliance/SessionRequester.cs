@@ -43,48 +43,57 @@ public class SessionRequester
         var toSend = Encoding.UTF8.GetBytes($"--BEGIN--{argsString}--END--");
         stream.Write(toSend.AsSpan());
 
-        // Let's get the response.....
-        var buffer = new byte[0x400];
-        string allData = string.Empty;
 
-        const int MAX_LENGTH = 0x400;
-
-        // Read bytes....
-        while (true)
-        {
-          int size = stream.Read(buffer, 0, buffer.Length);
-          string nextChunk = Encoding.UTF8.GetString(buffer, 0, size);
-          allData += nextChunk;
-
-          // TOOD: We have to interpret the data...
-          if (allData.Length > MAX_LENGTH)
-          {
-            throw new InvalidOperationException("Max data size exceeded!");
-          }
-          if (allData.EndsWith("--END--"))
-          {
-            // TODO: We will deserialize the response.
-            // This is the end of the response!
-            if (!allData.StartsWith("--START--"))
-            {
-              throw new InvalidOperationException("Invalid request data (header)!");
-            }
-
-            var checkSize = ("--START--".Length) + ("--END--".Length);
-            string responseData = allData.Substring("--START--".Length, allData.Length - checkSize);
-
-            var res = JsonSerializer.Deserialize<SessionRequestResponse>(responseData);
-            if (res == null) {
-              throw new InvalidOperationException("Could not deserialize response data into the correct type!");
-            }
-
-            return res;
-          }
-        }
-
+        SessionRequestResponse response = ReadMessageFromStream<SessionRequestResponse>(stream);
+        return response;
       }
     }
 
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  // TODO: SHARE:
+  // This should go into some kind of shared library....
+  public static T ReadMessageFromStream<T>(NetworkStream stream, int maxSize = 0x400)
+  {
+    // Let's get the response.....
+    var buffer = new byte[0x400];
+    string allData = string.Empty;
+
+
+    // Read bytes....
+    while (true)
+    {
+      int size = stream.Read(buffer, 0, buffer.Length);
+      string nextChunk = Encoding.UTF8.GetString(buffer, 0, size);
+      allData += nextChunk;
+
+      // TOOD: We have to interpret the data...
+      if (allData.Length > maxSize)
+      {
+        throw new InvalidOperationException("Max data size exceeded!");
+      }
+      if (allData.EndsWith("--END--"))
+      {
+        // TODO: We will deserialize the response.
+        // This is the end of the response!
+        if (!allData.StartsWith("--START--"))
+        {
+          throw new InvalidOperationException("Invalid request data (header)!");
+        }
+
+        var checkSize = ("--START--".Length) + ("--END--".Length);
+        string responseData = allData.Substring("--START--".Length, allData.Length - checkSize);
+
+        var res = JsonSerializer.Deserialize<T>(responseData);
+        if (res == null)
+        {
+          throw new InvalidOperationException($"Could not deserialize response data into the correct type: {typeof(T)}!");
+        }
+
+        return res;
+      }
+    }
   }
 }
 

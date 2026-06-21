@@ -69,7 +69,7 @@ public class GGPOEndpoint
   private int RemotePort;
   private IPEndPoint RemoteIP;
   private EndPoint RemoteEP;
-  private SocketAddress UseRemote;
+  // private SocketAddress UseRemote;
 
   private GGPOEndpointOptions Options = null!;
 
@@ -175,7 +175,7 @@ public class GGPOEndpoint
 
     RemoteIP = new IPEndPoint(IPAddress.Parse(Options.RemoteHost), Options.RemotePort);
     RemoteEP = RemoteIP;
-    UseRemote = RemoteIP.Serialize();
+    // UseRemote = RemoteIP.Serialize();
 
     _last_sent_input.init(-1, null, 1);
     _last_received_input.init(-1, null, 1);
@@ -1086,7 +1086,7 @@ public class GGPOEndpoint
 
 
     // Client.Send(toSend, packetSize, Remote);
-    Client.UDP.Send(_SendBuffer, packetSize, UseRemote);
+    Client.UDP.Send(_SendBuffer, packetSize, RemoteEP);
   }
 
   // ------------------------------------------------------------------------

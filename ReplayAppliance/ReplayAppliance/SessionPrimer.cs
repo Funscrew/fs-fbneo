@@ -7,7 +7,6 @@ using System.Text.Json;
 
 namespace funscrew;
 
-
 // ==============================================================================================================================
 /// <summary>
 /// SessionPrimer is responsible for generating and reporting session ids, and getting the system setup to receive the connections.
@@ -17,15 +16,13 @@ public class SessionPrimer : IDisposable
 {
   public const UInt64 TEST_SESSION_ID = 12345;
 
-  private object IDLock = new object();
-  private UInt64 LastSessionID = 0;
-
   public SessionPrimerOptions Options { get; private set; }
 
   private CancellationTokenSource CTSource = default!;
   private CancellationToken CancelToken = default!;
   private TcpListener Listener = null!;
   private ReplayAppliance ReplayAppliance = null!;
+  private SessionIDGenerator IDGenerator = new SessionIDGenerator();
 
   // --------------------------------------------------------------------------------------------------------------------------
   public SessionPrimer(SessionPrimerOptions options_, ReplayAppliance replayAppliance_)
@@ -34,8 +31,6 @@ public class SessionPrimer : IDisposable
     CTSource = new CancellationTokenSource();
     CancelToken = CTSource.Token;
     ReplayAppliance = replayAppliance_;
-
-    GetNextSessionID();
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -52,7 +47,6 @@ public class SessionPrimer : IDisposable
 
     var res = Task.Factory.StartNew(() =>
     {
-
       Listener = new TcpListener(IPAddress.Any, Options.Port);
       Listener.Start();
 
@@ -67,16 +61,11 @@ public class SessionPrimer : IDisposable
           using (client)
           using (NetworkStream stream = client.GetStream())
           {
-            // Read incoming data (optional)
-            byte[] buffer = new byte[1024];
-            int bytesRead = stream.Read(buffer, 0, buffer.Length);
+            var id = IDGenerator.GetNextSessionID();
+            var sessOps = SessionRequester.ReadMessageFromStream<SessionOptions>(stream);
 
-            string request = Encoding.UTF8.GetString(buffer, 0, bytesRead);
-            Log.Info($"Received: {request}");
-
-            // Send JSON response
-            // TODO: We will get the session ID + indicate to the replay handler that connections will be incoming.
-            var id = GetNextSessionID();
+            // Make the session active!
+            this.BeginSession(id, sessOps);
 
             var response = new SessionRequestResponse()
             {
@@ -121,6 +110,12 @@ public class SessionPrimer : IDisposable
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
+  protected void BeginSession(ulong id, SessionOptions sessOps)
+  {
+    this.ReplayAppliance.BeginSession(id, sessOps);
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
   public void EndListen()
   {
     Log.Info("The front door is closing....");
@@ -136,6 +131,36 @@ public class SessionPrimer : IDisposable
         client.Connect("127.0.0.1", Options.Port);
       }
     }
+  }
+}
+
+
+// ==============================================================================================================================
+public class SessionPrimerOptions
+{
+  public const int DEFAULT_PORT = 5000;
+
+  /// <summary>
+  /// The port to listen on.
+  /// </summary>
+  public int Port { get; set; } = DEFAULT_PORT;
+}
+
+
+// ==============================================================================================================================
+public interface ISessionIDGenerator
+{
+  UInt64 GetNextSessionID();
+}
+
+// ==============================================================================================================================
+public class SessionIDGenerator : ISessionIDGenerator
+{
+  private object IDLock = new object();
+  private UInt64 LastSessionID = 0;
+  public SessionIDGenerator()
+  {
+    GetNextSessionID();
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -158,16 +183,4 @@ public class SessionPrimer : IDisposable
     }
   }
 
-}
-
-
-// ==============================================================================================================================
-public class SessionPrimerOptions
-{
-  public const int DEFAULT_PORT = 5000;
-
-  /// <summary>
-  /// The port to listen on.
-  /// </summary>
-  public int Port { get; set; } = DEFAULT_PORT;
 }
