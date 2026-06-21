@@ -10,7 +10,7 @@ namespace funscrewTesters
   // ==================================================================================================================
   public class SimUdp : IUdpBlaster
   {
-    public funscrew.IClockSource TimeSource { get; private set; }
+    public funscrew.IClockSource Clock { get; private set; }
     public TestMessageQueue MsgQueue { get; private set; }
 
     public uint AvgPing { get; set; }
@@ -19,7 +19,7 @@ namespace funscrewTesters
     public IPEndPoint Endpoint { get; private set; }
 
     // ----------------------------------------------------------------------------------------------------------------
-    public SimUdp(string host_, int port_, funscrew.IClockSource timeSource_, TestMessageQueue msgQueue_, uint avgPing_, uint pingJitter_ = 0)
+    public SimUdp(string host_, int port_, funscrew.IClockSource timeSource_, TestMessageQueue msgQueue_, bool isBlocking_ , uint avgPing_, uint pingJitter_ = 0)
     {
       Host = host_;
       Port = port_;
@@ -27,11 +27,12 @@ namespace funscrewTesters
       var addr = IPAddress.Parse(Host);
       Endpoint = new IPEndPoint(addr, Port);
 
-      TimeSource = timeSource_;
+      Clock = timeSource_;
       MsgQueue = msgQueue_;
 
       AvgPing = avgPing_;
       PingJitter = pingJitter_;
+      IsBlocking = isBlocking_;
     }
 
     // NOTE: This doesn't really matter, just a name / IP will do.
@@ -59,7 +60,7 @@ namespace funscrewTesters
     public int Receive(byte[] receiveBuffer, ref EndPoint remoteEP)
     {
       // TODO: Implement blocking logic...
-      if (this.IsBlocking) { throw new NotImplementedException(); }
+      if (this.IsBlocking) { throw new NotImplementedException("do something about the blocking code!"); }
 
       SimUdpMessage? msg = MsgQueue.GetNextMessage(this);
       if (msg == null)
@@ -103,7 +104,7 @@ namespace funscrewTesters
       var msg = new SimUdpMessage()
       {
         Data = CopyBytes(sendBuffer, packetSize),
-        ReceiveTime = (int)(TimeSource.CurTime + usePing),
+        ReceiveTime = (int)(Clock.CurTime + usePing),
 
         From = this.Endpoint,
         SrcHost = this.Host,

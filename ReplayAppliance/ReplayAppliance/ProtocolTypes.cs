@@ -487,6 +487,7 @@ public struct UdpMsg
         return sizeof(QualityReply);
       case EMsgType.InputAck:
         return sizeof(InputAck);
+      case EMsgType.Heartbeat:
       case EMsgType.KeepAlive:
         return 0;
 

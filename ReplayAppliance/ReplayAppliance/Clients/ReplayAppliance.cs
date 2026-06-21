@@ -55,7 +55,7 @@ public class ReplayAppliance
       throw new InvalidOperationException("ReplayAppliance requires a blocking IUdpBlaster instance!");
     }
     Clock = clock_;
-   // LocalConnectStatus = localConnectStatus_;
+    // LocalConnectStatus = localConnectStatus_;
 
     CancelToken = CTSource.Token;
 
@@ -117,7 +117,7 @@ public class ReplayAppliance
       ActiveSessions.Add(sessionId, session);
 
       return session;
-   }
+    }
   }
 
 
@@ -131,11 +131,12 @@ public class ReplayAppliance
       EndPoint ep = default!;
       while (true)
       {
+
       lblReceiveData:
 
         // This is a blocking call!
         int received = UDP.Receive(_ReceiveBuffer, ref ep);
-        if (received == 0)
+        if (received == 0 ||)
         {
           // AAIIIIIEEEEE EVIL! EVIL! EVIL! CALL THE COAST GUARD!!!!!
           goto lblReceiveData;
@@ -144,7 +145,8 @@ public class ReplayAppliance
         UdpMsg msg = new UdpMsg();
         UdpMsg.FromBytes(_ReceiveBuffer, ref msg, received);
 
-        if (msg.header.type == EMsgType.Heartbeat) { 
+        if (msg.header.type == EMsgType.Heartbeat)
+        {
           goto lblReceiveData;
         }
 

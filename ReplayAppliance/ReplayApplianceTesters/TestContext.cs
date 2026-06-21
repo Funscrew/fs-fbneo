@@ -62,16 +62,19 @@ namespace funscrewTesters
       {
         Clock.AddTime(TIME_INTERVAL);
 
-        if (SessionPrimer != null) {
-          // Send the heartbeat signal...
-          (SessionPrimer as SimSessionPrimer)?.SendHeartbeat();
-        // SessionPrimer.
-        }
-      
-        //if (ReplayAppliance != null)
-        //{
-        //  ReplayAppliance.DoPoll(0);
+        //// NOTE: We only want to send the heartbeat every so often......
+        //// And the purpose of the heartbeat is so that blocking calls in production netcode
+        //// have something to do every so often if there are no incoming packets...
+        //if (SessionPrimer != null) {
+        //  // Send the heartbeat signal...
+        //  (SessionPrimer as SimSessionPrimer)?.SendHeartbeat();
+        //// SessionPrimer.
         //}
+
+        if (ReplayAppliance != null)
+        {
+          ReplayAppliance.Update(); //DoPoll(0);
+        }
 
         if (curTime % FRAME_INTERVAL == 0)
         {

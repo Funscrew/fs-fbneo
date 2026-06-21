@@ -28,7 +28,7 @@ namespace funscrewTesters
       int minTime = int.MaxValue;
       SimUdpMessage? res = null;
 
-      int curTime = udp.TimeSource.CurTime;
+      int curTime = udp.Clock.CurTime;
 
       // Grab all messages in the queue up to the current time.
       // only include those messages that have the matching port...
