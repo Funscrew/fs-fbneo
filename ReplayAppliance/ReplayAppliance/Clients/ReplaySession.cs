@@ -22,7 +22,7 @@ public class ReplaySession : IGGPOClient
 
   public EReplaySessionState State { get; private set; } = EReplaySessionState.Invalid;
 
-  public int ClientCount { get ; private set; }=  0;
+  public int ClientCount { get; private set; } = 0;
   public GGPOEndpoint[] Endpoints = new GGPOEndpoint[MAX_PLAYERS_EVER];
 
   public bool IsComplete { get; private set; } = false;
@@ -46,17 +46,18 @@ public class ReplaySession : IGGPOClient
   public string LocalPlayerName { get; private set; } = "not matters";
   public UInt32 ClientVersion { get; } = 0;
   public int CurrentFrame { get; } = 0;
-  public string GameName { get; } = string.Empty;
+  public string GameName { get { return SessionArgs.GameName; } }
 
   public int CurTime { get { return SessionArgs.Clock.CurTime; } }
 
-  public IUdpBlaster UDP { get { throw new NotImplementedException("does anyone really need this?"); } }
+  public IUdpBlaster UDP { get; private set; } = null!;
 
   public bool IsSyncing { get; private set; } = true;
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public ReplaySession(UInt64 sessionId_, GameRecorder recorder_, SessionOptions sessOps_, GGPOSessionCallbacks callbacks_)
+  public ReplaySession(IUdpBlaster udp_, UInt64 sessionId_, GameRecorder recorder_, SessionOptions sessOps_, GGPOSessionCallbacks callbacks_)
   {
+    UDP = udp_;
     SessionId = sessionId_;
     Recorder = recorder_;
     SessionArgs = sessOps_;
@@ -72,12 +73,8 @@ public class ReplaySession : IGGPOClient
       num_prediction_frames = GGPOConsts.MAX_PREDICTION_FRAMES
     };
 
-    int len = LocalConnectStatus.Length;
-    for (int i = 0; i < len; i++)
-    {
-      LocalConnectStatus[i].last_frame = 0;
-      LocalConnectStatus[i].disconnected = false;
-    }
+    // RESET DATA:
+    ClearData();
 
     // NOTE: Not really sure what we are syncing in this context?
     Sync = new Sync(LocalConnectStatus, syncOps);
@@ -85,8 +82,28 @@ public class ReplaySession : IGGPOClient
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public GGPOEndpoint GetEndpoint(int index) { 
-    if (index >= ClientCount) { 
+  // Reset the internal data of this session.
+  // This will become more useful when we are on to mempools.
+  internal void ClearData()
+  {
+    int len = LocalConnectStatus.Length;
+    for (int i = 0; i < len; i++)
+    {
+      LocalConnectStatus[i].last_frame = 0;
+      LocalConnectStatus[i].disconnected = false;
+    }
+
+    for (int i = 0; i < MAX_PLAYERS_EVER; i++)
+    {
+      UsedPlayerIndexes[i] = -1;
+    }
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public GGPOEndpoint GetEndpoint(int index)
+  {
+    if (index >= ClientCount)
+    {
       throw new ArgumentOutOfRangeException($"Invalid {nameof(index)}!");
     }
     return Endpoints[index];
@@ -108,7 +125,7 @@ public class ReplaySession : IGGPOClient
       }
 
       // Uniqueness check....
-      for (int i = 0; i < MAX_PLAYERS_EVER; i++)
+      for (int i = 0; i < ClientCount; i++)
       {
         if (UsedAddreses[i] == endpoint.AddressHash) { throw new InvalidOperationException($"This address: {endpoint.AddressHash} is already connected to the replay session!"); }
         if (UsedPlayerIndexes[i] == endpoint.PlayerIndex) { throw new InvalidOperationException($"This player index: {endpoint.PlayerIndex} is already connected to the replay session!"); }
@@ -135,8 +152,10 @@ public class ReplaySession : IGGPOClient
       {
         Endpoints[i].Disconnect(curFrame);
       }
+      ClientCount = 0;
 
       State = EReplaySessionState.Complete;
+      this.IsComplete = true;
     }
   }
 
@@ -150,7 +169,7 @@ public class ReplaySession : IGGPOClient
     {
       // We have detected an error in the recorder.  We will log this, and send disconnect
       // notices to all active clients.
-      Log.Error($"There was a recording error: {Recorder.ErrorReason} : {Recorder.ErrorMessage}");
+      Log.Error($"Session:{this.SessionId} - There was a recording error: {Recorder.ErrorReason} : {Recorder.ErrorMessage}");
       DisconnectAll();
       return;
     }

@@ -98,6 +98,7 @@ public class SessionRequester
 }
 
 // ==============================================================================================================================
+// TODO: Should this have a 'SessionId' property as well?
 public class SessionOptions
 {
   public string GameName { get; set; }

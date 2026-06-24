@@ -20,6 +20,8 @@ namespace funscrewTesters
 
     public ulong SessionId { get; private set; }
 
+    public SessionOptions SessionOptions { get; set; } = null!;
+
     // --------------------------------------------------------------------------------------------------------------------------
     public TestContext(ulong sessionId_, SimClock timeSource_, TestMessageQueue msgQueue_, IList<GGPOClient> allClients_, IList<byte[]> inputBuffers_, ReplayAppliance? replay_ = null)
     {
@@ -73,7 +75,7 @@ namespace funscrewTesters
 
         if (ReplayAppliance != null)
         {
-          ReplayAppliance.Update(); //DoPoll(0);
+          ReplayAppliance.Update(); 
         }
 
         if (curTime % FRAME_INTERVAL == 0)
@@ -84,14 +86,14 @@ namespace funscrewTesters
           int len = AllClients.Count;
           for (int clientIndex = 0; clientIndex < len; clientIndex++)
           {
-            var c = AllClients[clientIndex];
+            var client = AllClients[clientIndex];
 
             if (setInputs != null)
             {
-              setInputs(InputBuffers[clientIndex], c.GetLocalPlayer().PlayerIndex, curTime);
+              setInputs(InputBuffers[clientIndex], client.GetLocalPlayer().PlayerIndex, curTime);
             }
 
-            Program.RunFrame(c, InputBuffers[clientIndex]);
+            Program.RunFrame(client, InputBuffers[clientIndex]);
 
             ++LastFrame;
           }

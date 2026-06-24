@@ -19,16 +19,19 @@ namespace funscrewTesters
 
     // --------------------------------------------------------------------------------------------------------------------------
     /// <summary>
-    /// This test case shows that while it may be able to connect to a replay appliance at some point, is dropped, etc.
+    /// This test case shows that while it may be able to connect to a replay appliance at some point,
+    /// it is possible for the connection to go bad / get dropped.
     /// When this condition is detected (during merge) we will want to send out the disconnect signal + log
-    /// the failure to capture the replay.
+    /// the failure in the replay data.
     /// </summary>
     [Test]
     public unsafe void ReplayApplianceWontSyncUntilAllPlayersAreConnected()
     {
       const string P1_NAME = "Joe";
       const string P2_NAME = "Archie";
-      TestContext context = CreateTestContext(P1_NAME, P2_NAME);
+      const string GAME_NAME = "test-game";
+      const string GAME_VERSION = "123";
+      TestContext context = CreateTestContext(GAME_NAME, GAME_VERSION, P1_NAME, P2_NAME);
 
       var ops = new GGPOClientOptions("test-game", 0, REPLAY_APPLIANCE_PORT, Defaults.PROTOCOL_VERSION, context.SessionId);
       ops.Callbacks = CreateDefaultCallbacks();
@@ -43,8 +46,7 @@ namespace funscrewTesters
         Port = FRONT_DOOR_PORT,
       };
       var frontDoor = new SimSessionPrimer(spOps, replayAppliance);
-      SessionOptions sessOps = CreateDefaultSessionOptions(context);
-      ReplaySession rpSess = frontDoor.BeginSession(SessionPrimer.TEST_SESSION_ID, sessOps);
+      ReplaySession rpSess = frontDoor.BeginSession(context.SessionId, context.SessionOptions);
 
       context.SetSessionPrimer(frontDoor);
       context.SetReplayAppliance(replayAppliance);
@@ -63,13 +65,16 @@ namespace funscrewTesters
       Assert.That(replayAppliance.Errors.Count, Is.EqualTo(0), "There should be no listed errors!");
       Assert.That(rpSess.ClientCount, Is.EqualTo(1), "There should be one connected client!");
 
+      
       // We want to get a count for the number of times that we have sent inputs to the remote.
       // We should not have any until everything is all synced up....
       Assert.That(p1Remote.TotalInputsSent, Is.GreaterThan(0), "Inputs should be exchanged at this point.");
 
+      // NOTE: Is there any way that we can get disconnect events?
 
       const int SIM_TIME = 2000;      // More than enough time for the mismatch to be detected / dropped.
       context.RunGame(SIM_TIME);
+
 
       // Show that there are no longer any connections....
       Assert.IsTrue(rpSess.IsComplete, "The session should be in the complete state.");
@@ -93,7 +98,10 @@ namespace funscrewTesters
     {
       const string P1_NAME = "Joe";
       const string P2_NAME = "Archie";
-      TestContext context = CreateTestContext(P1_NAME, P2_NAME);
+      const string GAME_NAME = "test-game";
+      const string GAME_VERSION = "123";
+
+      TestContext context = CreateTestContext(GAME_NAME, GAME_VERSION, P1_NAME, P2_NAME);
 
       var ops = new GGPOClientOptions("test-game", 0, REPLAY_APPLIANCE_PORT, Defaults.PROTOCOL_VERSION, context.SessionId);
       ops.Callbacks = CreateDefaultCallbacks();
@@ -107,8 +115,8 @@ namespace funscrewTesters
         Port = FRONT_DOOR_PORT,
       };
       var frontDoor = new SimSessionPrimer(spOps, replayAppliance);
-      SessionOptions sessOps = CreateDefaultSessionOptions(context);
-      ReplaySession rpSess = frontDoor.BeginSession(SessionPrimer.TEST_SESSION_ID, sessOps);
+
+      ReplaySession rpSess = frontDoor.BeginSession(context.SessionId, context.SessionOptions);
 
       context.SetSessionPrimer(frontDoor);
       context.SetReplayAppliance(replayAppliance);
@@ -184,8 +192,10 @@ namespace funscrewTesters
     {
       const string P1_NAME = "Joe";
       const string P2_NAME = "Archie";
+      const string GAME_NAME = "test-game";
+      const string GAME_VERSION = "123";
 
-      TestContext context = CreateTestContext(P1_NAME, P2_NAME);
+      TestContext context = CreateTestContext(GAME_NAME, GAME_VERSION, P1_NAME, P2_NAME);
 
       var p1 = context.Player1;
       var p2 = context.Player2;
@@ -215,7 +225,7 @@ namespace funscrewTesters
     /// <summary>
     /// A convenient way to setup a test context, with two clients, replay appliance, etc.
     /// </summary>
-    protected TestContext CreateTestContext(string p1Name, string p2Name)
+    protected TestContext CreateTestContext(string gameName, string gameVersion, string p1Name, string p2Name)
     {
       ulong sessId = GetNextSessionId();
 
@@ -230,7 +240,7 @@ namespace funscrewTesters
         Port = PLAYER1_PORT,
         TimeSource = timeSource,
         InputBuffer = new byte[5 * MAX_PLAYERS],
-        PlayerName = "Joe"
+        PlayerName = p1Name
       };
       var ops2 = new TestPlayerOptions()
       {
@@ -239,7 +249,7 @@ namespace funscrewTesters
         Port = PLAYER2_PORT,
         TimeSource = timeSource,
         InputBuffer = new byte[5 * MAX_PLAYERS],
-        PlayerName = "Archie"
+        PlayerName = p2Name
       };
       var p1GGPO = CreateGGPOClient(ops1, ops2, testQueue, sessId);
       var p2GGPO = CreateGGPOClient(ops2, ops1, testQueue, sessId);
@@ -251,6 +261,17 @@ namespace funscrewTesters
       //var p1 = p2GGPO.GetRemotePlayer();
 
       var context = new TestContext(sessId, timeSource, testQueue, new[] { p1GGPO, p2GGPO }, new[] { ops1.InputBuffer, ops2.InputBuffer });
+
+      var sessOps = new SessionOptions()
+      {
+        Clock = context.Clock,
+        GameName = gameName,
+        GameVersion = gameVersion,
+        TotalInputSize = 10,
+        MaxPlayerCount = 2,
+        PlayerNames = new[] { p1Name, p2Name }
+      };
+      context.SessionOptions = sessOps;
 
       return context;
     }

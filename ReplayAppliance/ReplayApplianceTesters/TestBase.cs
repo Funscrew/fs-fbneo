@@ -133,21 +133,6 @@ namespace funscrewTesters
       return res; 
     }
 
-    // --------------------------------------------------------------------------------------------------------------------------
-    protected SessionOptions CreateDefaultSessionOptions(TestContext context)
-    {
-
-      // Begin a replay session (this simulates a client starting the session via frontdoor service)
-      return new SessionOptions()
-      {
-        Clock = context.Clock,
-        GameName = "sfiii3nr1",
-        GameVersion = "0.0.0",
-        MaxPlayerCount = 2,
-        PlayerNames = new[] { "Joe", "Archie" },
-        TotalInputSize = 10
-      };
-    }
   }
 
 

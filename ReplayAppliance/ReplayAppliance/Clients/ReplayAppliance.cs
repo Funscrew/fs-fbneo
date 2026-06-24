@@ -120,7 +120,7 @@ public class ReplayAppliance
         load_game_state = NoOp_LoadGame,
       };
 
-      var session = new ReplaySession(sessionId, recorder, sessionOps, callbacks);
+      var session = new ReplaySession(this.UDP, sessionId, recorder, sessionOps, callbacks);
       ActiveSessions.Add(sessionId, session);
 
       return session;
@@ -247,6 +247,7 @@ public class ReplayAppliance
     if (msg.header.type == EMsgType.SyncRequest && !this.AddressToSession.ContainsKey(hashedAddr)) // .Keys.Contains(hashedAddr))
     {
       // Validate session ID!
+      // TODO : We should return null and add the blacklist code in the calling function!
       var sid = msg.u.sync_request.session_id;
       if (!this.ActiveSessions.TryGetValue(sid, out useSession))
       {
