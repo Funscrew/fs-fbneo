@@ -68,6 +68,8 @@ namespace funscrewTesters
         return 0;
       }
 
+      remoteEP = msg.From;
+
       // TODO: This is going to create a lot of garbage.....
       // I'm thinking the message queue tracks the host/port for the clients in a better way.....
       //remoteEP = new IPEndPoint(IPAddress.Parse(msg.SrcHost), msg.SrcPort);

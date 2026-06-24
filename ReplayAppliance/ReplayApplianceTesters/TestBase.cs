@@ -98,7 +98,7 @@ namespace funscrewTesters
     {
       if (callbacks == null) { callbacks = CreateDefaultCallbacks(); }
 
-      var udp = new SimUdp(local.Host, local.Port, local.TimeSource, msgQueue, true, SIM_PING, SIM_JITTER);
+      var udp = new SimUdp(local.Host, local.Port, local.TimeSource, msgQueue, false, SIM_PING, SIM_JITTER);
       var clientOps = new GGPOClientOptions("test-game",local.PlayerIndex, local.Port, Defaults.PROTOCOL_VERSION, sessionId);
 
       clientOps.IdleTimeout = 0;
@@ -127,7 +127,7 @@ namespace funscrewTesters
         ReplayPort = REPLAY_APPLIANCE_PORT,
         RequestPort = FRONT_DOOR_PORT
       };
-      var blaster = new SimUdp(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT, context.Clock, context.MsgQueue, true, SIM_PING, SIM_JITTER);
+      var blaster = new SimUdp(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT, context.Clock, context.MsgQueue, false, SIM_PING, SIM_JITTER);
       var res = new SimReplayAppliance(replayOps, blaster, context.Clock);
 
       return res; 

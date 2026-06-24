@@ -2,6 +2,7 @@
 using drewCo.Tools.Logging;
 using System.Net;
 using System.Security.Cryptography;
+using System.Transactions;
 
 namespace funscrew.Clients;
 
@@ -45,15 +46,21 @@ public class ReplayAppliance
   private IClockSource Clock = null!;
   public IUdpBlaster UDP { get; private set; } = null!;
 
+  private byte[] _ReceiveBuffer = new byte[4096];
+
   // --------------------------------------------------------------------------------------------------------------------------
   public ReplayAppliance(ReplayOptions ops_, IUdpBlaster udp_, IClockSource clock_)
   {
     Options = ops_;
     UDP = udp_;
-    if (!UDP.IsBlocking)
+
+    // NOTE: I don't think that this should apply in test cases....
+    // Maybe we will make it an option or something....
+    if (!UDP.IsBlocking && false)
     {
       throw new InvalidOperationException("ReplayAppliance requires a blocking IUdpBlaster instance!");
     }
+
     Clock = clock_;
     // LocalConnectStatus = localConnectStatus_;
 
@@ -120,9 +127,54 @@ public class ReplayAppliance
     }
   }
 
+  // --------------------------------------------------------------------------------------------------------------------------
+  public bool Update()
+  {
+    EndPoint ep = default!;
+
+    // This is a blocking call!
+    int received = UDP.Receive(_ReceiveBuffer, ref ep);
+    if (received == 0)
+    {
+        return false;
+    }
+
+    UdpMsg msg = new UdpMsg();
+    UdpMsg.FromBytes(_ReceiveBuffer, ref msg, received);
+
+    if (msg.header.type == EMsgType.Heartbeat)
+    {
+      Log.Verbose("Heartbeat!");
+      return true;
+    }
+
+    ReplaySession? sess = DeliverMessage(ref msg, received, (IPEndPoint)ep);
+    if (sess == null)
+    {
+      // NOTE: Possibly got data from a blacklist client?
+      // Ideally this branch would not be possible...
+      // TODO: LOG?
+      return false;
+      // goto lblReceiveData;
+    }
+
+    // Now update the session so it can do its thing.....
+    sess.DoPoll();
+    return true;
+    // The rest of 'DoPoll'
+
+
+    //// TEMP: TEST:
+    //if (Clock.CurTime > 2000)
+    //{
+    //  Log.Info("Test timeout has expired!");
+    //  break;
+    //}
+  }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  private byte[] _ReceiveBuffer = new byte[4096];
+
+  // NOTE: This should only be used in production.  Not suitable for test code....
   public Task BeginUpdateLoop()
   {
     var res = Task.Factory.StartNew(() =>
@@ -134,9 +186,15 @@ public class ReplayAppliance
 
       lblReceiveData:
 
+        bool updated = Update();
+        if (!updated) {
+          // AAIIIIIEEEEE EVIL! EVIL! EVIL! CALL THE COAST GUARD!!!!!
+          goto lblReceiveData;
+        }
+
         // This is a blocking call!
         int received = UDP.Receive(_ReceiveBuffer, ref ep);
-        if (received == 0 ||)
+        if (received == 0)
         {
           // AAIIIIIEEEEE EVIL! EVIL! EVIL! CALL THE COAST GUARD!!!!!
           goto lblReceiveData;
