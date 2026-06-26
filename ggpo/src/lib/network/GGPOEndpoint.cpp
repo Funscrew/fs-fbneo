@@ -523,15 +523,21 @@ bool GGPOEndpoint::OnSyncRequest(UdpMsg* msg, int len)
   UdpMsg* reply = new UdpMsg(UdpMsg::SyncReply);
   reply->u.sync_reply.random_reply = msg->u.sync_request.random_request;
   reply->u.sync_reply.client_version = _client_version;
-  reply->u.sync_reply.player_index = _playerIndex; // (uint8_t)(_playerIndex == 0 ? 1 :0);        // Indicate the local player index.
+  reply->u.sync_reply.player_index = _playerIndex;
   reply->u.sync_reply.delay = _delay;
   reply->u.sync_reply.runahead = _runahead;
+
+  // TODO: Check the GGPOClient to see if we are waiting for replay appliance connections....
+  reply->u.sync_reply.isReady = this->_Client->IsReadyToSync(msg) ? 1 : 0; //  true;
 
   // reply->u.sync_reply.is_ready = this->_Client->IsReplayApplianceReady();
 
   // TODO: I need to send the delay + runahead here (in main)
   // So... if we are sending whatever data in the sync replies, should we include replay id here too?
   // --> We should include whatever extra client/game specific data is needed for the specific game.
+  // TODO: For future protocol, some kind of proper 'metadata exchange' would be cool.  That way
+  // appplications can define + swap whatever specific data they need, and we don't have to get
+  // clever or think of possible scenarios.
 
   strcpy_s(reply->u.sync_reply.playerName, _playerName);
   strcpy_s(reply->u.sync_reply.gameName, _gameName);

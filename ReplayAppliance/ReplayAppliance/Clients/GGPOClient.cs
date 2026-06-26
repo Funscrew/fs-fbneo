@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.ComponentModel;
+using System.Diagnostics;
 using System.Net;
 
 namespace funscrew;
@@ -6,10 +7,13 @@ namespace funscrew;
 // ==========================================================================================
 /// <summary>
 /// Main client that is used to connect to one or more other players over the network.
+/// Each GGPOClient instance will have one local player, and one or more remote players.
 /// </summary>
 public class GGPOClient : IGGPOClient, IDisposable
 {
-  protected GGPOClientOptions ClientOptions = null!;
+  protected GGPOClientOptions Options =null!;
+
+
   protected List<GGPOEndpoint> _endpoints = new List<GGPOEndpoint>();
   protected GGPOEndpoint[] _Players = new GGPOEndpoint[GGPOConsts.MAX_PLAYERS];
   protected int _ConnectedPlayerCount = 0;
@@ -19,7 +23,8 @@ public class GGPOClient : IGGPOClient, IDisposable
   private IClockSource Clock = null!;
   public int CurTime { get { return Clock.CurTime; } }
 
-  public UInt32 ClientVersion { get { return this.ClientOptions.ClientVersion; } }
+  public int ConnectTimeout { get { return this.Options.ReplayConnectTimeout; } }
+  public UInt32 ClientVersion { get { return this.Options.ClientVersion; } }
 
   /// <summary>
   /// Indicates that the client is officially started, and no new connections can be added.
@@ -39,14 +44,15 @@ public class GGPOClient : IGGPOClient, IDisposable
   private string[] _PlayerNames = new string[GGPOConsts.MAX_PLAYERS];
   protected GGPOSessionCallbacks _callbacks;
 
+  public GGPOSessionCallbacks Callbacks { get { return _callbacks; } }
 
-  private GGPOEndpoint LocalPlayer = null;
+  private GGPOEndpoint LocalPlayer = null!;
 
   /// <summary>
   /// Session Id, which corresponds to unix time in milliseconds.
   /// Only used in replay contexts.
   /// </summary>
-  public UInt64 SessionId { get { return ClientOptions.SessionId; } }
+  public UInt64 SessionId { get { return Options.SessionId; } }
 
   private int _next_recommended_sleep = 0;
 
@@ -64,7 +70,7 @@ public class GGPOClient : IGGPOClient, IDisposable
   // ----------------------------------------------------------------------------------------
   public GGPOClient(GGPOClientOptions options_, IUdpBlaster udp_, IClockSource clock_)
   {
-    ClientOptions = options_;
+    Options = options_;
 
     ValidateOptions();
 
@@ -79,14 +85,14 @@ public class GGPOClient : IGGPOClient, IDisposable
 
     var SyncOps = new SyncOptions()
     {
-      callbacks = ClientOptions.Callbacks,
-      input_size = ClientOptions.InputSize,
+      callbacks = Options.Callbacks,
+      input_size = Options.InputSize,
       num_players = 2,
       num_prediction_frames = GGPOConsts.MAX_PREDICTION_FRAMES
     };
     _sync = new Sync(_local_connect_status, SyncOps);
 
-    _callbacks = ClientOptions.Callbacks;
+    _callbacks = Options.Callbacks;
 
     // I'm implementing this out of a sense of tradition....
     // Not really sure if this matters here, or if this is even the best place to
@@ -102,7 +108,7 @@ public class GGPOClient : IGGPOClient, IDisposable
     UDP?.Dispose();
   }
 
-  public string GameName { get { return this.ClientOptions.GameName; } }
+  public string GameName { get { return this.Options.GameName; } }
 
   // ----------------------------------------------------------------------------------------
   public virtual void DisconnectAll()
@@ -134,7 +140,7 @@ public class GGPOClient : IGGPOClient, IDisposable
   // ----------------------------------------------------------------------------------------
   private void ValidateOptions()
   {
-    if (ClientOptions.Callbacks == null)
+    if (Options.Callbacks == null)
     {
       throw new InvalidOperationException("Callbacks are null!");
     }
@@ -231,6 +237,45 @@ public class GGPOClient : IGGPOClient, IDisposable
   }
 
 
+  // ----------------------------------------------------------------------------------------------------------
+  public bool IsReadyToSync(ref UdpMsg msg)
+  {
+    switch (msg.header.type)
+    {
+      case EMsgType.SyncRequest:
+
+        // We are always ready to connect to the replay appliance.
+        if (msg.u.sync_request.endpointType == (uint8_t)EEndpointType.ReplayAppliance)
+        {
+          return true;
+        }
+
+        break;
+
+      case EMsgType.SyncReply:
+        // Do nothing.  Goal is to make sure that the replay endpoint (if any)
+        // is actually synced up and ready to go!
+        int x = 10;
+        break;
+
+      default:
+        throw new InvalidOperationException($"Unsupported message type: {msg.header.type}!");
+    }
+
+    // Check all endpoints for replay appliance + see if we are synced with it yet.
+    for (int i = 0; i < _endpoints.Count; i++)
+    {
+      var ep = _endpoints[i];
+      if (ep.IsReplayClient)
+      {
+        bool res = ep.IsRunning();
+        return res;
+      }
+    }
+
+    return true;
+  }
+
   // ----------------------------------------------------------------------------------------
   private void CheckLocked()
   {
@@ -243,7 +288,7 @@ public class GGPOClient : IGGPOClient, IDisposable
   // ----------------------------------------------------------------------------------------
   public void Idle()
   {
-    DoPoll(ClientOptions.IdleTimeout);
+    DoPoll(Options.IdleTimeout);
   }
 
   // ----------------------------------------------------------------------------------------
@@ -563,7 +608,7 @@ public class GGPOClient : IGGPOClient, IDisposable
     input.init(-1, values, isize);
 
     // Feed the input for the current frame into the synchronzation layer.
-    if (!_sync.AddLocalInput(ClientOptions.PlayerIndex, ref input))
+    if (!_sync.AddLocalInput(Options.PlayerIndex, ref input))
     {
       // return GGPO_ERRORCODE_PREDICTION_THRESHOLD;
       return false;
@@ -578,8 +623,8 @@ public class GGPOClient : IGGPOClient, IDisposable
       // NOTE: All endpoints send out the _local_connect_status data with each message.
       // An ideal implemetation would have a single 'client' that we set this data on,
       // and then all endpoints would also be contained internally.
-      Utils.LogIt(LogCategories.INPUT, "local frame for: %d - %d", ClientOptions.PlayerIndex, input.frame);
-      _local_connect_status[ClientOptions.PlayerIndex].last_frame = input.frame;
+      Utils.LogIt(LogCategories.INPUT, "local frame for: %d - %d", Options.PlayerIndex, input.frame);
+      _local_connect_status[Options.PlayerIndex].last_frame = input.frame;
 
       // Send the input to all the remote players.
       // NOTE: This queues input, and it gets pumped out later....
@@ -928,6 +973,8 @@ public class GGPOClient : IGGPOClient, IDisposable
 // ==========================================================================================
 public class GGPOClientOptions
 {
+  public const int DEFAULT_CONNECT_TIMEOUT = 100;
+
   private const int DEFAULT_INPUT_SIZE = 5;   // This is for 3rd strike.
   private const int MAX_PLAYER_COUNT = 4;     // NOTE: This should be 2, but that will make trouble!
   private const int DEFAULT_PLAYER_COUNT = 2;
@@ -951,7 +998,7 @@ public class GGPOClientOptions
 
       ReplayHost = x.Host;
       ReplayPort = x.Port;
-      ReplayTimeout = replayTimeout;
+      ReplayConnectTimeout = replayTimeout;
     }
   }
 
@@ -974,7 +1021,11 @@ public class GGPOClientOptions
 
   public string? ReplayHost { get; private set; } = null;
   public int ReplayPort { get; private set; } = -1;
-  public int ReplayTimeout { get; private set; } = 0;
+
+  /// <summary>
+  /// How long will we wait for a replay client connection to timeout.
+  /// </summary>
+  public int ReplayConnectTimeout { get; private set; } = DEFAULT_CONNECT_TIMEOUT;
 
   /// <summary>
   /// Verseion of this client.  It is a 32 bitmasked number as follows:
@@ -1027,5 +1078,8 @@ public interface IGGPOClient : IClockSource
   string LocalPlayerName { get; }
   int CurrentFrame { get; }
   string GameName { get; }
+  int ConnectTimeout { get ; }
+
+  bool IsReadyToSync(ref UdpMsg syncRequest);
 }
 

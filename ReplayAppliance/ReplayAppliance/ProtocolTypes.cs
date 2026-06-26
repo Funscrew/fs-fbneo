@@ -113,12 +113,20 @@ public struct ConnectStatus
 }
 
 // ================================================================================================================
+public enum EEndpointType : uint8_t
+{
+  Player = 0,
+  ReplayAppliance = 1,
+}
+
+// ================================================================================================================
 [StructLayout(LayoutKind.Sequential, Pack = 1)]
 public struct SyncRequest
 {
   public uint random_request;   // please reply back with this random data
-  public byte player_index;     // Players must identify their desired index.
-  public byte isReplayEndpoint; // This is from a replay appliance.   ( we use a byte to make sure that we are C++ compatible)
+  public uint8_t player_index;     // Players must identify their desired index.
+  
+  public uint8_t endpointType;  // Type of endpoint (application defined).  Use a value for EEndpointType or whatever you want.
   public UInt64 session_id;     // Used for replay ids.  This is the form of a unix timestamp in milliseconds!  For p2p connections, this can be zero, but is ignored.
 
   // ---------------------------------------------------------------------------------
@@ -131,7 +139,7 @@ public struct SyncRequest
     res.player_index = (byte)BitConverter.ToChar(data, useOffset);
     useOffset += sizeof(byte);
 
-    res.isReplayEndpoint = (byte)BitConverter.ToChar(data, useOffset);
+    res.endpointType = (byte)BitConverter.ToChar(data, useOffset);
     useOffset += sizeof(byte);
 
     res.session_id = BitConverter.ToUInt64(data, useOffset);
@@ -145,7 +153,7 @@ public unsafe struct SyncReply
   public UInt32 random_reply;     // OK, here's your random data back
   public UInt32 client_version;   // Version of this client, in 8 byte chunks: MAJOR - MINOR - REVISION - GGPO (protocol version)
   public byte player_index;       // Index of the remote player.  Should match what we expect / not be our index!
-  public byte isReplayEndpoint;   // This is from a replay appliance.   ( we use a byte to make sure that we are C++ compatible)
+  public byte isReady;            // Indicates that the client is ready.  Only false when waiting to connect to replay appliances, etc.   ( we use a byte to make sure that we are C++ compatible)
   public byte delay;
   public byte runahead;
   //public byte is_ready;           // Readiness flag, used in the context of hooking up to a replay client.

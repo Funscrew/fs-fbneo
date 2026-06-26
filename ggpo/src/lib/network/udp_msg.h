@@ -15,6 +15,10 @@
 
 #pragma pack(push, 1)
 
+enum EEndpointType : uint8_t {
+  Player = 0,
+  ReplayAppliance = 1
+};
 
 struct UdpMsg
 {
@@ -30,6 +34,7 @@ struct UdpMsg
     Datagram = 8,  
     Heartbeat = 9
   };
+
 
   // This struct saves us one byte of space.
   // Makes ports to other languages a bit annoying to deal with, so
@@ -54,15 +59,15 @@ struct UdpMsg
     struct {
       uint32      random_request;  /* please reply back with this random data */
       uint8_t     player_index;
-      uint8_t     isReplayEndpoint;
-      uint64_t    session_id;      // Used for replay ids.  This is the form of a unix timestamp in milliseconds!  For p2p connections, this can be zero, but is ignored.
+      uint8_t     endpointType;     
+      uint64_t    session_id;         // Used for replay ids.  This is the form of a unix timestamp in milliseconds!  For p2p connections, this can be zero, but is ignored.
     } sync_request;
 
     struct {
       uint32      random_reply;           /* OK, here's your random data back */
       uint32      client_version;       // Version of this client, in 8 byte chunks: MAJOR - MINOR - REVISION - GGPO (protocol version)
       uint8_t player_index;             // Index of the remote player.  Should match what we expect / not be our index!
-      uint8_t isReplayEndpoint;
+      uint8_t isReady;                  // Indicates that we are ready to begin.
       uint8_t delay;                    // current delay setting.
       uint8_t runahead;                 // current runahead setting.
       // uint8_t is_ready;                 // readiness flag.  This is used when we are also trying to sync to a replay endpoint.

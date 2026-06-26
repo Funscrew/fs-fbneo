@@ -103,10 +103,16 @@ public class SessionOptions
 {
   public string GameName { get; set; }
   public string GameVersion { get; set; }
+
+  /// <summary>
+  /// NOTE: This says 'max player count', but is really the total count of expected players for the session.  When protocol gets updated, we can think about stuff like absolute max + players jumping in and out of a session.
+  /// </summary>
   public uint16_t MaxPlayerCount = 0;
   public uint16_t TotalInputSize = 0;
   public string[] PlayerNames { get; set; }
   public IClockSource Clock { get; set; }
+
+public int ConnectTimeout { get; set; } = GGPOClientOptions.DEFAULT_CONNECT_TIMEOUT;
 }
 
 // ============================================================================================================================

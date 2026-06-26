@@ -57,13 +57,13 @@ public class ReplayAppliance_LEGACY : GGPOClient
     {
       GameName = ReplayOptions.GameName,
       GameVersion = ReplayOptions.GameVersion,
-      MaxPlayerCount = (UInt16)ClientOptions.MaxPlayerCount,
-      TotalInputSize = (UInt16)(ClientOptions.InputSize * ClientOptions.MaxPlayerCount)
+      MaxPlayerCount = (UInt16)Options.MaxPlayerCount,
+      TotalInputSize = (UInt16)(Options.InputSize * Options.MaxPlayerCount)
     };
 
     Recorder = new GameRecorder(gameData,
     ReplayOptions.DataDir,
-    ClientOptions.SessionId
+    Options.SessionId
     );
   }
 

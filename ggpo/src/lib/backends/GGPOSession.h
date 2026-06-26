@@ -38,6 +38,9 @@ struct GGPOSession {
 
   virtual int CurrentFrame() { return -1; }
 
+  // If the game session isn't using a replay appliance connection, then this will return true.
+  virtual bool IsReadyToSync(const UdpMsg* syncRequest) = 0;
+
 
   // Additions:
 protected:

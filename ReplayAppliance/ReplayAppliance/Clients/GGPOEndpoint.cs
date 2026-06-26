@@ -1,11 +1,12 @@
-﻿using System.Runtime.InteropServices;
-using System.Net;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
+﻿using drewCo.Tools;
 using drewCo.Tools.Logging;
 using Microsoft.VisualBasic;
+using System.Diagnostics;
+using System.Net;
+using System.Reflection.PortableExecutable;
+using System.Runtime.CompilerServices;
+using System.Runtime.InteropServices;
 using System.Text;
-using drewCo.Tools;
 
 namespace funscrew;
 
@@ -523,7 +524,7 @@ public class GGPOEndpoint
     var msg = new UdpMsg(EMsgType.SyncRequest);
     msg.u.sync_request.random_request = SyncState.random;
     msg.u.sync_request.player_index = this.PlayerIndex;
-    msg.u.sync_request.isReplayEndpoint = (byte)(this.IsReplayClient ? 1 : 0);
+    msg.u.sync_request.endpointType = (uint8_t)(this.IsReplayClient ? EEndpointType.ReplayAppliance : EEndpointType.Player);
     msg.u.sync_request.session_id = this.SessionId;
     SendMsg(ref msg);
 
@@ -891,21 +892,16 @@ public class GGPOEndpoint
       Utils.LogIt(LogCategories.SYNC, "SyncRequest from unknown endpoint :%d != %d)", msg.header.magic, _remote_magic_number);
       return false;
     }
+
     UdpMsg reply = new UdpMsg(EMsgType.SyncReply);
     reply.u.sync_reply.random_reply = msg.u.sync_request.random_request;
     reply.u.sync_reply.client_version = this.Client.ClientVersion;
-    reply.u.sync_reply.player_index = this.PlayerIndex; // (byte)(this.PlayerIndex == 0 ? 1 : 0;
-    reply.u.sync_reply.isReplayEndpoint = (byte)(this.IsReplayClient ? 1 : 0);
+    reply.u.sync_reply.player_index = this.PlayerIndex;
     reply.u.sync_reply.delay = Options.Delay;
     reply.u.sync_reply.runahead = Options.Runahead;
 
-    // So this endpoint is responding to a sync request, so we should be replying with the name
-    // of the local player....
-    // I think that the sync requests should be the ones that have the player names set....
-    // Also, we should have the player names set as part of the options for security purposes!
+    reply.u.sync_reply.isReady = (uint8_t)(Client.IsReadyToSync(ref msg) ? 1 : 0);
 
-    // Only remote endpoints will be receiving sync requests.  Therefore the player name
-    // that we send over the wire should be that of the local player name.
     reply.u.sync_reply.SetPlayerName(Client.LocalPlayerName);
     reply.u.sync_reply.SetGameName(Client.GameName);
 
@@ -920,6 +916,17 @@ public class GGPOEndpoint
     {
       Utils.LogIt(LogCategories.SYNC, "SyncReply while not synching");
       return msg.header.magic == _remote_magic_number;
+    }
+
+    if (msg.u.sync_reply.isReady == 0) { 
+      Utils.LogIt(LogCategories.SYNC, "Remote endpoint is replying to sync, but not ready!");
+      return false;
+    }
+
+    // We need to check the main client for readyness as well!
+    if (!this.Client.IsReadyToSync(ref msg)) {
+      Utils.LogIt(LogCategories.SYNC, "Local client is still not ready to fully sync!");
+      return false;
     }
 
     if (msg.u.sync_reply.random_reply != SyncState.random)

@@ -16,6 +16,8 @@ public class ReplaySession : IGGPOClient
   // Setting a large upper bound in the hopes of using mem pools in production.... (recycle ReplaySession instances)
   private const int MAX_PLAYERS_EVER = 8;
 
+  public int ConnectTimeout { get { return SessionArgs.ConnectTimeout; }}
+
   public UInt64 SessionId { get; private set; }
   public SessionOptions SessionArgs { get; private set; }
   public GameRecorder Recorder { get; private set; }
@@ -36,7 +38,7 @@ public class ReplaySession : IGGPOClient
   const int LEGACY_MAX_PLAYERS = 4;
   private ConnectStatus[] LocalConnectStatus = new ConnectStatus[LEGACY_MAX_PLAYERS];
 
-  private Sync Sync = null!; //new Sync()
+  private Sync Sync = null!; 
   private GGPOSessionCallbacks Callbacks = null!;
 
 
@@ -79,6 +81,14 @@ public class ReplaySession : IGGPOClient
     // NOTE: Not really sure what we are syncing in this context?
     Sync = new Sync(LocalConnectStatus, syncOps);
 
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public bool IsReadyToSync(ref UdpMsg msg)
+  {
+    // We are only ready once we have all connections made!
+    bool res = this.ClientCount == this.SessionArgs.MaxPlayerCount;
+    return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -182,7 +192,7 @@ public class ReplaySession : IGGPOClient
     int epCount = ClientCount;
     for (int i = 0; i < epCount; i++)
     {
-      var ep = Endpoints[i]; // _endpoints[i];
+      var ep = Endpoints[i]; 
       if (!ep.IsLocalPlayer && ep.HasAddress(receivedFrom))
       {
         ep.HandleMessage(ref msg, received);
@@ -212,15 +222,12 @@ public class ReplaySession : IGGPOClient
       // notify all of our endpoints of their local frame number for their
       // next connection quality report
       int current_frame = Sync.GetFrameCount();
-
-
       for (int i = 0; i < ClientCount; i++)
       {
         Endpoints[i].SetLocalFrameNumber(current_frame);
       }
 
       int total_min_confirmed = current_frame; // Nothing to poll in replay context!   PollPlayers(current_frame);
-
 
       Utils.LogIt(LogCategories.ENDPOINT, "last confirmed: %d.", total_min_confirmed);
       if (total_min_confirmed >= 0)
@@ -407,7 +414,7 @@ public class ReplaySession : IGGPOClient
       case EEventType.Datagram:
 
         info.event_code = EEventCode.GGPO_EVENTCODE_DATAGRAM;
-        info.u.datagram.player_index = (byte)playerIndex;
+        info.u.datagram.player_index = (byte)playerIndex;           // NOTE: For replay appliance, etc. we should include for information like 'endpoint type'
         info.u.datagram.code = evt.u.datagram.code;
         info.u.datagram.frame = evt.u.datagram.frame;
         info.u.datagram.dataSize = evt.u.datagram.dataSize;

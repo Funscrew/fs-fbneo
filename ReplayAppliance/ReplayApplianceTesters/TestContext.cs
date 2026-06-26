@@ -1,9 +1,15 @@
+using drewCo.Tools.Logging;
 using funscrew;
 using funscrew.Clients;
+using System.Diagnostics;
 
 namespace funscrewTesters
 {
   // ==============================================================================================================================
+  /// <summary>
+  /// Test context keeps track of all clients, replay appliances, etc. so that we can
+  /// simulate a game, etc.  Use 'CreateTestContext' to easily set one up.
+  /// </summary>
   public class TestContext
   {
     const int TIME_INTERVAL = 1;
@@ -16,7 +22,7 @@ namespace funscrewTesters
     public ReplayAppliance? ReplayAppliance { get; private set; } = null;
     public SessionPrimer? SessionPrimer { get; private set; } = null;
 
-    public int LastFrame {get; private set; } = -1;
+    public int LastFrame { get; private set; } = -1;
 
     public ulong SessionId { get; private set; }
 
@@ -62,57 +68,108 @@ namespace funscrewTesters
       //  const int MAX_FRAMES = 50;
       for (int curTime = 0; curTime < totalTime; curTime++)
       {
-        Clock.AddTime(TIME_INTERVAL);
-
-        //// NOTE: We only want to send the heartbeat every so often......
-        //// And the purpose of the heartbeat is so that blocking calls in production netcode
-        //// have something to do every so often if there are no incoming packets...
-        //if (SessionPrimer != null) {
-        //  // Send the heartbeat signal...
-        //  (SessionPrimer as SimSessionPrimer)?.SendHeartbeat();
-        //// SessionPrimer.
-        //}
-
-        if (ReplayAppliance != null)
-        {
-          ReplayAppliance.Update(); 
-        }
-
-        if (curTime % FRAME_INTERVAL == 0)
-        {
-          // TODO: I want to change the inputs per frame.  Data doesn't matter, just that it can be exchanged.
-          // Probably just increment the bits....
-          // p1Input[0] = (byte)(i & 0xFF);
-          int len = AllClients.Count;
-          for (int clientIndex = 0; clientIndex < len; clientIndex++)
-          {
-            var client = AllClients[clientIndex];
-
-            if (setInputs != null)
-            {
-              setInputs(InputBuffers[clientIndex], client.GetLocalPlayer().PlayerIndex, curTime);
-            }
-
-            Program.RunFrame(client, InputBuffers[clientIndex]);
-
-            ++LastFrame;
-          }
-
-        }
-        else
-        {
-          // TODO: A proper idle() function.....    (see Program.cs for example)
-          // This is where we would send out the player inputs and so on....
-          int len = AllClients.Count;
-          for (int j = 0; j < len; j++)
-          {
-            var c = AllClients[j];
-            c.Idle();
-          }
-        }
+        RunStep(TIME_INTERVAL);
       }
 
     }
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    private void RunStep(int interval, Action<byte[], int, int>? setInputs = null)
+    {
+      Clock.AddTime(interval);
+      int curTime = Clock.CurTime;
+
+      //// NOTE: We only want to send the heartbeat every so often......
+      //// And the purpose of the heartbeat is so that blocking calls in production netcode
+      //// have something to do every so often if there are no incoming packets...
+      //if (SessionPrimer != null) {
+      //  // Send the heartbeat signal...
+      //  (SessionPrimer as SimSessionPrimer)?.SendHeartbeat();
+      //// SessionPrimer.
+      //}
+
+      if (ReplayAppliance != null)
+      {
+        ReplayAppliance.Update();
+      }
+
+      if (curTime % FRAME_INTERVAL == 0)
+      {
+        // TODO: I want to change the inputs per frame.  Data doesn't matter, just that it can be exchanged.
+        // Probably just increment the bits....
+        // p1Input[0] = (byte)(i & 0xFF);
+        int len = AllClients.Count;
+        for (int clientIndex = 0; clientIndex < len; clientIndex++)
+        {
+          var client = AllClients[clientIndex];
+
+          if (setInputs != null)
+          {
+            setInputs(InputBuffers[clientIndex], client.GetLocalPlayer().PlayerIndex, curTime);
+          }
+
+          Program.RunFrame(client, InputBuffers[clientIndex]);
+
+          ++LastFrame;
+        }
+
+      }
+      else
+      {
+        // TODO: A proper idle() function.....    (see Program.cs for example)
+        // This is where we would send out the player inputs and so on....
+        int len = AllClients.Count;
+        for (int j = 0; j < len; j++)
+        {
+          var c = AllClients[j];
+          c.Idle();
+        }
+      }
+    }
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    internal void RunUtilEvent(GGPOClient client, EEventCode eventCode, int maxTime, Action<byte[], int, int>? setInputs = null)
+    {
+      // if (client.Callbacks.on_event != null) { throw new InvalidOperationException("there is already a handler for 'on_event'"); }
+      var oldEvent = client.Callbacks.on_event;
+
+
+      bool hitEvent = false;
+      GGPOEvent evt = default!;
+      client.Callbacks.on_event = (ref GGPOEvent x) =>
+      {
+        if (oldEvent != null) { 
+          oldEvent(ref x);
+        }
+
+        if (x.event_code == eventCode)
+        {
+          Debug.WriteLine($"We hit the event: {eventCode}!");
+          hitEvent = true;
+          evt = x;
+          return true;
+        }
+
+        return false;
+      };
+
+      for (int i = 0; i < maxTime; i++)
+      {
+        RunStep(TIME_INTERVAL, setInputs);
+        if (hitEvent)
+        {
+          // We hit the event, so let's quit!
+          // NOTE: Later we will return more data from this function.
+          break;
+        }
+      }
+
+      client.Callbacks.on_event = oldEvent;
+
+      Assert.Fail($"Event: {eventCode} was not encountered after max time: {maxTime}!");
+    }
+
+
   }
 
 

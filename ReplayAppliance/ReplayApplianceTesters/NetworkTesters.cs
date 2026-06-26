@@ -31,13 +31,14 @@ namespace funscrewTesters
       const string P2_NAME = "Archie";
       const string GAME_NAME = "test-game";
       const string GAME_VERSION = "123";
+
       TestContext context = CreateTestContext(GAME_NAME, GAME_VERSION, P1_NAME, P2_NAME);
 
-      var ops = new GGPOClientOptions("test-game", 0, REPLAY_APPLIANCE_PORT, Defaults.PROTOCOL_VERSION, context.SessionId);
-      ops.Callbacks = CreateDefaultCallbacks();
+      //var ops = new GGPOClientOptions("test-game", 0, REPLAY_APPLIANCE_PORT, Defaults.PROTOCOL_VERSION, context.SessionId);
+      //ops.Callbacks = CreateDefaultCallbacks();
 
-      var cbh = new CallbackHandler();
-      ops.Callbacks.on_event = cbh.OnEvent;
+      //var cbh = new CallbackHandler();
+      //ops.Callbacks.on_event = cbh.OnEvent;
 
 
       ReplayAppliance replayAppliance = CreateTestReplayAppliance(context);
@@ -55,9 +56,12 @@ namespace funscrewTesters
       GGPOClient p1 = context.Player1Client;
       p1.AddReplayAppliance(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT, REPLAY_APPLIANCE_TIMEOUT);
 
-
       var p1Remote = p1.GetRemotePlayer() as SimGGPOEndpoint;
       Assert.IsNotNull(p1Remote);
+
+      GGPOClient p2 = context.Player2Client;
+      var p2Remote = p2.GetRemotePlayer() as SimGGPOEndpoint;
+      Assert.IsNotNull(p2Remote);
 
       const int STARTUP_TIME = 100;
       context.RunGame(STARTUP_TIME);
@@ -65,24 +69,50 @@ namespace funscrewTesters
       Assert.That(replayAppliance.Errors.Count, Is.EqualTo(0), "There should be no listed errors!");
       Assert.That(rpSess.ClientCount, Is.EqualTo(1), "There should be one connected client!");
 
-      
-      // We want to get a count for the number of times that we have sent inputs to the remote.
-      // We should not have any until everything is all synced up....
-      Assert.That(p1Remote.TotalInputsSent, Is.GreaterThan(0), "Inputs should be exchanged at this point.");
 
-      // NOTE: Is there any way that we can get disconnect events?
+      // P1 / P2 should still be syncing at this point.
+      Assert.That(p1Remote._current_state, Is.EqualTo(EClientState.Syncing), "P1 should still be syncing!");
+       Assert.That(p2Remote._current_state, Is.EqualTo(EClientState.Syncing), "P2 should still be syncing!");
+
+      // If both players are syncing, then no exchange of inputs should happen.
+      Assert.That(p1Remote.TotalInputsSent, Is.EqualTo(0), "No inputs should have been sent at this time!");
+      Assert.That(p2Remote.TotalInputsSent, Is.EqualTo(0), "No inputs should have been sent at this time!");
+
+
+      // After a while, if the second player doesn't connect / sync, then the replay appliance should
+      // send a disconnect signal, and abandon the session.
+
+
+      context.RunUtilEvent(p1, EEventCode.GGPO_EVENTCODE_DATAGRAM, 5000);
+
+
+      throw new InvalidOperationException("Create some kind of 'run until event' function!");
 
       const int SIM_TIME = 2000;      // More than enough time for the mismatch to be detected / dropped.
       context.RunGame(SIM_TIME);
 
 
-      // Show that there are no longer any connections....
-      Assert.IsTrue(rpSess.IsComplete, "The session should be in the complete state.");
-      Assert.That(rpSess.ClientCount, Is.EqualTo(0), "There should no longer be any connected clients!");
+      //// NOTE: The conditions below are all wrong.
+      //// If only one of the clients have connected, there should not be any exchange of inputs
+      //// until BOTH clients have connected + synced.
 
-      var recorder = rpSess.Recorder;
-      Assert.IsTrue(recorder.RecordingComplete, "The recording should be marked as complete!");
-      Assert.IsTrue(recorder.HasError, "The recorder should be marked as having an error!");
+      //// We want to get a count for the number of times that we have sent inputs to the remote.
+      //// We should not have any until everything is all synced up....
+      //Assert.That(p1Remote.TotalInputsSent, Is.GreaterThan(0), "Inputs should be exchanged at this point.");
+
+      //// NOTE: Is there any way that we can get disconnect events?
+
+      //const int SIM_TIME = 2000;      // More than enough time for the mismatch to be detected / dropped.
+      //context.RunGame(SIM_TIME);
+
+
+      //// Show that there are no longer any connections....
+      //Assert.IsTrue(rpSess.IsComplete, "The session should be in the complete state.");
+      //Assert.That(rpSess.ClientCount, Is.EqualTo(0), "There should no longer be any connected clients!");
+
+      //var recorder = rpSess.Recorder;
+      //Assert.IsTrue(recorder.RecordingComplete, "The recording should be marked as complete!");
+      //Assert.IsTrue(recorder.HasError, "The recorder should be marked as having an error!");
 
     }
 
@@ -242,6 +272,7 @@ namespace funscrewTesters
         InputBuffer = new byte[5 * MAX_PLAYERS],
         PlayerName = p1Name
       };
+
       var ops2 = new TestPlayerOptions()
       {
         PlayerIndex = PLAYER2_INDEX,
@@ -251,6 +282,7 @@ namespace funscrewTesters
         InputBuffer = new byte[5 * MAX_PLAYERS],
         PlayerName = p2Name
       };
+
       var p1GGPO = CreateGGPOClient(ops1, ops2, testQueue, sessId);
       var p2GGPO = CreateGGPOClient(ops2, ops1, testQueue, sessId);
 

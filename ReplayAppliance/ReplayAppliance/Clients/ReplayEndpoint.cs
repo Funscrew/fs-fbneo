@@ -17,7 +17,6 @@ namespace funscrew.Clients
   {
     public static int MAX_ACKS = 0x100;
 
-    // private ReplayAppliance Appliance = null;
     private ReplaySession Session = null!;
 
     /// <summary>
@@ -25,17 +24,35 @@ namespace funscrew.Clients
     /// </summary>
     private RingBuffer<GameInput> _PendingAcks = null!;
 
+    private int StartTime = 0;
+
+
     // --------------------------------------------------------------------------------------------------------------------------  
     public ReplayEndpoint(ReplaySession session_, GGPOEndpointOptions ops_, ConnectStatus[] localConnectStatus_)
       : base(session_, ops_, localConnectStatus_)
     {
       this.Session = session_;
       _PendingAcks = new RingBuffer<GameInput>(MAX_ACKS);
+
+      StartTime = Client.CurTime;
     }
 
     // --------------------------------------------------------------------------------------------------------------------------  
     public override void OnLoopPoll()
     {
+      if (_current_state == EClientState.Disconnected) { return; }
+
+      if (_current_state == EClientState.Syncing)
+      {
+        int elapsed = Client.CurTime - StartTime;
+        if (elapsed >= Client.ConnectTimeout)
+        {
+          // We are going to disconnect.
+          Disconnect(Client.CurrentFrame, true);
+          return;
+        }
+      }
+
       base.OnLoopPoll();
       SendPendingAcks();
     }
@@ -57,7 +74,7 @@ namespace funscrew.Clients
         _last_acked_input = _PendingAcks.Front();
         _PendingAcks.Pop();
 
-        if (this.Session!= null)
+        if (this.Session != null)
         {
           this.Session.MergeInput(ref _last_acked_input, this.PlayerIndex);
         }
@@ -103,7 +120,7 @@ namespace funscrew.Clients
       // We will collect all of the pending acks and send a message for each:
       // In the future we can combine them all into a single message to ACK mulitple inputs.
       if (_PendingAcks.Size > 0)
-      { 
+      {
         var last = _last_acked_input;
         var front = _PendingAcks.Front();
         Utils.ASSERT(last.frame == -1 || last.frame + 1 == front.frame);

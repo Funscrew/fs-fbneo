@@ -58,6 +58,7 @@ public:
   uint8_t Runahead() { return _runahead; }
 
   virtual int CurrentFrame() override;
+  virtual bool IsReadyToSync(const UdpMsg* syncRequest) override;
 
 protected:
   void DisconnectPlayer(uint8_t playerIndex, int syncto);

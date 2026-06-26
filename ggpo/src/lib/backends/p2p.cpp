@@ -781,6 +781,29 @@ void Peer2PeerBackend::CheckInitialSync()
 }
 
 // ----------------------------------------------------------------------------------------------------------
+bool Peer2PeerBackend::IsReadyToSync(const UdpMsg* syncRequest)
+{
+
+  // This should always be a sync request....
+  _ASSERT(syncRequest->header.type == UdpMsg::SyncRequest);
+
+  // We are always ready to connect to the replay appliance.
+  if (syncRequest->u.sync_request.endpointType == EEndpointType::ReplayAppliance) { return true; }
+
+  // Check all endpoints for replay appliance + see if we are synced with it yet.
+  for (size_t i = 0; i < _endpointCount; i++)
+  {
+    auto ep = _endpoints[i];
+    if (ep->IsReplayClient()) {
+      bool res = ep->IsRunning();
+      return res;
+    }
+  }
+
+  return true;
+}
+
+// ----------------------------------------------------------------------------------------------------------
 int Peer2PeerBackend::CurrentFrame() {
   return _sync.GetFrameCount();
 }
