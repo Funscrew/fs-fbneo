@@ -544,11 +544,7 @@ void Peer2PeerBackend::OnUdpProtocolPeerEvent(UdpEvent& evt, GGPOEndpoint* endpo
     if (evt.u.datagram.code == DATAGRAM_CODE_DISCONNECT) {
       // The given endpoint is indicating that it wants to disconnect.
       // For now, I think that we will only care about the case where it is a replay appliance...
-      if (endpoint->IsReplayClient()) {
-
-        // Effectively disconnect the endpoint so it no longer sends / receives data...
-        endpoint->DisconnectEx(0, false);
-      }
+      HandleDisconnect(endpoint);
     }
     break;
 
@@ -557,6 +553,25 @@ void Peer2PeerBackend::OnUdpProtocolPeerEvent(UdpEvent& evt, GGPOEndpoint* endpo
     break;
 
   }
+}
+
+// ----------------------------------------------------------------------------------------------------------
+void Peer2PeerBackend::HandleDisconnect(GGPOEndpoint* endpoint) {
+
+  if (!endpoint->IsDisconnected())
+  {
+    GGPOEvent e;
+    e.event_code = GGPO_EVENTCODE_DISCONNECTED_FROM_PEER;
+    e.player_index = endpoint->PlayerIndex();
+    e.isReplayEndpoint = (uint8_t)(endpoint->IsReplayClient() ? 1 : 0);
+    _callbacks.on_event(&e);
+  }
+
+  if (endpoint->IsReplayClient()) {
+    // Effectively disconnect the endpoint so it no longer sends / receives data...
+    endpoint->DisconnectEx(0, false);
+  }
+
 }
 
 // ----------------------------------------------------------------------------------------------------------
@@ -675,6 +690,7 @@ void Peer2PeerBackend::DisconnectEx() {
 
 // --------------------------------------------------------------------------------------------------------------
 // NOTE: This code / function is never called.  It may be replaced in the future...
+// [Obsolete("This never actually gets called in the emulator, or any other implementation at at this time so it is basicall garbage.  We will get rid of it, and a lot of the concepts around it!")]
 void Peer2PeerBackend::DisconnectPlayer(uint8_t playerIndex, int syncto)
 {
   return;

@@ -210,6 +210,9 @@ public class ReplaySession : IGGPOClient
   {
     for (int i = 0; i < ClientCount; i++)
     {
+      if (Endpoints[i].IsDisconnected) { 
+        // One or more endpoints have disconnected, so we will disconnect them all / wrap this up!
+      }
       Endpoints[i].OnLoopPoll();
     }
     HandleEvents();

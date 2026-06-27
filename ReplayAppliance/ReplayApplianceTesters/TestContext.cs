@@ -138,7 +138,8 @@ namespace funscrewTesters
       GGPOEvent evt = default!;
       client.Callbacks.on_event = (ref GGPOEvent x) =>
       {
-        if (oldEvent != null) { 
+        if (oldEvent != null)
+        {
           oldEvent(ref x);
         }
 
@@ -166,7 +167,10 @@ namespace funscrewTesters
 
       client.Callbacks.on_event = oldEvent;
 
-      Assert.Fail($"Event: {eventCode} was not encountered after max time: {maxTime}!");
+      if (!hitEvent)
+      {
+        Assert.Fail($"Event: {eventCode} was not encountered after max time: {maxTime}!");
+      }
     }
 
 

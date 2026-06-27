@@ -99,6 +99,8 @@ public:
   bool GetPeerConnectStatus(int id, int* frame);
   bool IsInitialized() { return _udp != NULL; }
   bool IsSynchronized() { return _current_state == Running; }
+  bool IsDisconnected() { return _current_state == Disconnected; }
+
   bool IsRunning() { return _current_state == Running; }
   void SendInput(GameInput& input);
   void SendChat(char* text);

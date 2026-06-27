@@ -35,6 +35,8 @@ public class GGPOEndpoint
   //sockaddr_in _peer_addr;
   private UInt16 _magic_number;
   private int _queue;
+
+  // NOTE: This is only set after sync!
   UInt16 _remote_magic_number;
   bool _connected;
   int _send_latency;
@@ -812,7 +814,7 @@ public class GGPOEndpoint
 
     // filter out messages that don't match what we expect
     UInt16 seq = msg.header.sequence_number;
-    if (msg.header.type != EMsgType.SyncRequest && msg.header.type != EMsgType.SyncReply)
+    if (msg.header.type != EMsgType.SyncRequest && msg.header.type != EMsgType.SyncReply && msg.header.type != EMsgType.Datagram)
     {
       if (msg.header.magic != _remote_magic_number)
       {

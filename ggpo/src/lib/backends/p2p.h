@@ -67,6 +67,8 @@ protected:
   int Poll2Players(int current_frame);
   int PollNPlayers(int current_frame);
 
+  void HandleDisconnect(GGPOEndpoint* endpoint);
+
   // void AddReplayEndpoint(char* remoteIp, uint16 remotePort);
   // REFACTOR: -> 'AddRemoteEndpoint'
   void AddRemotePlayer(GGPOPlayer* player, uint64_t sessionId);

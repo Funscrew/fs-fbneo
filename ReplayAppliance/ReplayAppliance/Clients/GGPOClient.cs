@@ -1,4 +1,5 @@
-﻿using System.ComponentModel;
+﻿using drewCo.Tools.Logging;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Net;
 
@@ -11,7 +12,7 @@ namespace funscrew;
 /// </summary>
 public class GGPOClient : IGGPOClient, IDisposable
 {
-  protected GGPOClientOptions Options =null!;
+  protected GGPOClientOptions Options = null!;
 
 
   protected List<GGPOEndpoint> _endpoints = new List<GGPOEndpoint>();
@@ -701,6 +702,7 @@ public class GGPOClient : IGGPOClient, IDisposable
 
       case EEventType.Datagram:
 
+        // NOTE: At some point we will end up with a first class disconnect signal / event!
         if (evt.u.datagram.code == UdpEvent.DATAGRAM_CODE_DISCONNECT)
         {
           HandleDisconnect(endpoint);
@@ -718,12 +720,27 @@ public class GGPOClient : IGGPOClient, IDisposable
   // ----------------------------------------------------------------------------------------------------------
   protected virtual void HandleDisconnect(GGPOEndpoint endpoint)
   {
+    if (!endpoint.IsDisconnected)
+    {
+      GGPOEvent e = new GGPOEvent();
+      e.event_code = EEventCode.GGPO_EVENTCODE_DISCONNECTED_FROM_PEER;
+      e.player_index = endpoint.PlayerIndex;
+      e.isReplayEndpoint = (uint8_t)(endpoint.IsReplayClient ? 1 : 0);
+      _callbacks.on_event(ref e);
+    }
+
     // The given endpoint is indicating that it wants to disconnect.
     // For now, I think that we will only care about the case where it is a replay appliance...
     if (endpoint.IsReplayClient)
     {
+
+
+
+
       // Effectively disconnect the endpoint so it no longer sends / receives data...
       endpoint.Disconnect(0, false);
+
+      // We will remove the endpoint too?
     }
   }
 
@@ -775,42 +792,45 @@ public class GGPOClient : IGGPOClient, IDisposable
 
   // --------------------------------------------------------------------------------------------------------------
   //void DisconnectPlayer(byte playerIndex, int syncto)
+  [Obsolete("This never actually gets called in the emulator, or any other implementation at at this time so it is basicall garbage.  We will get rid of it, and a lot of the concepts around it!")]
   void DisconnectEndpoint(GGPOEndpoint endpoint, int syncto)
   {
-    int frameCount = _sync.GetFrameCount();
+    Log.Warning($"Function: {nameof(DisconnectEndpoint)} is called, but doesn't do anything!");
+    return;
+    //int frameCount = _sync.GetFrameCount();
 
-    if (!endpoint.IsReplayClient)
-    {
-      var playerIndex = endpoint.PlayerIndex;
+    //if (!endpoint.IsReplayClient)
+    //{
+    //  var playerIndex = endpoint.PlayerIndex;
 
-      GGPOEvent info = new GGPOEvent();
-      int framecount = _sync.GetFrameCount();
+    //  GGPOEvent info = new GGPOEvent();
+    //  int framecount = _sync.GetFrameCount();
 
-      _endpoints[playerIndex].Disconnect(frameCount);
+    //  _endpoints[playerIndex].Disconnect(frameCount);
 
-      Utils.LogIt(LogCategories.ENDPOINT, "Changing player: %d local connect status for last frame from %d to %d on disconnect request (current: %d).", playerIndex, _local_connect_status[playerIndex].last_frame, syncto, framecount);
+    //  Utils.LogIt(LogCategories.ENDPOINT, "Changing player: %d local connect status for last frame from %d to %d on disconnect request (current: %d).", playerIndex, _local_connect_status[playerIndex].last_frame, syncto, framecount);
 
-      _local_connect_status[playerIndex].disconnected = true;
-      _local_connect_status[playerIndex].last_frame = syncto;
+    //  _local_connect_status[playerIndex].disconnected = true;
+    //  _local_connect_status[playerIndex].last_frame = syncto;
 
-      if (syncto < framecount)
-      {
-        Utils.LogIt(LogCategories.ENDPOINT, "adjusting simulation to account for the fact that %d disconnected @ %d.", playerIndex, syncto);
-        _sync.AdjustSimulation(syncto);
-        Utils.LogIt(LogCategories.ENDPOINT, "finished adjusting simulation.");
-      }
+    //  if (syncto < framecount)
+    //  {
+    //    Utils.LogIt(LogCategories.ENDPOINT, "adjusting simulation to account for the fact that %d disconnected @ %d.", playerIndex, syncto);
+    //    _sync.AdjustSimulation(syncto);
+    //    Utils.LogIt(LogCategories.ENDPOINT, "finished adjusting simulation.");
+    //  }
 
-      info.event_code = EEventCode.GGPO_EVENTCODE_DISCONNECTED_FROM_PEER;
-      info.player_index = playerIndex;
-      _callbacks.on_event(ref info);
+    //  info.event_code = EEventCode.GGPO_EVENTCODE_DISCONNECTED_FROM_PEER;
+    //  info.player_index = playerIndex;
+    //  _callbacks.on_event(ref info);
 
-      CheckInitialSync();
-    }
-    else
-    {
-      // NOTE: All endpoints should be disconnected this way.....
-      endpoint.Disconnect(frameCount);
-    }
+    //  CheckInitialSync();
+    //}
+    //else
+    //{
+    //  // NOTE: All endpoints should be disconnected this way.....
+    //  endpoint.Disconnect(frameCount);
+    //}
   }
 
   // ----------------------------------------------------------------------------------------------------------
@@ -1078,7 +1098,7 @@ public interface IGGPOClient : IClockSource
   string LocalPlayerName { get; }
   int CurrentFrame { get; }
   string GameName { get; }
-  int ConnectTimeout { get ; }
+  int ConnectTimeout { get; }
 
   bool IsReadyToSync(ref UdpMsg syncRequest);
 }

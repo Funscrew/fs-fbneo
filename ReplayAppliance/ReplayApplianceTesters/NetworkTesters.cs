@@ -81,9 +81,7 @@ namespace funscrewTesters
 
       // After a while, if the second player doesn't connect / sync, then the replay appliance should
       // send a disconnect signal, and abandon the session.
-
-
-      context.RunUtilEvent(p1, EEventCode.GGPO_EVENTCODE_DATAGRAM, 5000);
+      context.RunUtilEvent(p1, EEventCode.GGPO_EVENTCODE_DISCONNECTED_FROM_PEER, 5000);
 
 
       throw new InvalidOperationException("Create some kind of 'run until event' function!");
