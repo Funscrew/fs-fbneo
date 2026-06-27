@@ -1,8 +1,7 @@
 ﻿using drewCo.Tools;
 using drewCo.Tools.Logging;
+using System.Diagnostics;
 using System.Net;
-using System.Security.Cryptography;
-using System.Transactions;
 
 namespace funscrew.Clients;
 
@@ -27,8 +26,10 @@ public class ReplayAppliance
 
   // We will have a list of active sessions, each of which will have their own game recorder.
   private object SessionLock = new object();
-  private Dictionary<uint64_t, ReplaySession> ActiveSessions = new Dictionary<uint64_t, ReplaySession>();
+  private Dictionary<uint64_t, ReplaySession> IdToSession = new Dictionary<uint64_t, ReplaySession>();
   private Dictionary<AddrHash, ReplaySession> AddressToSession = new Dictionary<AddrHash, ReplaySession>();
+  private List<ReplaySession> ActiveSessions = new List<ReplaySession>(0xff);
+  private List<ReplaySession> CompleteSessions = new List<ReplaySession>(0xff);
 
   /// <summary>
   /// This is the set of all known connected clients regardless of their session.
@@ -80,7 +81,7 @@ public class ReplayAppliance
     Log.Info($"Starting new session with id: {sessionId}...");
     lock (SessionLock)
     {
-      if (ActiveSessions.ContainsKey(sessionId))
+      if (IdToSession.ContainsKey(sessionId))
       {
         throw new InvalidOperationException($"Session id: {sessionId} is already active!");
       }
@@ -121,118 +122,155 @@ public class ReplayAppliance
       };
 
       var session = new ReplaySession(this.UDP, sessionId, recorder, sessionOps, callbacks);
-      ActiveSessions.Add(sessionId, session);
+      IdToSession.Add(sessionId, session);
+      ActiveSessions.Add(session);
 
       return session;
     }
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public bool Update()
+  public void Update()
   {
-    EndPoint ep = default!;
+    // TODO: Some kind of completion flag here......
+    // if (IsComplete) { return; }
 
-    // This is a blocking call!
-    int received = UDP.Receive(_ReceiveBuffer, ref ep);
-    if (received == 0)
-    {
-        return false;
-    }
-
-    UdpMsg msg = new UdpMsg();
-    UdpMsg.FromBytes(_ReceiveBuffer, ref msg, received);
-
-    if (msg.header.type == EMsgType.Heartbeat)
-    {
-      Log.Verbose("Heartbeat!");
-      return true;
-    }
-
-    ReplaySession? sess = DeliverMessage(ref msg, received, (IPEndPoint)ep);
-    if (sess == null)
-    {
-      // NOTE: Possibly got data from a blacklist client?
-      // Ideally this branch would not be possible...
-      // TODO: LOG?
-      return false;
-      // goto lblReceiveData;
-    }
-
-    // Now update the session so it can do its thing.....
-    sess.DoPoll();
-    return true;
-    // The rest of 'DoPoll'
-
-
-    //// TEMP: TEST:
-    //if (Clock.CurTime > 2000)
-    //{
-    //  Log.Info("Test timeout has expired!");
-    //  break;
-    //}
-  }
-
-  // --------------------------------------------------------------------------------------------------------------------------
-
-  // NOTE: This should only be used in production.  Not suitable for test code....
-  public Task BeginUpdateLoop()
-  {
-    var res = Task.Factory.StartNew(() =>
+    lock (SessionLock)
     {
 
       EndPoint ep = default!;
+
+      // This is a blocking call!
       while (true)
       {
-
-      lblReceiveData:
-
-        bool updated = Update();
-        if (!updated) {
-          // AAIIIIIEEEEE EVIL! EVIL! EVIL! CALL THE COAST GUARD!!!!!
-          goto lblReceiveData;
-        }
-
-        // This is a blocking call!
         int received = UDP.Receive(_ReceiveBuffer, ref ep);
         if (received == 0)
         {
-          // AAIIIIIEEEEE EVIL! EVIL! EVIL! CALL THE COAST GUARD!!!!!
-          goto lblReceiveData;
+          break;
         }
 
         UdpMsg msg = new UdpMsg();
         UdpMsg.FromBytes(_ReceiveBuffer, ref msg, received);
 
-        if (msg.header.type == EMsgType.Heartbeat)
-        {
-          goto lblReceiveData;
-        }
-
         ReplaySession? sess = DeliverMessage(ref msg, received, (IPEndPoint)ep);
         if (sess == null)
         {
-          // NOTE: Possibly got data from a blacklist client?
-          goto lblReceiveData;
-        }
-
-        sess.DoPoll();
-
-
-        // The rest of 'DoPoll'
-
-
-        // TEMP: TEST:
-        if (Clock.CurTime > 2000)
-        {
-          Log.Info("Test timeout has expired!");
-          break;
+          Log.Error("Could not deliver message to session!  Bad data?");
         }
       }
 
+      // Update all sessions:
+      // NOTE:  If we have a lot of sessions, we might get better perf by have some kind of
+      // 'last updated' timestamp + 'force update every x. ms' type of deal.
+      int len = ActiveSessions.Count;
+      for (int i = 0; i < len; i++)
+      {
+        var sess = ActiveSessions[i];
+        sess.DoPoll();
 
-    }, CancelToken);
+        if (sess.IsComplete) { CompleteSessions.Add(sess); }
+      }
 
-    return res;
+      CleanupCompleteSessions();
+
+    }
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private void CleanupCompleteSessions()
+  {
+    lock (SessionLock)
+    {
+      int len = CompleteSessions.Count;
+      for (int i = 0; i < len; i++)
+      {
+        var sess = CompleteSessions[i];
+
+        Log.Info($"Session: {sess.SessionId} is complete and will be removed!");
+
+        Debug.Assert(ActiveSessions.Contains(sess));
+        Debug.Assert(IdToSession.ContainsKey(sess.SessionId));
+
+        ActiveSessions.Remove(sess);
+        IdToSession.Remove(sess.SessionId);
+
+        int epCount = sess.EndpointCount;
+        for(int j = 0; j < epCount; j++) {
+          var hash = sess.Endpoints[j].AddressHash;
+          Debug.Assert(AddressToSession.ContainsKey(hash));
+
+          AddressToSession.Remove(hash);
+        }
+      }
+
+      CompleteSessions.Clear();
+    }
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  // NOTE: This should only be used in production.  Not suitable for test code....
+  public Task BeginUpdateLoop()
+  {
+    throw new InvalidOperationException("Don't use this!");
+    // return default!;
+
+    //var res = Task.Factory.StartNew(() =>
+    //{
+
+    //  EndPoint ep = default!;
+    //  while (true)
+    //  {
+
+    //  lblReceiveData:
+
+    //    bool updated = Update();
+    //    if (!updated)
+    //    {
+    //      // AAIIIIIEEEEE EVIL! EVIL! EVIL! CALL THE COAST GUARD!!!!!
+    //      goto lblReceiveData;
+    //    }
+
+    //    // This is a blocking call!
+    //    int received = UDP.Receive(_ReceiveBuffer, ref ep);
+    //    if (received == 0)
+    //    {
+    //      // AAIIIIIEEEEE EVIL! EVIL! EVIL! CALL THE COAST GUARD!!!!!
+    //      goto lblReceiveData;
+    //    }
+
+    //    UdpMsg msg = new UdpMsg();
+    //    UdpMsg.FromBytes(_ReceiveBuffer, ref msg, received);
+
+    //    if (msg.header.type == EMsgType.Heartbeat)
+    //    {
+    //      goto lblReceiveData;
+    //    }
+
+    //    ReplaySession? sess = DeliverMessage(ref msg, received, (IPEndPoint)ep);
+    //    if (sess == null)
+    //    {
+    //      // NOTE: Possibly got data from a blacklist client?
+    //      goto lblReceiveData;
+    //    }
+
+    //    sess.DoPoll();
+
+
+    //    // The rest of 'DoPoll'
+
+
+    //    // TEMP: TEST:
+    //    if (Clock.CurTime > 2000)
+    //    {
+    //      Log.Info("Test timeout has expired!");
+    //      break;
+    //    }
+    //  }
+
+
+    //}, CancelToken);
+
+    //return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -249,7 +287,7 @@ public class ReplayAppliance
       // Validate session ID!
       // TODO : We should return null and add the blacklist code in the calling function!
       var sid = msg.u.sync_request.session_id;
-      if (!this.ActiveSessions.TryGetValue(sid, out useSession))
+      if (!this.IdToSession.TryGetValue(sid, out useSession))
       {
         Log.Warning($"Invalid session ID!  Connection from: {receivedFrom.ToString()} should be blacklisted!");
         // throw new InvalidOperationException("Invalid session ID!  Connection should be blacklisted!");
@@ -360,242 +398,6 @@ public class ReplayAppliance
   }
 
   #endregion
-
-
-  //// --------------------------------------------------------------------------------------------------------------------------
-  //private void ValidateOptions()
-  //{
-  //  if (string.IsNullOrWhiteSpace(ReplayOptions.GameName))
-  //  {
-  //    throw new InvalidOperationException("Invalid game name!");
-  //  }
-  //}
-
-  //// --------------------------------------------------------------------------------------------------------------------------
-  //private void InitGameRecorder()
-  //{
-  //  if (string.IsNullOrWhiteSpace(ReplayOptions.GameVersion))
-  //  {
-  //    throw new InvalidOperationException("Invalid game version!");
-  //  }
-
-  //  var gameData = new CGameData()
-  //  {
-  //    GameName = ReplayOptions.GameName,
-  //    GameVersion = ReplayOptions.GameVersion,
-  //    MaxPlayerCount = (UInt16)ClientOptions.MaxPlayerCount,
-  //    TotalInputSize = (UInt16)(ClientOptions.InputSize * ClientOptions.MaxPlayerCount)
-  //  };
-
-  //  Recorder = new GameRecorder(gameData,
-  //  ReplayOptions.DataDir,
-  //  ClientOptions.SessionId
-  //  );
-  //}
-
-  //// --------------------------------------------------------------------------------------------------------------------------
-  //protected override void HandleDisconnect(GGPOEndpoint endpoint)
-  //{
-  //  base.HandleDisconnect(endpoint);
-  //  if (endpoint.IsDisconnected)
-  //  {
-  //    Log.Info("A player disconnected.... wrapping up....");
-  //  }
-  //}
-
-  //// --------------------------------------------------------------------------------------------------------------------------
-  //public override void DisconnectAll()
-  //{
-  //  base.DisconnectAll();
-
-  //  this.AllConnected = false;
-  //  this.ConnectedPlayerIndexes.Clear();
-  //}
-
-
-  //// --------------------------------------------------------------------------------------------------------------------------
-  //public GGPOEndpoint GetEndpoint(int index)
-  //{
-  //  return _endpoints[index];
-  //}
-
-  //// --------------------------------------------------------------------------------------------------------------------------
-  //protected override void DeliverMessage(ref UdpMsg msg, int received, EndPoint receivedFrom)
-  //{
-  //  // NOTE: This is going to make garbage.... lame!
-  //  SocketAddress ipa = receivedFrom.Serialize();
-  //  if (msg.header.type == EMsgType.SyncRequest && !this.ConnectedClients.Contains(ipa))
-  //  {
-  //    int index = ConnectedClients.Count;
-  //    var ep = ConnectNewClient(ref msg, ipa);
-  //    if (ep != null)
-  //    {
-  //      _endpoints.Add(ep);
-  //    }
-  //  }
-
-  //  // Now that the end
-  //  base.DeliverMessage(ref msg, received, receivedFrom);
-
-  //}
-
-  //// --------------------------------------------------------------------------------------------------------------------------
-  //private GGPOEndpoint ConnectNewClient(ref UdpMsg msg, SocketAddress ipa)
-  //{
-  //  // JFC can we make this any more of a pain in the ass?
-  //  // TODO: This will probably go away when we fix how we represent this stuff....
-  //  // Also, this won't work with IPV6, booooo
-  //  var bufferData = ipa.Buffer.ToArray();
-  //  byte[] port = new byte[2];
-  //  port[0] = bufferData[3];
-  //  port[1] = bufferData[2];
-  //  var remotePort = BitConverter.ToUInt16(port);
-  //  string remoteHost = $"{bufferData[4]}.{bufferData[5]}.{bufferData[6]}.{bufferData[7]}";
-
-  //  // Make sure that session id + player index are correct....
-  //  var sid = msg.u.sync_request.session_id;
-  //  if (sid != ReplayOptions.SessionId)
-  //  {
-  //    // We don't want to receive from this endpoint anymore.....
-  //    // How can we block receiving?
-  //    AddError($"Connection attempt with invalid session id! ({ReplayOptions.SessionId}-{msg.u.sync_request.session_id}) [adding to blacklist]");
-  //    UDP.AddToBlacklist(ipa);
-  //    return null;
-  //  }
-
-  //  // We also want to check to see if we are getting the correct player index.
-  //  // NOTE: If a certain player index is already connected, then we want to
-  //  // reject those other connections that are reporting the wrong one!
-  //  var pi = msg.u.sync_request.player_index;
-  //  if (ConnectedPlayerIndexes.Contains(pi))
-  //  {
-  //    AddError($"The player with index: {pi} has already been connected! [adding to blacklist]");
-  //    UDP.AddToBlacklist(ipa);
-  //    return null;
-  //  }
-
-  //  // NOTE: We should have a sync request with the correct request ID set!
-  //  // Don't know what to do if we don't... probably just ignore it...
-  //  var newEndpoint = AddReplayEndpoint(remoteHost, remotePort, msg);
-
-  //  Log.Info("A remote endpoint was added...");
-
-  //  this.ConnectedClients.Add(ipa);
-  //  if (this.ConnectedClients.Count == 2)
-  //  {
-  //    AllConnected = true;
-  //    Log.Info("All clients are setup...");
-  //  }
-
-  //  return newEndpoint;
-
-  //  // Send the sync reply, immediately.
-  //  // newEndpoint.OnSyncRequest(ref msg, received);
-
-  //}
-
-  //// --------------------------------------------------------------------------------------------------------------------------
-  //protected override int PollPlayers(int current_frame)
-  //{
-  //  // Replay appliance doesn't really do anything at this point, tho maybe this is where
-  //  // we do stuff like confim inputs or whatever.....?
-  //  // return base.PollPlayers(current_frame);
-  //  return current_frame;
-  //}
-
-  // --------------------------------------------------------------------------------------------------------------------------
-  private void AddError(string msg)
-  {
-    Log.Error(msg);
-    this.Errors.Add(msg);
-  }
-
-  //// --------------------------------------------------------------------------------------------------------------------------
-  //protected override void CheckInitialSync()
-  //{
-  //  if (_synchronizing)
-  //  {
-  //    int epLen = _endpoints.Count;
-  //    if (epLen < 2) { return; }
-
-  //    for (int i = 0; i < epLen; i++)
-  //    {
-  //      var ep = _endpoints[i];
-  //      if (!ep.IsSynchronized() && !_local_connect_status[ep.PlayerIndex].disconnected)
-  //      {
-  //        return;
-  //      }
-  //    }
-
-  //    GGPOEvent info = new GGPOEvent();
-  //    info.event_code = EEventCode.GGPO_EVENTCODE_RUNNING;
-  //    _callbacks.on_event(ref info);
-  //    _synchronizing = false;
-  //  }
-  //}
-
-  //// --------------------------------------------------------------------------------------------------------------------------
-  //private GGPOEndpoint AddReplayEndpoint(string remoteHost, int remotePort, UdpMsg msg)
-  //{
-  //  if (remoteHost == "0.0.0.0") { throw new InvalidOperationException("Invalid host!"); }
-  //  if (remotePort == 0) { throw new InvalidOperationException("Invalid port!"); }
-
-  //  var playerIndex = msg.u.sync_request.player_index;
-  //  var ops = new GGPOEndpointOptions()
-  //  {
-  //    Delay = 0,
-  //    IsLocal = false,
-  //    PlayerIndex = playerIndex, // GGPOConsts.REPLAY_APPLIANCE_PLAYER_INDEX,
-  //    PlayerName = "REPLAY_APP",
-  //    RemoteHost = remoteHost,
-  //    RemotePort = remotePort,
-  //    Runahead = 0,
-  //    IsReplayClient = true,
-  //    TestOptions = new TestOptions()
-  //  };
-
-  //  // NOTE: We may not want to send out the sync request immediately on these endpoints?
-  //  // Nah -> it should be OK that they bounce around.....
-  //  var remote = new ReplayEndpoint(this, ops, _local_connect_status);
-
-  //  ConnectedPlayerIndexes.Add(playerIndex);
-
-  //  return remote;
-  //}
-
-  //// --------------------------------------------------------------------------------------------------------------------------
-  //public override bool SyncInput(in byte[] values, int isize, int maxPlayers)
-  //{
-  //  // TODO: Maybe this is where we merge + ACK inputs?
-  //  return true;
-  //}
-
-  //// --------------------------------------------------------------------------------------------------------------------------
-  //protected override bool AddLocalInput(byte[] values, int isize)
-  //{
-  //  // Do nothing, we don't have local inputs!
-  //  return true;
-  //}
-
-
-  //// --------------------------------------------------------------------------------------------------------------------------
-  ///// <summary>
-  ///// This is where the inputs for the different frames will get merged, recorded, and later sent out.
-  ///// </summary>
-  //// private bool _WarningSent = false;
-  //internal void MergeInput(ref GameInput input, int playerIndex)
-  //{
-  //  if (Recorder.HasError)
-  //  {
-  //    int x = 10;
-  //    // We have detected an error in the recorder.  We will log this, and send disconnect
-  //    // notices to all active clients.
-  //    Log.Error($"There was a recording error: {Recorder.ErrorReason} : {Recorder.ErrorMessage}");
-  //    DisconnectAll();
-  //    return;
-  //  }
-  //  Recorder.AddInput(playerIndex, ref input);
-  //}
 
 }
 

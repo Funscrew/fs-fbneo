@@ -98,6 +98,8 @@ public class GGPOEndpoint
 
   public EClientState _current_state { get; private set; } = EClientState.Disconnected;
 
+  public bool ConnectionTimedOut { get; protected set; } = false;
+
   /*
    * Fairness.
    */

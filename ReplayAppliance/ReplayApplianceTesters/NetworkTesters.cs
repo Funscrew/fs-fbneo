@@ -1,8 +1,6 @@
 using drewCo.Tools;
 using funscrew;
 using funscrew.Clients;
-using System.Net.Mime;
-using System.Net.WebSockets;
 
 namespace funscrewTesters
 {
@@ -34,13 +32,6 @@ namespace funscrewTesters
 
       TestContext context = CreateTestContext(GAME_NAME, GAME_VERSION, P1_NAME, P2_NAME);
 
-      //var ops = new GGPOClientOptions("test-game", 0, REPLAY_APPLIANCE_PORT, Defaults.PROTOCOL_VERSION, context.SessionId);
-      //ops.Callbacks = CreateDefaultCallbacks();
-
-      //var cbh = new CallbackHandler();
-      //ops.Callbacks.on_event = cbh.OnEvent;
-
-
       ReplayAppliance replayAppliance = CreateTestReplayAppliance(context);
       var spOps = new SessionPrimerOptions()
       {
@@ -67,12 +58,12 @@ namespace funscrewTesters
       context.RunGame(STARTUP_TIME);
 
       Assert.That(replayAppliance.Errors.Count, Is.EqualTo(0), "There should be no listed errors!");
-      Assert.That(rpSess.ClientCount, Is.EqualTo(1), "There should be one connected client!");
+      Assert.That(rpSess.EndpointCount, Is.EqualTo(1), "There should be one connected client!");
 
 
       // P1 / P2 should still be syncing at this point.
       Assert.That(p1Remote._current_state, Is.EqualTo(EClientState.Syncing), "P1 should still be syncing!");
-       Assert.That(p2Remote._current_state, Is.EqualTo(EClientState.Syncing), "P2 should still be syncing!");
+      Assert.That(p2Remote._current_state, Is.EqualTo(EClientState.Syncing), "P2 should still be syncing!");
 
       // If both players are syncing, then no exchange of inputs should happen.
       Assert.That(p1Remote.TotalInputsSent, Is.EqualTo(0), "No inputs should have been sent at this time!");
@@ -81,7 +72,16 @@ namespace funscrewTesters
 
       // After a while, if the second player doesn't connect / sync, then the replay appliance should
       // send a disconnect signal, and abandon the session.
-      context.RunUtilEvent(p1, EEventCode.GGPO_EVENTCODE_DISCONNECTED_FROM_PEER, 5000);
+      var testTime = GGPOClientOptions.DEFAULT_CONNECT_TIMEOUT * 2;
+      var evt = context.RunUtilEvent(p1, EEventCode.GGPO_EVENTCODE_DISCONNECTED_FROM_PEER, testTime);
+      Assert.IsTrue(evt.isReplayEndpoint == 1, "The disconnecting endpoint should be from the replay appliance.");
+      Assert.NotNull(evt);
+
+      // Now after some time, the two players should sync up, and the replay appliance should be marked as complete / disconnected.
+      context.RunGame(1000);
+
+      Assert.That(p1Remote._current_state, Is.EqualTo(EClientState.Running), "p1 remote should be running now");
+      Assert.That(p2Remote._current_state, Is.EqualTo(EClientState.Running), "p2 remote should be running now");
 
 
       throw new InvalidOperationException("Create some kind of 'run until event' function!");
@@ -164,7 +164,7 @@ namespace funscrewTesters
       Assert.That(replayAppliance.Errors.Count, Is.EqualTo(0), "There should be no listed errors!");
 
       // At this point we should have two connected clients on the replay appliance.
-      Assert.That(rpSess.ClientCount, Is.EqualTo(2), "There should be two connected clients!");
+      Assert.That(rpSess.EndpointCount, Is.EqualTo(2), "There should be two connected clients!");
 
       // Make sure that the players are synced up as well as the GGPO client itself.
       var remote1 = context.Player1Client.GetRemotePlayer();

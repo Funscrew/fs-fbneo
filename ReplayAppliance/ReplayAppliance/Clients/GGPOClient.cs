@@ -15,7 +15,7 @@ public class GGPOClient : IGGPOClient, IDisposable
   protected GGPOClientOptions Options = null!;
 
 
-  protected List<GGPOEndpoint> _endpoints = new List<GGPOEndpoint>();
+  protected List<GGPOEndpoint> _endpoints = new List<GGPOEndpoint>(0x04);
   protected GGPOEndpoint[] _Players = new GGPOEndpoint[GGPOConsts.MAX_PLAYERS];
   protected int _ConnectedPlayerCount = 0;
 
@@ -733,14 +733,11 @@ public class GGPOClient : IGGPOClient, IDisposable
     // For now, I think that we will only care about the case where it is a replay appliance...
     if (endpoint.IsReplayClient)
     {
-
-
-
-
       // Effectively disconnect the endpoint so it no longer sends / receives data...
       endpoint.Disconnect(0, false);
 
-      // We will remove the endpoint too?
+      Log.Info($"Received disconnect signal from ReplayAppliance on session: {this.SessionId}");
+      this._endpoints.Remove(endpoint);
     }
   }
 
@@ -993,7 +990,7 @@ public class GGPOClient : IGGPOClient, IDisposable
 // ==========================================================================================
 public class GGPOClientOptions
 {
-  public const int DEFAULT_CONNECT_TIMEOUT = 100;
+  public const int DEFAULT_CONNECT_TIMEOUT = 5000;
 
   private const int DEFAULT_INPUT_SIZE = 5;   // This is for 3rd strike.
   private const int MAX_PLAYER_COUNT = 4;     // NOTE: This should be 2, but that will make trouble!

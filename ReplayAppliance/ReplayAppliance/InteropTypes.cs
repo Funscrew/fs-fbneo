@@ -219,7 +219,8 @@ public enum ECompletionReason : uint8_t
 {
   Invalid = 0,
   NormalDisconnect,
-  Error
+  Error,
+  ConnectionTimeout
 };
 
 // ========================================================================================================================

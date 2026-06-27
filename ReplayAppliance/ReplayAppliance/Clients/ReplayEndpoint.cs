@@ -49,6 +49,7 @@ namespace funscrew.Clients
         {
           // We are going to disconnect.
           Disconnect(Client.CurrentFrame, true);
+          ConnectionTimedOut = true;
           return;
         }
       }
