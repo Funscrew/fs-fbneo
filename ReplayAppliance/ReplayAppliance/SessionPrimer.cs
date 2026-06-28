@@ -110,9 +110,9 @@ public class SessionPrimer : IDisposable
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  protected ReplaySession BeginSession(ulong id, SessionOptions sessOps)
+  protected ReplaySession BeginSession(ulong sessionId, SessionOptions sessOps)
   {
-    ReplaySession res = this.ReplayAppliance.BeginSession(id, sessOps);
+    ReplaySession res = this.ReplayAppliance.BeginSession(sessionId, sessOps);
     return res;
   }
 

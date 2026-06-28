@@ -107,20 +107,26 @@ namespace funscrewTesters
 
       // Each of the players will need to send their data to the replay appliance.
       var p1 = context.Player1Client;
-      p1.AddReplayAppliance(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT, REPLAY_APPLIANCE_TIMEOUT);
+      var raep1 = p1.AddReplayAppliance(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT, REPLAY_APPLIANCE_TIMEOUT);
 
       var p2 = context.Player2Client;
-      p2.AddReplayAppliance(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT, REPLAY_APPLIANCE_TIMEOUT);
-
+      var raep2 = p2.AddReplayAppliance(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT, REPLAY_APPLIANCE_TIMEOUT);
 
       // NOTE: Choose as little time as possible to get the clients synced.
       // Maybe some kind of a callback or 'run until'...?
-      const int STARTUP_TIME = 50;
+      // TODO: Implement a 'run until....' here to minimize connection time?
+      const int STARTUP_TIME = 2000;
       context.RunGame(STARTUP_TIME);
       Assert.That(replayAppliance.Errors.Count, Is.EqualTo(0), "There should be no listed errors!");
 
-      // At this point we should have two connected clients on the replay appliance.
+      // Show that the endpoints on the session are running:
       Assert.That(rpSess.EndpointCount, Is.EqualTo(2), "There should be two connected clients!");
+      Assert.That(rpSess.Endpoints[0]._current_state, Is.EqualTo(EClientState.Running));
+      Assert.That(rpSess.Endpoints[1]._current_state, Is.EqualTo(EClientState.Running));
+
+      // Show that both players are also synced with the replay appliance (on those endpoints)
+      Assert.That(raep1._current_state, Is.EqualTo(EClientState.Running), "Replay appliance endpoint for p1 should be listed as running!");
+      Assert.That(raep2._current_state, Is.EqualTo(EClientState.Running), "Replay appliance endpoint for p2 should be listed as running!");
 
       // Make sure that the players are synced up as well as the GGPO client itself.
       var remote1 = context.Player1Client.GetRemotePlayer();
@@ -238,7 +244,10 @@ namespace funscrewTesters
       };
 
       var p1GGPO = CreateGGPOClient(ops1, ops2, testQueue, sessId);
+      p1GGPO.ID = 1;
+
       var p2GGPO = CreateGGPOClient(ops2, ops1, testQueue, sessId);
+      p2GGPO.ID = 2;
 
       // NOTE: If we use 'GetLocalPlayer' then the test fails.  This is part of some weird implementation
       // detail of how the GGPOEndpoints/Client code runs.  I am pretty sure this is by design, and I have

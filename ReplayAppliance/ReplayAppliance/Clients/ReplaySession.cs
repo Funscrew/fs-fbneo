@@ -40,6 +40,7 @@ public class ReplaySession : IGGPOClient
   private Sync Sync = null!; 
   private GGPOSessionCallbacks Callbacks = null!;
 
+  public int ID { get; set; }
 
   // IGGPOClient interface stuff:
   // NOTE: With this version of ReplayAppliance, these properties don't make sense in terms

@@ -176,7 +176,7 @@ public class TestContext
   // --------------------------------------------------------------------------------------------------------------------------
   internal (SimSessionPrimer frontDoor, SimReplayAppliance replayAppliance) CreateReplayAppliance()
   {
-  var context = this;
+    var context = this;
     SimReplayAppliance replayAppliance = CreateTestReplayAppliance();
 
     var spOps = new SessionPrimerOptions()
@@ -201,7 +201,7 @@ public class TestContext
       ReplayPort = TestBase.REPLAY_APPLIANCE_PORT,
       RequestPort = TestBase.FRONT_DOOR_PORT
     };
-    var blaster = new SimUdp(TestBase.REPLAY_APPLIANCE_HOST, TestBase.REPLAY_APPLIANCE_PORT, context.Clock, context.MsgQueue, false, TestBase.SIM_PING, TestBase. SIM_JITTER);
+    var blaster = new SimUdp(TestBase.REPLAY_APPLIANCE_HOST, TestBase.REPLAY_APPLIANCE_PORT, context.Clock, context.MsgQueue, false, TestBase.SIM_PING, TestBase.SIM_JITTER);
     var res = new SimReplayAppliance(replayOps, blaster, context.Clock);
 
     return res;

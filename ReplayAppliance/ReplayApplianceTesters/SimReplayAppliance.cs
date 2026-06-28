@@ -27,6 +27,7 @@ namespace funscrewTesters
     public new ReplaySession BeginSession(UInt64 sessionId, SessionOptions ops)
     {
       ReplaySession res = base.BeginSession(sessionId, ops);
+      res.ID = 111;
       return res;
     }
 

@@ -27,6 +27,8 @@ public class GGPOClient : IGGPOClient, IDisposable
   public int ConnectTimeout { get { return this.Options.ReplayConnectTimeout; } }
   public UInt32 ClientVersion { get { return this.Options.ClientVersion; } }
 
+  public int ID { get; set; }
+
   /// <summary>
   /// Indicates that the client is officially started, and no new connections can be added.
   /// </summary>
@@ -256,6 +258,7 @@ public class GGPOClient : IGGPOClient, IDisposable
       case EMsgType.SyncReply:
         // Do nothing.  Goal is to make sure that the replay endpoint (if any)
         // is actually synced up and ready to go!
+        if (msg.u.sync_reply.isReady == 1) { return true; }
         int x = 10;
         break;
 
@@ -1090,6 +1093,11 @@ public class ClockTimer : IClockSource
 // ==========================================================================================
 public interface IGGPOClient : IClockSource
 {
+  /// <summary>
+  /// Optional value to identify the client.  Useful for testing and logging.  0 == Not Set.
+  /// </summary>
+  int ID { get; }
+
   IUdpBlaster UDP { get; }
   UInt32 ClientVersion { get; }
   string LocalPlayerName { get; }
