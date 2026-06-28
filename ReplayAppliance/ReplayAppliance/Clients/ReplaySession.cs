@@ -45,7 +45,7 @@ public class ReplaySession : IGGPOClient
   // IGGPOClient interface stuff:
   // NOTE: With this version of ReplayAppliance, these properties don't make sense in terms
   // of how we are dealing with endpoints.... kind of telling ;)
-  public string LocalPlayerName { get; private set; } = "not matters";
+  public string LocalPlayerName { get; private set; } = "<replay-sess>";
   public UInt32 ClientVersion { get; } = 0;
   public int CurrentFrame { get; } = 0;
   public string GameName { get { return SessionArgs.GameName; } }

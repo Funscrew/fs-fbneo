@@ -35,6 +35,7 @@ namespace funscrew.Clients
       _PendingAcks = new RingBuffer<GameInput>(MAX_ACKS);
 
       StartTime = Client.CurTime;
+      EndpointType = EEndpointType.ReplayAppliance;
     }
 
     // --------------------------------------------------------------------------------------------------------------------------  

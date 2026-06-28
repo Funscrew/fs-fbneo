@@ -59,7 +59,7 @@ struct UdpMsg
     struct {
       uint32      random_request;  /* please reply back with this random data */
       uint8_t     player_index;
-      uint8_t     endpointType;     
+      uint8_t     endpointType;       // Type of endpoint (application defined).  Use a value for EEndpointType or whatever you want.
       uint64_t    session_id;         // Used for replay ids.  This is the form of a unix timestamp in milliseconds!  For p2p connections, this can be zero, but is ignored.
     } sync_request;
 
@@ -70,7 +70,7 @@ struct UdpMsg
       uint8_t isReady;                  // Indicates that we are ready to begin.
       uint8_t delay;                    // current delay setting.
       uint8_t runahead;                 // current runahead setting.
-      // uint8_t is_ready;                 // readiness flag.  This is used when we are also trying to sync to a replay endpoint.
+      uint8_t endpointType;             // Type of endpoint (application defined).  Use a value for EEndpointType or whatever you want.
 
       char playerName[MAX_NAME_SIZE];   /* The name of the player we synced to: */
       char gameName[MAX_NAME_SIZE];     // Name of the game.  This is a little hack so we can create file names for replay state.

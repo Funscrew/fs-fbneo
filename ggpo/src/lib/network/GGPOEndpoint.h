@@ -130,6 +130,7 @@ public:
 
 protected:
   
+  EEndpointType EndpointType = EEndpointType::Player;
 
   GGPOSession* _Client = nullptr;
 

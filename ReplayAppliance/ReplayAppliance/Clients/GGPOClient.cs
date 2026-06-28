@@ -2,6 +2,7 @@
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Net;
+using System.Transactions;
 
 namespace funscrew;
 
@@ -256,10 +257,12 @@ public class GGPOClient : IGGPOClient, IDisposable
         break;
 
       case EMsgType.SyncReply:
-        // Do nothing.  Goal is to make sure that the replay endpoint (if any)
-        // is actually synced up and ready to go!
-        if (msg.u.sync_reply.isReady == 1) { return true; }
-        int x = 10;
+        // Special case for replay appliance...?
+        if (msg.u.sync_reply.isReady == 1 && msg.u.sync_reply.endpointType == (uint8_t)EEndpointType.ReplayAppliance)
+        {
+          return true;
+        }
+
         break;
 
       default:

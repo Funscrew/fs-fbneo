@@ -529,6 +529,7 @@ bool GGPOEndpoint::OnSyncRequest(UdpMsg* msg, int len)
 
   // TODO: Check the GGPOClient to see if we are waiting for replay appliance connections....
   reply->u.sync_reply.isReady = this->_Client->IsReadyToSync(msg) ? 1 : 0; //  true;
+  reply->u.sync_reply.endpointType = this->EndpointType;
 
   // reply->u.sync_reply.is_ready = this->_Client->IsReplayApplianceReady();
 

@@ -153,6 +153,7 @@ public class GGPOEndpoint
   public byte PlayerIndex { get { return Options.PlayerIndex; } }
   public bool IsLocalPlayer { get { return Options.IsLocal; } }
   public bool IsReplayClient { get { return Options.IsReplayClient; } }
+  public EEndpointType EndpointType { get; protected set; } = EEndpointType.Player;
 
   /// <summary>
   /// This is used on the replay appliance.
@@ -905,6 +906,7 @@ public class GGPOEndpoint
     reply.u.sync_reply.runahead = Options.Runahead;
 
     reply.u.sync_reply.isReady = (uint8_t)(Client.IsReadyToSync(ref msg) ? 1 : 0);
+    reply.u.sync_reply.endpointType = (uint8_t)this.EndpointType;
 
     reply.u.sync_reply.SetPlayerName(Client.LocalPlayerName);
     reply.u.sync_reply.SetGameName(Client.GameName);
@@ -922,13 +924,15 @@ public class GGPOEndpoint
       return msg.header.magic == _remote_magic_number;
     }
 
-    if (msg.u.sync_reply.isReady == 0) { 
+    if (msg.u.sync_reply.isReady == 0)
+    {
       Utils.LogIt(LogCategories.SYNC, "Remote endpoint is replying to sync, but not ready!");
       return false;
     }
 
     // We need to check the main client for readyness as well!
-    if (!this.Client.IsReadyToSync(ref msg)) {
+    if (!this.Client.IsReadyToSync(ref msg))
+    {
       Utils.LogIt(LogCategories.SYNC, "Local client is still not ready to fully sync!");
       return false;
     }

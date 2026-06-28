@@ -126,8 +126,8 @@ public struct SyncRequest
   public uint random_request;   // please reply back with this random data
   public uint8_t player_index;     // Players must identify their desired index.
   
-  public uint8_t endpointType;  // Type of endpoint (application defined).  Use a value for EEndpointType or whatever you want.
-  public UInt64 session_id;     // Used for replay ids.  This is the form of a unix timestamp in milliseconds!  For p2p connections, this can be zero, but is ignored.
+  public uint8_t endpointType;    // Type of endpoint (application defined).  Use a value for EEndpointType or whatever you want.
+  public uint64_t session_id;     // Used for replay ids.  This is the form of a unix timestamp in milliseconds!  For p2p connections, this can be zero, but is ignored.
 
   // ---------------------------------------------------------------------------------
   internal static void FromBytes(byte[] data, int startOffset, ref SyncRequest res)
@@ -156,7 +156,7 @@ public unsafe struct SyncReply
   public byte isReady;            // Indicates that the client is ready.  Only false when waiting to connect to replay appliances, etc.   ( we use a byte to make sure that we are C++ compatible)
   public byte delay;
   public byte runahead;
-  //public byte is_ready;           // Readiness flag, used in the context of hooking up to a replay client.
+  public uint8_t endpointType;
 
   public fixed byte playerName[GGPOConsts.MAX_NAME_SIZE];
   public fixed byte gameName[GGPOConsts.MAX_NAME_SIZE];
