@@ -1,6 +1,7 @@
 using drewCo.Tools;
 using funscrew;
 using funscrew.Clients;
+using System.Net.Mime;
 
 namespace funscrewTesters
 {
@@ -17,32 +18,24 @@ namespace funscrewTesters
 
     // --------------------------------------------------------------------------------------------------------------------------
     /// <summary>
-    /// This test case shows that while it may be able to connect to a replay appliance at some point,
-    /// it is possible for the connection to go bad / get dropped.
-    /// When this condition is detected (during merge) we will want to send out the disconnect signal + log
-    /// the failure in the replay data.
+    /// This test case shows:
+    /// 1. If one or more players aren't able to connect / don't connect in time, the replay appliance will timeout / fail.
+    /// 2. After it times out / disconnects, the players will then be able to sync their game as normal.
+    /// NOTE: This only addresses the case of the timeout happenening from the perspective of the replay appliance.  It does not
+    /// consider the case where the players' aren't able to connect / communicate at all (for whatever reason).
     /// </summary>
     [Test]
-    public unsafe void ReplayApplianceWontSyncUntilAllPlayersAreConnected()
+    public unsafe void PlayersCanStillSyncIfReplayApplianceDisconnects()
     {
       const string P1_NAME = "Joe";
       const string P2_NAME = "Archie";
-      const string GAME_NAME = "test-game";
+      const string GAME_NAME = "test-game-1";
       const string GAME_VERSION = "123";
 
       TestContext context = CreateTestContext(GAME_NAME, GAME_VERSION, P1_NAME, P2_NAME);
 
-      SimReplayAppliance replayAppliance = CreateTestReplayAppliance(context);
-
-      var spOps = new SessionPrimerOptions()
-      {
-        Port = FRONT_DOOR_PORT,
-      };
-      var frontDoor = new SimSessionPrimer(spOps, replayAppliance);
+      (var frontDoor, var replayAppliance) = context.CreateReplayAppliance();
       ReplaySession rpSess = frontDoor.BeginSession(context.SessionId, context.SessionOptions);
-
-      context.SetSessionPrimer(frontDoor);
-      context.SetReplayAppliance(replayAppliance);
 
       // We will connect only one player at this time, and run the system for a bit.
       GGPOClient p1 = context.Player1Client;
@@ -109,23 +102,8 @@ namespace funscrewTesters
 
       TestContext context = CreateTestContext(GAME_NAME, GAME_VERSION, P1_NAME, P2_NAME);
 
-      var ops = new GGPOClientOptions("test-game", 0, REPLAY_APPLIANCE_PORT, Defaults.PROTOCOL_VERSION, context.SessionId);
-      ops.Callbacks = CreateDefaultCallbacks();
-
-      var cbh = new CallbackHandler();
-      ops.Callbacks.on_event = cbh.OnEvent;
-
-      ReplayAppliance replayAppliance = CreateTestReplayAppliance(context);
-      var spOps = new SessionPrimerOptions()
-      {
-        Port = FRONT_DOOR_PORT,
-      };
-      var frontDoor = new SimSessionPrimer(spOps, replayAppliance);
-
+      (var frontDoor, var replayAppliance) = context.CreateReplayAppliance();
       ReplaySession rpSess = frontDoor.BeginSession(context.SessionId, context.SessionOptions);
-
-      context.SetSessionPrimer(frontDoor);
-      context.SetReplayAppliance(replayAppliance);
 
       // Each of the players will need to send their data to the replay appliance.
       var p1 = context.Player1Client;
