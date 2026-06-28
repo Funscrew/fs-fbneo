@@ -26,10 +26,10 @@ public class ReplayAppliance
 
   // We will have a list of active sessions, each of which will have their own game recorder.
   private object SessionLock = new object();
-  private Dictionary<uint64_t, ReplaySession> IdToSession = new Dictionary<uint64_t, ReplaySession>();
-  private Dictionary<AddrHash, ReplaySession> AddressToSession = new Dictionary<AddrHash, ReplaySession>();
-  private List<ReplaySession> ActiveSessions = new List<ReplaySession>(0xff);
-  private List<ReplaySession> CompleteSessions = new List<ReplaySession>(0xff);
+  protected Dictionary<uint64_t, ReplaySession> IdToSession = new Dictionary<uint64_t, ReplaySession>();
+  protected Dictionary<AddrHash, ReplaySession> AddressToSession = new Dictionary<AddrHash, ReplaySession>();
+  protected List<ReplaySession> ActiveSessions = new List<ReplaySession>(0xff);
+  protected List<ReplaySession> CompleteSessions = new List<ReplaySession>(0xff);
 
   /// <summary>
   /// This is the set of all known connected clients regardless of their session.
@@ -76,7 +76,7 @@ public class ReplayAppliance
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public unsafe ReplaySession BeginSession(UInt64 sessionId, SessionOptions sessionOps)
+  public virtual unsafe ReplaySession BeginSession(UInt64 sessionId, SessionOptions sessionOps)
   {
     Log.Info($"Starting new session with id: {sessionId}...");
     lock (SessionLock)
@@ -176,6 +176,7 @@ public class ReplayAppliance
     }
   }
 
+
   // --------------------------------------------------------------------------------------------------------------------------
   private void CleanupCompleteSessions()
   {
@@ -185,27 +186,34 @@ public class ReplayAppliance
       for (int i = 0; i < len; i++)
       {
         var sess = CompleteSessions[i];
-
-        Log.Info($"Session: {sess.SessionId} is complete and will be removed!");
-
-        Debug.Assert(ActiveSessions.Contains(sess));
-        Debug.Assert(IdToSession.ContainsKey(sess.SessionId));
-
-        ActiveSessions.Remove(sess);
-        IdToSession.Remove(sess.SessionId);
-
-        int epCount = sess.EndpointCount;
-        for(int j = 0; j < epCount; j++) {
-          var hash = sess.Endpoints[j].AddressHash;
-          Debug.Assert(AddressToSession.ContainsKey(hash));
-
-          AddressToSession.Remove(hash);
-        }
+        EndSession(sess);
       }
 
       CompleteSessions.Clear();
     }
   }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  protected virtual void EndSession(ReplaySession sess)
+  {
+    Log.Info($"Session: {sess.SessionId} is complete and will be removed!");
+
+    Debug.Assert(ActiveSessions.Contains(sess));
+    Debug.Assert(IdToSession.ContainsKey(sess.SessionId));
+
+    ActiveSessions.Remove(sess);
+    IdToSession.Remove(sess.SessionId);
+
+    int epCount = sess.EndpointCount;
+    for (int j = 0; j < epCount; j++)
+    {
+      var hash = sess.Endpoints[j].AddressHash;
+      Debug.Assert(AddressToSession.ContainsKey(hash));
+
+      AddressToSession.Remove(hash);
+    }
+  }
+
 
   // --------------------------------------------------------------------------------------------------------------------------
   // NOTE: This should only be used in production.  Not suitable for test code....

@@ -32,7 +32,8 @@ namespace funscrewTesters
 
       TestContext context = CreateTestContext(GAME_NAME, GAME_VERSION, P1_NAME, P2_NAME);
 
-      ReplayAppliance replayAppliance = CreateTestReplayAppliance(context);
+      SimReplayAppliance replayAppliance = CreateTestReplayAppliance(context);
+
       var spOps = new SessionPrimerOptions()
       {
         Port = FRONT_DOOR_PORT,
@@ -69,6 +70,7 @@ namespace funscrewTesters
       Assert.That(p1Remote.TotalInputsSent, Is.EqualTo(0), "No inputs should have been sent at this time!");
       Assert.That(p2Remote.TotalInputsSent, Is.EqualTo(0), "No inputs should have been sent at this time!");
 
+      Assert.That(replayAppliance.ActiveSessionCount, Is.EqualTo(1), "There should be one active sessions now!");
 
       // After a while, if the second player doesn't connect / sync, then the replay appliance should
       // send a disconnect signal, and abandon the session.
@@ -77,41 +79,17 @@ namespace funscrewTesters
       Assert.IsTrue(evt.isReplayEndpoint == 1, "The disconnecting endpoint should be from the replay appliance.");
       Assert.NotNull(evt);
 
+      // Let's make sure that the replay appliance is cleaned up correctly as well.
+      Assert.That(replayAppliance.ActiveSessionCount, Is.EqualTo(0), "There should be no active sessions now!");
+      Assert.That(replayAppliance.SessionsStarted, Is.EqualTo(1));
+      Assert.That(replayAppliance.SessionsEnded, Is.EqualTo(1));
+
+
       // Now after some time, the two players should sync up, and the replay appliance should be marked as complete / disconnected.
-      context.RunGame(1000);
+      context.RunGame(500);
 
       Assert.That(p1Remote._current_state, Is.EqualTo(EClientState.Running), "p1 remote should be running now");
       Assert.That(p2Remote._current_state, Is.EqualTo(EClientState.Running), "p2 remote should be running now");
-
-
-      throw new InvalidOperationException("Create some kind of 'run until event' function!");
-
-      const int SIM_TIME = 2000;      // More than enough time for the mismatch to be detected / dropped.
-      context.RunGame(SIM_TIME);
-
-
-      //// NOTE: The conditions below are all wrong.
-      //// If only one of the clients have connected, there should not be any exchange of inputs
-      //// until BOTH clients have connected + synced.
-
-      //// We want to get a count for the number of times that we have sent inputs to the remote.
-      //// We should not have any until everything is all synced up....
-      //Assert.That(p1Remote.TotalInputsSent, Is.GreaterThan(0), "Inputs should be exchanged at this point.");
-
-      //// NOTE: Is there any way that we can get disconnect events?
-
-      //const int SIM_TIME = 2000;      // More than enough time for the mismatch to be detected / dropped.
-      //context.RunGame(SIM_TIME);
-
-
-      //// Show that there are no longer any connections....
-      //Assert.IsTrue(rpSess.IsComplete, "The session should be in the complete state.");
-      //Assert.That(rpSess.ClientCount, Is.EqualTo(0), "There should no longer be any connected clients!");
-
-      //var recorder = rpSess.Recorder;
-      //Assert.IsTrue(recorder.RecordingComplete, "The recording should be marked as complete!");
-      //Assert.IsTrue(recorder.HasError, "The recorder should be marked as having an error!");
-
     }
 
     // --------------------------------------------------------------------------------------------------------------------------

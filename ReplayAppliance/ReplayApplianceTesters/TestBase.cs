@@ -119,7 +119,7 @@ namespace funscrewTesters
     }
 
     // --------------------------------------------------------------------------------------------------------------------------
-    protected ReplayAppliance CreateTestReplayAppliance(TestContext context)
+    protected SimReplayAppliance CreateTestReplayAppliance(TestContext context)
     {
       var replayOps = new ReplayOptions()
       {
