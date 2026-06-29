@@ -273,7 +273,7 @@ public class GGPOClient : IGGPOClient, IDisposable
     for (int i = 0; i < _endpoints.Count; i++)
     {
       var ep = _endpoints[i];
-      if (ep.IsReplayClient)
+      if (ep.IsReplayClient && !ep.IsDisconnected)
       {
         bool res = ep.IsRunning();
         return res;
