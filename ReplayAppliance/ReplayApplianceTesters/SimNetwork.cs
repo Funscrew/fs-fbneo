@@ -1,4 +1,6 @@
-﻿using funscrew;
+﻿using drewCo.Tools;
+using drewCo.Tools.Logging;
+using funscrew;
 using NUnit.Framework.Internal.Commands;
 using System;
 using System.Net;
@@ -18,8 +20,14 @@ namespace funscrewTesters
     public bool IsBlocking { get; private set; }
     public IPEndPoint Endpoint { get; private set; }
 
+    /// <summary>
+    /// How many packets did we drop / not deliver?
+    /// TODO: We should be able to make these stats more robust as we go.
+    /// </summary>
+    public int DroppedPackets { get; private set; }
+
     // ----------------------------------------------------------------------------------------------------------------
-    public SimUdp(string host_, int port_, funscrew.IClockSource timeSource_, TestMessageQueue msgQueue_, bool isBlocking_ , uint avgPing_, uint pingJitter_ = 0)
+    public SimUdp(string host_, int port_, funscrew.IClockSource timeSource_, TestMessageQueue msgQueue_, bool isBlocking_, uint avgPing_, uint pingJitter_ = 0)
     {
       Host = host_;
       Port = port_;
@@ -96,12 +104,26 @@ namespace funscrewTesters
       //var x = ep.Create(useRemote);
       //IPEndPoint ipEndPoint = (IPEndPoint)x;
       var ipEndPoint = useRemote as IPEndPoint;
-      if (ipEndPoint == null) {  throw new ArgumentException($"{nameof(useRemote)} must be an {nameof(IPEndPoint)} instance!"); }
+      if (ipEndPoint == null) { throw new ArgumentException($"{nameof(useRemote)} must be an {nameof(IPEndPoint)} instance!"); }
 
       string useHost = ipEndPoint.Address.ToString();
       int usePort = ipEndPoint.Port;
 
-      uint usePing = ComputePing();
+      var settings = MsgQueue.GetLinkSettings(this.Endpoint, ipEndPoint);
+
+      // Are we even going to use this packet?
+      if (settings != null)
+      {
+        var nextPct = RandomTools.RNG.NextDouble();
+        if (nextPct <= settings.PacketLossPct)
+        {
+          Log.Verbose("A network packet was lost on purpose!");
+          ++DroppedPackets;
+          return packetSize;
+        }
+      }
+
+      uint usePing = ComputePing(settings);
 
       var msg = new SimUdpMessage()
       {
@@ -136,10 +158,19 @@ namespace funscrewTesters
     }
 
     // ----------------------------------------------------------------------------------------------------------------
-    private uint ComputePing()
+    private uint ComputePing(CLinkSettings? settings)
     {
-      uint res = this.AvgPing;
-      if (this.PingJitter > 0)
+      uint usePing = this.AvgPing;
+      uint useJitter = this.PingJitter;
+
+      if (settings != null)
+      {
+        usePing = settings.Ping == CLinkSettings.USE_GLOBAL ? usePing : settings.Ping;
+        useJitter = settings.Jitter == CLinkSettings.USE_GLOBAL ? useJitter : settings.Jitter;
+      }
+
+      uint res = usePing;
+      if (useJitter > 0)
       {
         throw new NotSupportedException("Ping jitter is not supported at this time!");
         // TODO: LATER:

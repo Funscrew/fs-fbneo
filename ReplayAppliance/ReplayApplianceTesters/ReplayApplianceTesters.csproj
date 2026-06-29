@@ -11,6 +11,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <Compile Include="..\ReplayAppliance\GlobalUsings.cs" Link="GlobalUsings.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
     <PackageReference Include="coverlet.collector" Version="6.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.8.0" />
     <PackageReference Include="NUnit" Version="3.14.0" />
@@ -40,10 +44,7 @@
       <ExtraFiles Include="../libs/$(Configuration)/*.*" />
     </ItemGroup>
 
-    <Copy
-      SourceFiles="@(ExtraFiles)"
-      DestinationFiles="@(ExtraFiles->'$(OutputPath)%(Filename)%(Extension)')"
-      SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(ExtraFiles)" DestinationFiles="@(ExtraFiles->'$(OutputPath)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

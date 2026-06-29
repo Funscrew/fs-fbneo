@@ -375,7 +375,7 @@ public partial class Program
 
           if (ClientOptions.ReplayHost != null)
           {
-            Client.AddReplayAppliance(ClientOptions.ReplayHost, ClientOptions.ReplayPort, ClientOptions.ReplayConnectTimeout);
+            Client.AddReplayAppliance(ClientOptions.ReplayHost, ClientOptions.ReplayPort);
           }
 
           // No more endpoints can be added!

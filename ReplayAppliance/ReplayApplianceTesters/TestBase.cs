@@ -18,14 +18,14 @@ namespace funscrewTesters
 
     // NOTE: The hosts don't actually matter.  Just make them IP addresses.
     public const int PLAYER1_INDEX = 0;
-    public const string PLAYER1_HOST = "127.0.0.1";
+    public const string PLAYER1_HOST = "111.0.0.1";
     public const int PLAYER1_PORT = 7000;
 
     public const int PLAYER2_INDEX = 1;
-    public const string PLAYER2_HOST = "192.168.1.3";
+    public const string PLAYER2_HOST = "222.0.0.1";
     public const int PLAYER2_PORT = 7001;
 
-    public const string REPLAY_APPLIANCE_HOST = "10.25.199.123";
+    public const string REPLAY_APPLIANCE_HOST = "100.100.100.100";
     public const int REPLAY_APPLIANCE_PORT = 7003;
     public const int FRONT_DOOR_PORT = 5000;         // NOTE: This is the port that the 'front door' listens on.
 
@@ -99,7 +99,7 @@ namespace funscrewTesters
       if (callbacks == null) { callbacks = CreateDefaultCallbacks(); }
 
       var udp = new SimUdp(local.Host, local.Port, local.TimeSource, msgQueue, false, SIM_PING, SIM_JITTER);
-      var clientOps = new GGPOClientOptions("test-game",local.PlayerIndex, local.Port, Defaults.PROTOCOL_VERSION, sessionId);
+      var clientOps = new GGPOClientOptions(local.GameName,local.PlayerIndex, local.Port, Defaults.PROTOCOL_VERSION, sessionId);
 
       clientOps.IdleTimeout = 0;
       clientOps.Callbacks = callbacks;

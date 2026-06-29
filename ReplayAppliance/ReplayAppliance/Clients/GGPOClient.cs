@@ -156,7 +156,7 @@ public class GGPOClient : IGGPOClient, IDisposable
   /// Add a connection to the replay appliance.  Send out inputs, etc. to this endpoint
   /// so that recordings can be made, and other can spectate.
   /// </summary>
-  public GGPOEndpoint AddReplayAppliance(string host, int port, int replayTimeout)
+  public GGPOEndpoint AddReplayAppliance(string host, int port)
   {
     if (LocalPlayer == null)
     {
@@ -979,16 +979,23 @@ public class GGPOClient : IGGPOClient, IDisposable
   }
 
   // ----------------------------------------------------------------------------------------
-  public GGPOEndpoint GetLocalPlayer()
+  public GGPOEndpoint? GetLocalPlayer()
   {
     var res = (from x in _endpoints where x.IsLocalPlayer select x).SingleOrDefault();
     return res;
   }
 
   // ----------------------------------------------------------------------------------------
-  public GGPOEndpoint GetRemotePlayer()
+  public GGPOEndpoint? GetRemotePlayer()
   {
     var res = (from x in _endpoints where !x.IsLocalPlayer && !x.IsReplayClient select x).SingleOrDefault();
+    return res;
+  }
+
+  // ----------------------------------------------------------------------------------------
+  public GGPOEndpoint? GetReplayApplianceEndpoint()
+  {
+    var res = (from x in _endpoints where x.IsReplayClient select x).SingleOrDefault();
     return res;
   }
 }

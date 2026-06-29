@@ -70,13 +70,13 @@ public class GGPOEndpoint
 
   private int LocalPort;
   private int RemotePort;
-  private IPEndPoint RemoteIP;
+
+  public IPEndPoint RemoteIP { get; private set; }
+  public IPEndPoint LocalIP {get; private set; }
+
   private EndPoint RemoteEP;
-  // private SocketAddress UseRemote;
 
   private GGPOEndpointOptions Options = null!;
-
-  // private Stopwatch Clock { get { return Client.Clock; } }
 
   private MsgHandler<UdpMsg>[] MsgHandlers = new MsgHandler<UdpMsg>[9];
 

@@ -16,6 +16,50 @@ namespace funscrewTesters
       FileTools.CreateDirectory("replays");
     }
 
+
+    // --------------------------------------------------------------------------------------------------------------------------
+    /// <summary>
+    /// This test case was provided to ensure that the replay appliance will time out and fail if one or more
+    /// players are not able to contact it.  This is similar to the test case <see cref="PlayersCanStillSyncIfReplayApplianceDisconnects"/>
+    /// except in this case the timeout happens on the player side as they are not able to communicate with the replay appliance.
+    /// </summary>
+    [Test]
+    public unsafe void ReplayApplianceWillDisconnectIfOneOrMorePlayersCantReachIt()
+    {
+      const string P1_NAME = "Joe";
+      const string P2_NAME = "Archie";
+      const string GAME_NAME = "test-game-2";
+      const string GAME_VERSION = "123";
+
+
+      TestContext context = CreateTestContext(GAME_NAME, GAME_VERSION, P1_NAME, P2_NAME);
+      (var frontDoor, var replayAppliance) = context.CreateReplayAppliance();
+      ReplaySession rpSess = frontDoor.BeginSession(context.SessionId, context.SessionOptions);
+
+      GGPOClient p1 = context.Player1Client;
+      p1.AddReplayAppliance(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT);
+
+      GGPOClient p2 = context.Player2Client;
+      p2.AddReplayAppliance(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT);
+
+      GGPOEndpoint p1ep = p1.GetLocalPlayer()!;
+      Assert.IsNotNull(p1ep);
+
+      GGPOEndpoint p1raep = p1.GetReplayApplianceEndpoint()!;
+      Assert.IsNotNull(p1raep);
+
+      context.MsgQueue.SetPacketLossPct(p1.UDP.Endpoint, replayAppliance.UDP.Endpoint, 100.0f);
+
+      int useTimeout = GGPOClientOptions.DEFAULT_CONNECT_TIMEOUT * 2;
+
+      context.RunGame(useTimeout);
+
+
+      Assert.Fail("Please complete this test case!");
+
+    }
+
+
     // --------------------------------------------------------------------------------------------------------------------------
     /// <summary>
     /// This test case shows:
@@ -33,13 +77,12 @@ namespace funscrewTesters
       const string GAME_VERSION = "123";
 
       TestContext context = CreateTestContext(GAME_NAME, GAME_VERSION, P1_NAME, P2_NAME);
-
       (var frontDoor, var replayAppliance) = context.CreateReplayAppliance();
       ReplaySession rpSess = frontDoor.BeginSession(context.SessionId, context.SessionOptions);
 
       // We will connect only one player at this time, and run the system for a bit.
       GGPOClient p1 = context.Player1Client;
-      p1.AddReplayAppliance(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT, REPLAY_APPLIANCE_TIMEOUT);
+      p1.AddReplayAppliance(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT);
 
       var p1Remote = p1.GetRemotePlayer() as SimGGPOEndpoint;
       Assert.IsNotNull(p1Remote);
@@ -67,6 +110,8 @@ namespace funscrewTesters
 
       // After a while, if the second player doesn't connect / sync, then the replay appliance should
       // send a disconnect signal, and abandon the session.
+
+      // TODO: A way to get the configured timeout.
       var testTime = GGPOClientOptions.DEFAULT_CONNECT_TIMEOUT * 2;
       var evt = context.RunUtilEvent(p1, EEventCode.GGPO_EVENTCODE_DISCONNECTED_FROM_PEER, testTime);
       Assert.IsTrue(evt.isReplayEndpoint == 1, "The disconnecting endpoint should be from the replay appliance.");
@@ -107,10 +152,10 @@ namespace funscrewTesters
 
       // Each of the players will need to send their data to the replay appliance.
       var p1 = context.Player1Client;
-      var raep1 = p1.AddReplayAppliance(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT, REPLAY_APPLIANCE_TIMEOUT);
+      var raep1 = p1.AddReplayAppliance(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT);
 
       var p2 = context.Player2Client;
-      var raep2 = p2.AddReplayAppliance(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT, REPLAY_APPLIANCE_TIMEOUT);
+      var raep2 = p2.AddReplayAppliance(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT);
 
       // NOTE: Choose as little time as possible to get the clients synced.
       // Maybe some kind of a callback or 'run until'...?
@@ -200,7 +245,7 @@ namespace funscrewTesters
       // and how UDP networks are.
       const int FRAME_DELTA = 4;
       int diff = (int)(check1 - rpFile.FrameCount);
-      Assert.IsTrue(diff <= FRAME_DELTA, "Unexpected frame count!");;
+      Assert.IsTrue(diff <= FRAME_DELTA, "Unexpected frame count!"); ;
 
     }
 
@@ -263,7 +308,8 @@ namespace funscrewTesters
         Port = PLAYER1_PORT,
         TimeSource = timeSource,
         InputBuffer = new byte[5 * MAX_PLAYERS],
-        PlayerName = p1Name
+        PlayerName = p1Name,
+        GameName = gameName
       };
 
       var ops2 = new TestPlayerOptions()
@@ -273,20 +319,15 @@ namespace funscrewTesters
         Port = PLAYER2_PORT,
         TimeSource = timeSource,
         InputBuffer = new byte[5 * MAX_PLAYERS],
-        PlayerName = p2Name
+        PlayerName = p2Name,
+        GameName = gameName
       };
 
-      var p1GGPO = CreateGGPOClient(ops1, ops2, testQueue, sessId);
+      var p1GGPO = CreateGGPOClient( ops1, ops2, testQueue, sessId);
       p1GGPO.ID = 1;
 
-      var p2GGPO = CreateGGPOClient(ops2, ops1, testQueue, sessId);
+      var p2GGPO = CreateGGPOClient( ops2, ops1, testQueue, sessId);
       p2GGPO.ID = 2;
-
-      // NOTE: If we use 'GetLocalPlayer' then the test fails.  This is part of some weird implementation
-      // detail of how the GGPOEndpoints/Client code runs.  I am pretty sure this is by design, and I have
-      // no intention of attempting to 'fix' it.
-      //var p2 = p1GGPO.GetRemotePlayer();
-      //var p1 = p2GGPO.GetRemotePlayer();
 
       var context = new TestContext(sessId, timeSource, testQueue, new[] { p1GGPO, p2GGPO }, new[] { ops1.InputBuffer, ops2.InputBuffer });
 

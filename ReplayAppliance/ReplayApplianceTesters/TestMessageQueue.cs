@@ -1,6 +1,11 @@
 ﻿
+using drewCo.Curations;
+using funscrew;
 using System.Diagnostics;
+using System.Diagnostics.CodeAnalysis;
+using System.Dynamic;
 using System.Net;
+using System.Security.Cryptography;
 
 namespace funscrewTesters
 {
@@ -13,11 +18,37 @@ namespace funscrewTesters
   /// REFACTOR: This is basically our "test network" so its name should reflect that.
   public class TestMessageQueue
   {
+
+
+
     // NOTE: We shouldn't expect to see a huge number of entries in this as we will
     // tend to receive them in order, and will remove all messages that have been received, etc.
     private List<SimUdpMessage> MsgQueue = new List<SimUdpMessage>();
 
-    // TODO: Let's make unique IPEndpoint instances for each of the addresses that are listed.
+
+    class IPEndpointComparer : IEqualityComparer<IPEndPoint>
+    {
+      // ----------------------------------------------------------------------------------------------------------------
+      public bool Equals(IPEndPoint? x, IPEndPoint? y)
+      {
+        if (x == null) { return y == null; }
+        if (y == null) { return x == null; }
+
+        var xVal = IUdpBlaster.GetAddrHash(x);
+        var yVal = IUdpBlaster.GetAddrHash(x);
+        return xVal == yVal;
+      }
+
+      // ----------------------------------------------------------------------------------------------------------------
+      public int GetHashCode([DisallowNull] IPEndPoint obj)
+      {
+        var res = IUdpBlaster.GetAddrHash(obj);
+        return (int)res;
+      }
+    }
+
+    private static IPEndpointComparer IPEComparer = new IPEndpointComparer();
+    private MultiDictionary<IPEndPoint, IPEndPoint, CLinkSettings> LinkSettings = new MultiDictionary<IPEndPoint, IPEndPoint, CLinkSettings>(IPEComparer, IPEComparer);
 
     // ----------------------------------------------------------------------------------------------------------------
     /// <summary>
@@ -59,11 +90,58 @@ namespace funscrewTesters
     // ---------------------------------------------------------------------------------------------------------------------------
     internal void AddMessage(SimUdpMessage msg)
     {
+      // Check packet loss stats + drop as needed.
+      // if (LinkSettings.TryGetValue(msg.From
+
+
+
       MsgQueue.Add(msg);
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------------
+    /// <summary>
+    /// Set parameters to simulate packet loss between clients.
+    /// </summary>
+    internal void SetPacketLossPct(IPEndPoint from, IPEndPoint to, float lossPct)
+    {
+      var match = LinkSettings.TryGetValue(from, to, out CLinkSettings settings);
+      if (!match)
+      {
+        settings = new CLinkSettings();
+
+        // BUG: This form doesn't work if there isn't already data for the keys.
+        LinkSettings.Add(from, to, settings);
+      }
+      settings.PacketLossPct = lossPct;
+    }
+
+    // ---------------------------------------------------------------------------------------------------------------------------
+    internal CLinkSettings? GetLinkSettings(IPEndPoint from, IPEndPoint to)
+    {
+      if (LinkSettings.TryGetValue(from, to, out var res))
+      {
+        return res;
+      }
+      return null;
     }
   }
 
 }
+
+// ==================================================================================================================
+internal class CLinkSettings
+{
+  public const uint USE_GLOBAL = uint.MaxValue;
+
+  public IPEndPoint From { get; set; } = default!;
+  public IPEndPoint To { get; set; } = default!;
+
+  public double PacketLossPct { get; set; } = 0.0f;
+
+  public uint Ping { get; set; } = USE_GLOBAL;
+  public uint Jitter { get; set; } = USE_GLOBAL;
+}
+
 
 // ==============================================================================================================================
 [DebuggerDisplay("{SrcHost}:{SrcPort} -> {DestHost}:{DestPort}")]
