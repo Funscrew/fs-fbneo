@@ -125,7 +125,9 @@ namespace funscrew
     /// </summary>
     public void CompleteReplay(int frame, ECompletionReason reason, EErrorReason errReason, string? message)
     {
-      ReplayFile.CompleteWrite(frame, reason, errReason, string.Empty);
+      int useFrame = frame == -1 ? SyncedBaseFrame : frame;
+      ReplayFile.CompleteWrite(reason, errReason, string.Empty);
+
       //CheckComplete();
 
       //// TODO: Some kind of sanity check for the frame #?

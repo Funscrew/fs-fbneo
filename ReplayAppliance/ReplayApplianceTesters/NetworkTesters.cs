@@ -147,27 +147,60 @@ namespace funscrewTesters
       Assert.That(rc1._current_state, Is.EqualTo(EClientState.Running), "Client 1 should be synced!");
       Assert.That(rc2._current_state, Is.EqualTo(EClientState.Running), "Client 2 should be synced!");
 
+
+      // Baseline
+      int r1InputCount = (remote1 as SimGGPOEndpoint)!.TotalInputsSent;
+      int r2InputCount = (remote2 as SimGGPOEndpoint)!.TotalInputsSent;
+      Assert.That(r1InputCount, Is.EqualTo(r2InputCount), "Total input counts should match for all remote endpoints. [1]");
+
+
       // Now that both clients are running, they should be exchanging input.
       // We want to inject a known set of inputs for each to test our recording capability.
+      int inputSize = context.SessionOptions.TotalInputSize / context.SessionOptions.MaxPlayerCount;
+      int[] curInput = new int[inputSize * context.SessionOptions.MaxPlayerCount];
 
-      int[] curInput = new int[2];
       const int ONE_SECOND = 1000;
       context.RunGame(ONE_SECOND, (data, playerindex, curTime) =>
       {
         curInput[playerindex] += 1;
-        int useVal = curInput[0];
+        int useVal = curInput[playerindex];
 
+        // NOTE: Inputs don't matter, we just need to know their values.
         data[0] = (byte)(useVal & 0xFF);
-        data[1] = (byte)(useVal >> 8 & 0xFF);
-        data[2] = (byte)(useVal >> 16 & 0xFF);
-        data[3] = (byte)(useVal >> 24 & 0xFF);
+        data[inputSize] = (byte)(-useVal & 0xFF);
       });
 
-      Assert.Inconclusive("Show that we have recorded a certain number of inputs!");
+      int check1 = (remote1 as SimGGPOEndpoint)!.TotalInputsSent;
+      int check2 = (remote2 as SimGGPOEndpoint)!.TotalInputsSent;
 
-      // TODO: Way more to do!
-      // Inputs need to be exchanged between the players + we need to confirm that we are receiving and merging them correctly!
-      throw new Exception("Please complete this test!");
+      int p1Expected = (ONE_SECOND / TestContext.FRAME_INTERVAL) + r1InputCount;
+
+      Assert.That(check1, Is.EqualTo(p1Expected), "Unexpected number of total inputs!");
+      Assert.That(check1, Is.EqualTo(check2), "Total input counts should match for all remote endpoints.");
+
+      // Endpoint recording is looking good, so let's check the replay file and make sure that it exists!
+      string replayPath = rpSess.Recorder.FilePath;
+      Assert.True(File.Exists(replayPath), $"The replay file does not exist at path: {replayPath}");
+
+      // Let's disconnect P1, which should disconnect P2 and so on....
+      p1.DisconnectAll();
+      context.RunGame(ONE_SECOND);
+
+      Assert.That(remote1._current_state, Is.EqualTo(EClientState.Disconnected), "P1 remote should be disconnected!");
+      Assert.That(remote2._current_state, Is.EqualTo(EClientState.Disconnected), "P2 remote should be disconnected!");
+
+      // Make sure that the replay appliance is also disconnected....
+      Assert.IsTrue(rpSess.Recorder.RecordingComplete, "The recording should be complete!");
+
+      // Now let us read back the recording data, and make sure that it is correct.
+      var rpFile = new ReplayFile(rpSess.Recorder.FilePath);
+
+      // NOTE: Because packets and whatever may still be in flight, it is possible / likely that we won't
+      // be able to capture every single frame that makes it to the players.  This is simply a result of latency
+      // and how UDP networks are.
+      const int FRAME_DELTA = 4;
+      int diff = (int)(check1 - rpFile.FrameCount);
+      Assert.IsTrue(diff <= FRAME_DELTA, "Unexpected frame count!");;
 
     }
 

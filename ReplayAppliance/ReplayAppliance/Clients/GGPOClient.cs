@@ -742,8 +742,8 @@ public class GGPOClient : IGGPOClient, IDisposable
       // Effectively disconnect the endpoint so it no longer sends / receives data...
       endpoint.Disconnect(0, false);
 
-      Log.Info($"Received disconnect signal from ReplayAppliance on session: {this.SessionId}");
-      this._endpoints.Remove(endpoint);
+      // Log.Info($"Received disconnect signal from ReplayAppliance on session: {this.SessionId}");
+      // this._endpoints.Remove(endpoint);
     }
   }
 

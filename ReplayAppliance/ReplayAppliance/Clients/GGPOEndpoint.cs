@@ -564,12 +564,6 @@ public class GGPOEndpoint
   {
     if (Options.IsLocal) { return; }
 
-    // TEMP:
-    if (Options.IsReplayClient)
-    {
-      int x = 10;
-    }
-
     if (_current_state == EClientState.Running)
     {
       /*

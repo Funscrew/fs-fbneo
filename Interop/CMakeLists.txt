@@ -18,6 +18,7 @@ add_library(NetcodeInterop SHARED
     ../ggpo/src/lib/CReplayFile.h
     ../ggpo/src/lib/CReplayFile.cpp
     ../ggpo/src/lib/game_input.h
+    ../src/burner/EZStream.cpp
     NetcodeInterop.cpp
     NetcodeInterop.h
 )

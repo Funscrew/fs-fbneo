@@ -134,7 +134,7 @@ struct CGameState {
 struct CFooterData {
   static constexpr int MSG_SIZE = 64;
 
-  uint32_t Frame;
+  uint32_t FrameCount;
   uint8_t CompleteReason;
   uint8_t ErrorReason;
   char Message[MSG_SIZE];
@@ -197,7 +197,7 @@ public:
 
   void AddChatSegment(const CChatData& chat);
   void AddInputSegment(const GameInput& input);
-  void CompleteReplayFile(int frame, ECompletionReason reason, EErrorReason errReason, const std::string& message);
+  void CompleteReplayFile(ECompletionReason reason, EErrorReason errReason, const std::string& message);
 
   // Read to the next recorded input....
   // NOTE: We should be pulling all events up to a certain frame, really.....  How else can we get timed chat data, etc.
@@ -210,9 +210,10 @@ public:
   static int CopyFixedString(const std::string& data, int maxSize, uint8_t* toBuffer, int offset);
 
   // Get the total frame count for the file.
-  uint32_t TotalFrames() { return _Footer.Frame; }
+  uint32_t TotalFrames() { return _Footer.FrameCount; }
   uint16_t TotalInputSize() { return _GameData.TotalInputSize; }
   CGameData GameData() { return _GameData; }
+  CFooterData FooterData() { return _Footer; }
 
 private:
 

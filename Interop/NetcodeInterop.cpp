@@ -68,6 +68,21 @@ int ReplayFile_GetGameData(CReplayFile* file, CGameData& data) {
 
 // ---------------------------------------------------------------------------------------------------------
 API_EXPORT
+int ReplayFile_GetFooter(CReplayFile* file, CFooterData& data) {
+  try {
+    data = file->FooterData();
+    return ERRORCODE_OK;
+  }
+  catch (const std::exception& ex)
+  {
+    _LastError.assign(ex.what());
+    return ERRORCODE_UNHANDLED;
+  }
+}
+
+
+// ---------------------------------------------------------------------------------------------------------
+API_EXPORT
 int ReplayFile_GetNextInput(CReplayFile* file, GameInput& input) {
   try {
     bool hasInput = file->GetNextInput(input);
@@ -139,15 +154,14 @@ int ReplayFile_AddChat(CReplayFile* file, const CChatData& chat) {
 
 // ---------------------------------------------------------------------------------------------------------
 API_EXPORT
-int CompleteReplay(CReplayFile* target, int frame, ECompletionReason reason, EErrorReason errReason, char* message, uint8_t messageSize) {
+int CompleteReplay(CReplayFile* target, ECompletionReason reason, EErrorReason errReason, char* message, uint8_t messageSize) {
 
   try
   {
     // NOTE: We may drop the usage of std::string since we really only care about passing bytes around?
     std::string useMsg;
     useMsg.assign(message, messageSize);
-    // useMsg.copy(message, messageSize, 0);
-    target->CompleteReplayFile(frame, reason, errReason, useMsg);
+    target->CompleteReplayFile(reason, errReason, useMsg);
   }
   catch (const std::exception& ex)
   {

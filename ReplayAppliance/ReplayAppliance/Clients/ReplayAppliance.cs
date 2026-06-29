@@ -155,7 +155,7 @@ public class ReplayAppliance
         ReplaySession? sess = DeliverMessage(ref msg, received, (IPEndPoint)ep);
         if (sess == null)
         {
-          Log.Error("Could not deliver message to session!  Bad data?");
+          Log.Error("Could not deliver message to session!  It may not be in service anymore....");
         }
       }
 
@@ -319,7 +319,12 @@ public class ReplayAppliance
       AddressToSession.TryGetValue(hashedAddr, out useSession);
       if (useSession == null)
       {
-        throw new InvalidOperationException("There is no session associated with this address!");
+        // Sometimes we can get the last few packets or whatever after a disconnect from a legitimate session that no longer exists.
+        // I don't think that blowing up the appliance is a good idea either, so we might have to just
+        // put these on some kind of "suspicious" list and trigger a blacklist if there are too many of them?
+        Log.Debug($"There is no sessions associated with the address: {receivedFrom.ToString()}");
+        return null;
+       /// throw new InvalidOperationException("There is no session associated with this address!");
       }
     }
 

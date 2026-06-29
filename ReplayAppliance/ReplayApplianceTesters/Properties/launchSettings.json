@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "ReplayApplianceTesters": {
+      "commandName": "Project",
+      "nativeDebugging": true
+    }
+  }
+}

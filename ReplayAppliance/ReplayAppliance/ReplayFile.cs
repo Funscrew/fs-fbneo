@@ -40,7 +40,7 @@ public class ReplayFile : IDisposable
   private static extern int ReplayFile_Close(IntPtr replayFile);
 
   [DllImport(LIB_NAME, CallingConvention = CallingConvention.Cdecl)]
-  private static extern int CompleteReplay(IntPtr replayFile, int frame, byte completionReason, byte errReason, byte[] message, byte messageSize);
+  private static extern int CompleteReplay(IntPtr replayFile, byte completionReason, byte errReason, byte[] message, byte messageSize);
 
   [DllImport(LIB_NAME, EntryPoint = "ReplayFile_AddInput", CallingConvention = CallingConvention.Cdecl)]
   private static extern int ReplayFile_AddInput(IntPtr file, ref GameInput input);
@@ -53,6 +53,9 @@ public class ReplayFile : IDisposable
 
   [DllImport(LIB_NAME, EntryPoint = "ReplayFile_GetGameData", CallingConvention = CallingConvention.Cdecl)]
   private static extern int ReplayFile_GetGameData(IntPtr file, ref CGameData gameData);
+
+  [DllImport(LIB_NAME, EntryPoint = "ReplayFile_GetFooter", CallingConvention = CallingConvention.Cdecl)]
+  private static extern int ReplayFile_GetFooter(IntPtr file, ref CFooterData gameData);
 
 
   [DllImport(LIB_NAME, CallingConvention = CallingConvention.Cdecl)]
@@ -72,6 +75,9 @@ public class ReplayFile : IDisposable
   private byte[] ErrMsgBuffer = new byte[ERR_BUF_SIZE];
 
   public string Path { get; private set; }
+
+  private CFooterData _FooterData = default;
+  public uint FrameCount { get { return _FooterData.FrameCount; } }
 
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
@@ -117,6 +123,10 @@ public class ReplayFile : IDisposable
     }
     {
       int code = ReplayFile_GetGameData(ReplayHandle, ref _GameData);
+      ThrowIfNotOK(code);
+    }
+    {
+      int code = ReplayFile_GetFooter(ReplayHandle, ref _FooterData);
       ThrowIfNotOK(code);
     }
 
@@ -176,14 +186,14 @@ public class ReplayFile : IDisposable
   /// <summary>
   /// Complete the writing of a replay file.
   /// </summary>
-  public void CompleteWrite(int onFrame, ECompletionReason completionReason, EErrorReason errReason, string message)
+  public void CompleteWrite(ECompletionReason completionReason, EErrorReason errReason, string message)
   {
     Debug.Assert(message != null);
 
     byte[] msgData = Encoding.UTF8.GetBytes(message);
     byte msgSize = (byte)msgData.Length;
 
-    int closeCode = CompleteReplay(ReplayHandle, onFrame, (byte)ECompletionReason.NormalDisconnect, (byte)EErrorReason.None, msgData, msgSize);
+    int closeCode = CompleteReplay(ReplayHandle, (byte)ECompletionReason.NormalDisconnect, (byte)EErrorReason.None, msgData, msgSize);
     if (closeCode != 0)
     {
       Console.WriteLine("Could not close the replay file properly!");

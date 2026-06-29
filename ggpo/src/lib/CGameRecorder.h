@@ -5,7 +5,6 @@
 #include <array>
 #include <fstream>
 #include <memory>
-//#include "game_input.h"
 #include "ring_buffer.h"
 #include "EZQ.h"
 #include "EZRing.h"
@@ -65,8 +64,6 @@ private:
 
 
 public:
-  //  string FilePath;
-
   bool RecordingComplete = false;
   string ErrorMessage;
   EErrorReason ErrorReason = EErrorReason::None;
@@ -77,9 +74,7 @@ public:
 
   bool HasError() const;
 
-  //  void Flush();
-  void CompleteReplay(int frame, ECompletionReason reason, EErrorReason errReason, const string& message);
- // void CompleteReplay(int frame, ECompletionReason reason, EErrorReason errReason, const char* message);
+  void CompleteReplay(ECompletionReason reason, EErrorReason errReason, const string& message);
 
   void AddChatSegment(CChatData& chat);
 
@@ -90,20 +85,7 @@ public:
   bool AddInput(int playerIndex, GameInput& input);
 
 private:
-  //void CloseStream();
-  //void CreateStream(const string& path);
-  //void WriteHeader(ostream& res);
-  //void CheckComplete();
-
-  //void WriteInputSegment(GameInput& input);
-  //void WriteGameDataSegment(const CGameData& gameData);
   void WriteSegmentData(EDataSegmentType segmentType, stringstream& fromStream);
-
-  //int CopyFixedString(
-  //  const string& data,
-  //  int maxSize,
-  //  uint8_t* toBuffer,
-  //  int offset);
 
   void OnError(EErrorReason errReason, const string& message);
   void MergeInputs();

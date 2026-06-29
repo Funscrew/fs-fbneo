@@ -1,10 +1,46 @@
-﻿using System.Runtime.CompilerServices;
+﻿using System.IO;
+using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Text;
 
 
 
 namespace funscrew;
+
+
+
+// ==============================================================================================================================
+[StructLayout(LayoutKind.Sequential)]
+public unsafe struct CFooterData
+{
+  public const int MSG_SIZE = 64;
+
+  public uint32_t FrameCount;
+  public uint8_t CompleteReason;
+  public uint8_t ErrorReason;
+  private fixed byte _Message[MSG_SIZE];
+  public uint64_t FinalFileSize;
+
+
+  public string Message
+  {
+    get
+    {
+      fixed (byte* p = _Message)
+      {
+        string res = StringHelpers.ReadUtf8String(p, MSG_SIZE);
+        return res;
+      }
+    }
+    set
+    {
+      fixed (byte* p = _Message)
+      {
+        StringHelpers.WriteUtf8String(value, p, MSG_SIZE);
+      }
+    }
+  }
+};
 
 
 // ==============================================================================================================================
@@ -201,18 +237,6 @@ public enum EErrorReason : uint8_t
   None = 0,
   InputBufferFull
 };
-
-
-//// ========================================================================================================================
-//public enum EDataSegmentType : uint8_t
-//{
-//  Invalid = 0,
-//  GameData,
-//  GameState,
-//  InputData,
-//  ChatData,
-//  Footer
-//};
 
 // ========================================================================================================================
 public enum ECompletionReason : uint8_t

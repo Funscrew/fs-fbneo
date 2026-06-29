@@ -47,7 +47,7 @@ public class ReplaySession : IGGPOClient
   // of how we are dealing with endpoints.... kind of telling ;)
   public string LocalPlayerName { get; private set; } = "<replay-sess>";
   public UInt32 ClientVersion { get; } = 0;
-  public int CurrentFrame { get; } = 0;
+  public int CurrentFrame { get; } = -1;
   public string GameName { get { return SessionArgs.GameName; } }
 
   public int CurTime { get { return SessionArgs.Clock.CurTime; } }

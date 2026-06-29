@@ -302,7 +302,7 @@ void CReplayFile::ReadInputFromBuffer(GameInput& input)
 
 // ------------------------------------------------------------------------------------------------------------------------
 void CFooterData::Read(istream& from) {
-  EZStream::Read(from, Frame);
+  EZStream::Read(from, FrameCount);
   EZStream::Read(from, CompleteReason);
   EZStream::Read(from, ErrorReason);
 
@@ -312,7 +312,7 @@ void CFooterData::Read(istream& from) {
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
-void CReplayFile::CompleteReplayFile(int frame, ECompletionReason reason, EErrorReason errReason, const std::string& message) {
+void CReplayFile::CompleteReplayFile(ECompletionReason reason, EErrorReason errReason, const std::string& message) {
 
   CheckComplete();
 
@@ -323,7 +323,7 @@ void CReplayFile::CompleteReplayFile(int frame, ECompletionReason reason, EError
   // TODO: Some kind of check to make sure that the frame we are ending on is at or near the current input frame.
   // WRITE FOOTER
   stringstream ms(ios::in | ios::out | ios::binary);
-  EZStream::Write(ms, frame);
+  EZStream::Write(ms, LastUsedFrame);
   EZStream::Write(ms, static_cast<uint8_t>(reason));
   EZStream::Write(ms, static_cast<uint8_t>(errReason));
 
@@ -717,7 +717,7 @@ void CReplayFile::AddInputSegment(const GameInput& input) {
   LastUsedFrame = input.frame;
 
   // TODO: Some kind of check to make sure that we are writing the frame numbers sequentially!
-  _Footer.Frame = input.frame;
+  _Footer.FrameCount = input.frame;
 
   streampos start = _Stream.tellp();
 

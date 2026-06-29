@@ -12,8 +12,8 @@ namespace funscrewTesters;
 /// </summary>
 public class TestContext
 {
-  const int TIME_INTERVAL = 1;
-  const int FRAME_INTERVAL = 16;
+  public const int TIME_INTERVAL = 1;
+  public const int FRAME_INTERVAL = 16;
 
   public SimClock Clock { get; private set; }
   public TestMessageQueue MsgQueue { get; private set; }

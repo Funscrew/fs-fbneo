@@ -22,7 +22,8 @@
     },
     "Session Request": {
       "commandName": "Project",
-      "commandLineArgs": "session-request --host \"localhost\" --port \"5000\""
+      "commandLineArgs": "session-request --host \"localhost\" --port \"5000\"",
+      "nativeDebugging": true
     }
   }
 }

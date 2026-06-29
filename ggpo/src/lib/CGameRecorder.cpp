@@ -82,9 +82,9 @@ bool CGameRecorder::HasError() const
 }
 
 // ----------------------------------------------------------------------------------------------------------
-void CGameRecorder::CompleteReplay(int frame, ECompletionReason reason, EErrorReason errReason, const string& message)
+void CGameRecorder::CompleteReplay(ECompletionReason reason, EErrorReason errReason, const string& message)
 {
-  _File->CompleteReplayFile(frame, reason, errReason, message);
+  _File->CompleteReplayFile(reason, errReason, message);
   RecordingComplete = true;
 }
 
@@ -94,7 +94,7 @@ void CGameRecorder::OnError(EErrorReason errReason, const string& message)
   ErrorReason = errReason;
   ErrorMessage = message;
 
-  CompleteReplay(SyncedBaseFrame, ECompletionReason::Error, errReason, message);
+  CompleteReplay(ECompletionReason::Error, errReason, message);
 }
 
 // ----------------------------------------------------------------------------------------------------------

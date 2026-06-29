@@ -215,7 +215,7 @@ namespace funscrewTesters
         }
 
 
-        replay.CompleteWrite(1, ECompletionReason.NormalDisconnect, EErrorReason.None, "ALL GOOD BEBE!");
+        replay.CompleteWrite(ECompletionReason.NormalDisconnect, EErrorReason.None, "ALL GOOD BEBE!");
         Console.WriteLine("Replay recording is complete!");
       }
 
