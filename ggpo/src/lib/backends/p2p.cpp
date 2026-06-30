@@ -12,10 +12,14 @@
 static const int RECOMMENDATION_INTERVAL = 240;
 
 // TEMP: We are hard coding the system to never time out for now.
-static const int NEVER_TIMEOUT = 0;
+static const int NEVER_TIMEOUT = -1;
 static const int DEFAULT_DISCONNECT_TIMEOUT = NEVER_TIMEOUT;
 static const int DEFAULT_DISCONNECT_NOTIFY_START = NEVER_TIMEOUT;
 
+static const int DEFAULT_CONNECT_TIMEOUT = NEVER_TIMEOUT;
+
+// NOTE: This is really more for the replay appliance than the peers...
+static const int DEFAULT_REPLAY_CONNECT_TIMEOUT = 5000;
 
 #define _DEL(x) {if (x) { delete x; }}
 
@@ -355,8 +359,9 @@ GGPOEndpoint* Peer2PeerBackend::AddReplayAppliance(GGPOPlayer* player, int repla
   }
 
   auto playerIndex = LocalPlayer->PlayerIndex();
-  auto replayEp = new GGPOEndpoint(); // = new ReplayEndpoint(&_udp, _pollMgr, LocalPlayer->PlayerIndex(), player->u.remote.ip_address, player->u.remote.port, _local_connect_status, _client_version);
+  auto replayEp = new GGPOEndpoint();
   replayEp->Init(this, &_udp, _pollMgr, playerIndex, player->u.remote.ip_address, player->u.remote.port, _local_connect_status, _client_version, 0, 0);
+  replayEp->SetConnectTimeout(DEFAULT_REPLAY_CONNECT_TIMEOUT);
   replayEp->SetDisconnectTimeout(_disconnect_timeout);
   replayEp->SetDisconnectNotifyStart(_disconnect_notify_start);
   replayEp->SetPlayerName(_PlayerNames[_playerIndex]);
@@ -386,6 +391,7 @@ void Peer2PeerBackend::AddRemotePlayer(GGPOPlayer* player, uint64_t sessionId) /
 
   auto ep = new GGPOEndpoint();
   ep->Init(this, &_udp, _pollMgr, playerIndex, player->u.remote.ip_address, player->u.remote.port, _local_connect_status, _client_version, _delay, _runahead);
+  ep->SetConnectTimeout(-1);
   ep->SetDisconnectTimeout(_disconnect_timeout);
   ep->SetDisconnectNotifyStart(_disconnect_notify_start);
   ep->SetPlayerName(_PlayerNames[_playerIndex]);
@@ -412,8 +418,6 @@ GGPOErrorCode Peer2PeerBackend::AddPlayer(GGPOPlayer* player)
     AddRemotePlayer(player, _sessionId);
   }
   if (player->type == GGPO_ENDPOINT_TYPE_LOCAL) {
-    // AddLocalPlayer(player, _sessionId);
-    // LocalPlayer = player;
     auto ep = new GGPOEndpoint();
     LocalPlayer = ep;
     LocalPlayer->PlayerIndex(player->player_index);
@@ -556,22 +560,18 @@ void Peer2PeerBackend::OnUdpProtocolPeerEvent(UdpEvent& evt, GGPOEndpoint* endpo
 }
 
 // ----------------------------------------------------------------------------------------------------------
-void Peer2PeerBackend::HandleDisconnect(GGPOEndpoint* endpoint) {
-
-  if (!endpoint->IsDisconnected())
-  {
-    GGPOEvent e;
-    e.event_code = GGPO_EVENTCODE_DISCONNECTED_FROM_PEER;
-    e.player_index = endpoint->PlayerIndex();
-    e.isReplayEndpoint = (uint8_t)(endpoint->IsReplayClient() ? 1 : 0);
-    _callbacks.on_event(&e);
-  }
+void Peer2PeerBackend::HandleDisconnect(GGPOEndpoint* endpoint)
+{
+  GGPOEvent e;
+  e.event_code = GGPO_EVENTCODE_DISCONNECTED_FROM_PEER;
+  e.player_index = endpoint->PlayerIndex();
+  e.isReplayEndpoint = (uint8_t)(endpoint->IsReplayClient() ? 1 : 0);
+  _callbacks.on_event(&e);
 
   if (endpoint->IsReplayClient()) {
     // Effectively disconnect the endpoint so it no longer sends / receives data...
     endpoint->DisconnectEx(0, false);
   }
-
 }
 
 // ----------------------------------------------------------------------------------------------------------
@@ -638,6 +638,16 @@ void Peer2PeerBackend::OnUdpProtocolEvent(UdpEvent& evt, const GGPOEndpoint* end
     memcpy_s(info.u.datagram.data, MAX_GGPO_DATA_SIZE, evt.u.datagram.data, evt.u.datagram.dataSize);
 
     break;
+
+  case UdpEvent::SyncFailed:
+    GGPOEvent e;
+    info.event_code = GGPO_EVENTCODE_CONNECT_TIMEOUT;
+    info.player_index = (uint8_t)playerIndex;
+    e.isReplayEndpoint = (uint8_t)(endpoint->IsReplayClient() ? 1 : 0);
+    _callbacks.on_event(&info);
+
+    break;
+
 
   }
 

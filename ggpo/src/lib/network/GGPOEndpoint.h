@@ -28,7 +28,8 @@ struct UdpEvent {
     Disconnected,
     NetworkInterrupted,
     NetworkResumed,
-    Datagram
+    Datagram,
+    SyncFailed
   };
 
   Type      type;
@@ -60,6 +61,10 @@ struct UdpEvent {
       uint8_t dataSize;
       char		data[MAX_GGPO_DATA_SIZE];
     } datagram;   // REFACTOR: Rename to 'data' or something like that...
+
+    struct {
+      uint8_t endpointType;
+    } SyncFailed;
 
   } u;			// REFACTOR: Rename this to something descriptive.
 
@@ -119,6 +124,7 @@ public:
   void SetLocalFrameNumber(int num);
   int RecommendFrameDelay();
 
+  void SetConnectTimeout(uint32_t timeout);
   void SetDisconnectTimeout(int timeout);
   void SetDisconnectNotifyStart(int timeout);
 
@@ -252,8 +258,12 @@ protected:
   unsigned int               _disconnect_notify_start;
   bool                       _disconnect_notify_sent;
 
+  uint32_t                   SyncStartTime = 0;
+
   uint16                     _next_send_seq;
   uint16                     _next_recv_seq;
+
+  int                        ConnectTimeout = -1;  // Never timeout.
 
   /*
    * Rift synchronization.

@@ -68,9 +68,9 @@ public class ReplayAppliance_LEGACY : GGPOClient
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  protected override void HandleDisconnect(GGPOEndpoint endpoint)
+  public override void OnDisconnect(GGPOEndpoint endpoint)
   {
-    base.HandleDisconnect(endpoint);
+    base.OnDisconnect(endpoint);
     if (endpoint.IsDisconnected)
     {
       Log.Info("A player disconnected.... wrapping up....");

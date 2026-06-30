@@ -15,7 +15,7 @@ public class ReplaySession : IGGPOClient
   // Setting a large upper bound in the hopes of using mem pools in production.... (recycle ReplaySession instances)
   private const int MAX_PLAYERS_EVER = 8;
 
-  public int ConnectTimeout { get { return SessionArgs.ConnectTimeout; }}
+  public int ConnectTimeout { get { return SessionArgs.ConnectTimeout; } }
 
   public UInt64 SessionId { get; private set; }
   public SessionOptions SessionArgs { get; private set; }
@@ -37,7 +37,7 @@ public class ReplaySession : IGGPOClient
   const int LEGACY_MAX_PLAYERS = 4;
   private ConnectStatus[] LocalConnectStatus = new ConnectStatus[LEGACY_MAX_PLAYERS];
 
-  private Sync Sync = null!; 
+  private Sync Sync = null!;
   private GGPOSessionCallbacks Callbacks = null!;
 
   public int ID { get; set; }
@@ -173,7 +173,7 @@ public class ReplaySession : IGGPOClient
   {
     DisconnectAll();
 
-    Recorder.CompleteReplay(curFrame, reason,  errReason, message);
+    Recorder.CompleteReplay(curFrame, reason, errReason, message);
 
     // NOTE: We can add more logging here if we wanted to.
 
@@ -204,7 +204,7 @@ public class ReplaySession : IGGPOClient
     int epCount = EndpointCount;
     for (int i = 0; i < epCount; i++)
     {
-      var ep = Endpoints[i]; 
+      var ep = Endpoints[i];
       if (!ep.IsLocalPlayer && ep.HasAddress(receivedFrom))
       {
         ep.HandleMessage(ref msg, received);
@@ -222,7 +222,8 @@ public class ReplaySession : IGGPOClient
   {
     for (int i = 0; i < EndpointCount; i++)
     {
-      if (Endpoints[i].IsDisconnected) { 
+      if (Endpoints[i].IsDisconnected)
+      {
         var reason = Endpoints[i].ConnectionTimedOut ? ECompletionReason.ConnectionTimeout : ECompletionReason.NormalDisconnect;
 
         // One or more endpoints have disconnected, so we will disconnect them all / wrap this up!
@@ -366,9 +367,13 @@ public class ReplaySession : IGGPOClient
         break;
 
     }
+  }
 
-
-
+  // --------------------------------------------------------------------------------------------------------------------------
+  public void OnDisconnect(GGPOEndpoint endpoint)
+  {
+    // We don't need to send out any more messges / events in a replay session.
+    Log.Info("An endpoint was disconnected...");
   }
 
   // --------------------------------------------------------------------------------------------------------------------------

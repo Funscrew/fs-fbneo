@@ -57,6 +57,11 @@ public enum EEventCode
   GGPO_EVENTCODE_CONNECTION_INTERRUPTED = 1006,
   GGPO_EVENTCODE_CONNECTION_RESUMED = 1007,
   GGPO_EVENTCODE_DATAGRAM = 1008,
+
+  /// <summary>
+  /// The initial connection (sync) failed due to a timeout.
+  /// </summary>
+  GGPO_EVENTCODE_CONNECT_TIMEOUT = 1009
 }
 
 

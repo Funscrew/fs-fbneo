@@ -72,7 +72,7 @@ public class GGPOEndpoint
   private int RemotePort;
 
   public IPEndPoint RemoteIP { get; private set; }
-  public IPEndPoint LocalIP {get; private set; }
+  public IPEndPoint LocalIP { get; private set; }
 
   private EndPoint RemoteEP;
 
@@ -112,10 +112,14 @@ public class GGPOEndpoint
   protected GameInput _last_sent_input;
   protected GameInput _last_acked_input;
 
+  private uint32_t SyncStartTime = 0;
+
   private uint _last_send_time = 0;
   private uint _last_recv_time = 0;
   private uint _shutdown_timeout = 0;
   private bool _disconnect_event_sent = false;
+
+  // REFACTOR: IdleTimeout
   private uint _disconnect_timeout = 0;
   private uint _disconnect_notify_start = 0;
   private bool _disconnect_notify_sent = false;
@@ -270,6 +274,8 @@ public class GGPOEndpoint
 
     _current_state = EClientState.Disconnected;
     _shutdown_timeout = (uint)(Client.CurTime + UDP_SHUTDOWN_TIMER);
+
+    Client.OnDisconnect(this);
   }
 
 
@@ -516,6 +522,8 @@ public class GGPOEndpoint
       throw new InvalidOperationException("Invalid state to begin synchronize operations.");
     }
 
+    SyncStartTime = (uint32_t)this.Client.CurTime;
+
     _current_state = EClientState.Syncing;
     SyncState.roundtrips_remaining = GGPOConsts.SYNC_PACKETS_COUNT;
     SendSyncRequest();
@@ -600,10 +608,23 @@ public class GGPOEndpoint
       case EClientState.Syncing:
         // do sync timeout + resend stuff here....
         next_interval = (SyncState.roundtrips_remaining == GGPOConsts.SYNC_PACKETS_COUNT) ? SYNC_FIRST_RETRY_INTERVAL : SYNC_RETRY_INTERVAL;
-        if (_last_send_time > 0 && _last_send_time + next_interval < now)
+        if (_last_send_time > 0)
         {
-          Utils.LogIt(LogCategories.SYNC, "Re-Queueing Sync");
-          SendSyncRequest();
+          var timeoutAt = SyncStartTime + Options.ConnectTimeout;
+          if (Options.ConnectTimeout != GGPOConsts.UNLIMITED_TIME && now > timeoutAt)
+          {
+            // Connection timed out!  Let's end things here!
+            Disconnect(0, true);
+
+            // Queue the event....
+            UdpEvent evt = new UdpEvent(EEventType.SyncFailed);
+            QueueEvent(evt);
+          }
+          else if (_last_send_time + next_interval < now)
+          {
+            Utils.LogIt(LogCategories.SYNC, "Re-Queueing Sync");
+            SendSyncRequest();
+          }
         }
         break;
 
@@ -1336,7 +1357,8 @@ public enum EEventType
   Disconnected,
   NetworkInterrupted,
   NetworkResumed,
-  Datagram
+  Datagram,
+  SyncFailed
 }
 
 // ================================================================================================
@@ -1377,6 +1399,9 @@ public unsafe struct UdpEvent
 
     [FieldOffset(0)]
     public Datagram datagram;
+
+    [FieldOffset(0)]
+    public SyncFailed SyncFailed;
   }
 
   public struct SyncData
@@ -1389,6 +1414,12 @@ public unsafe struct UdpEvent
   {
     public int disconnect_timeout;
   }
+
+  public struct SyncFailed
+  {
+    public uint8_t endpointType;
+  }
+
 }
 
 
@@ -1408,7 +1439,6 @@ public class GGPOEndpointOptions
   /// </summary>
   public bool IsReplayClient { get; set; }
 
-  // TODO: Is this really used?
   public int ConnectTimeout { get; set; } = GGPOConsts.UNLIMITED_TIME;
 
   /// <summary>

@@ -266,10 +266,25 @@ bool GGPOEndpoint::OnLoopPoll(void* cookie)
   switch (_current_state) {
   case Syncing:
     next_interval = (_state.sync.roundtrips_remaining == SYNC_PACKETS_COUNT) ? SYNC_FIRST_RETRY_INTERVAL : SYNC_RETRY_INTERVAL;
-    if (_last_send_time && _last_send_time + next_interval < now) {
-      Utils::LogIt(CATEGORY_SYNC, "Re-Queueing Sync"); //  "No luck syncing after %d ms... Re-queueing sync packet.\n", next_interval);
-      SendSyncRequest();
+
+
+    if (_last_send_time > 0) {
+      if (ConnectTimeout != -1 && now > SyncStartTime + ConnectTimeout)
+      {
+        // Connection timed out!  Let's end things here!
+        DisconnectEx(0, true);
+
+        UdpEvent evt(UdpEvent::SyncFailed);
+        evt.u.SyncFailed.endpointType = EndpointType;
+        QueueEvent(evt);
+      }
+      else if (_last_send_time + next_interval < now)
+      {
+          Utils::LogIt(CATEGORY_SYNC, "Re-Queueing Sync");
+          SendSyncRequest();
+      }
     }
+
     break;
 
   case Running:
@@ -334,8 +349,8 @@ bool GGPOEndpoint::OnLoopPoll(void* cookie)
 // ------------------------------------------------------------------------------------------------
 void GGPOEndpoint::DisconnectEx(int onFrame, bool sendDisconnectMessage = true)
 {
-  if (!_udp) { return; }
-
+  if (!_udp || _current_state == Disconnected) { return; }
+  
   // We send out duplicate message packets in case of packet loss.
   if (sendDisconnectMessage) {
     const int MSG_COUNT = 3;
@@ -356,7 +371,6 @@ void GGPOEndpoint::DisconnectEx(int onFrame, bool sendDisconnectMessage = true)
   // Drop the udp pointer so that we don't update this endpoint anymore....
   _udp = nullptr;
 
-  // CompleteDisconnect();
 }
 
 //// ------------------------------------------------------------------------------------------------
@@ -465,7 +479,7 @@ void GGPOEndpoint::OnMsg(UdpMsg* msg, int len)
 // ----------------------------------------------------------------------------------------------------------
 void GGPOEndpoint::UpdateNetworkStats(void)
 {
-  UINT32 now = Platform::GetCurrentTimeMS();
+  uint32_t now = Platform::GetCurrentTimeMS();
 
   if (_stats_start_time == 0) {
     _stats_start_time = now;
@@ -493,6 +507,9 @@ void GGPOEndpoint::QueueEvent(const UdpEvent& evt)
 void GGPOEndpoint::Synchronize()
 {
   if (_udp) {
+
+    SyncStartTime = Platform::GetCurrentTimeMS();
+
     _current_state = Syncing;
     _state.sync.roundtrips_remaining = SYNC_PACKETS_COUNT;
     SendSyncRequest();
@@ -821,7 +838,11 @@ int GGPOEndpoint::RecommendFrameDelay()
   return _timesync.recommend_frame_wait_duration(false);
 }
 
-
+// ----------------------------------------------------------------------------------------------------------
+void GGPOEndpoint::SetConnectTimeout(uint32_t timeout)
+{
+  ConnectTimeout = timeout;
+}
 
 // ----------------------------------------------------------------------------------------------------------
 void GGPOEndpoint::SetDisconnectTimeout(int timeout)

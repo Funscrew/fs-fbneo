@@ -52,8 +52,13 @@ namespace funscrewTesters
 
       int useTimeout = GGPOClientOptions.DEFAULT_CONNECT_TIMEOUT * 2;
 
-      context.RunGame(useTimeout);
 
+      context.RunUtilEvent(p1, EEventCode.GGPO_EVENTCODE_CONNECT_TIMEOUT, useTimeout);
+
+      // We want to run until P1 -> RA times out and quits.
+      // Then we want to show that the replay appliance will / has shut down.
+      // The we want to show that p1/p2 drop their connections to the replay appliance.
+      // Then we show that p1/p2 will connect anyway and can exchange their data.
 
       Assert.Fail("Please complete this test case!");
 
@@ -117,14 +122,16 @@ namespace funscrewTesters
       Assert.IsTrue(evt.isReplayEndpoint == 1, "The disconnecting endpoint should be from the replay appliance.");
       Assert.NotNull(evt);
 
+      // Now after some time, the two players should sync up, and the replay appliance should be marked as complete / disconnected.
+      // NOTE: When we update the system to allow for a shutdown period for the sessions, we will need to know how long
+      // that is so that we can make sure to run the system for long enough for all of that to happen.
+      context.RunGame(500);
+
       // Let's make sure that the replay appliance is cleaned up correctly as well.
       Assert.That(replayAppliance.ActiveSessionCount, Is.EqualTo(0), "There should be no active sessions now!");
       Assert.That(replayAppliance.SessionsStarted, Is.EqualTo(1));
       Assert.That(replayAppliance.SessionsEnded, Is.EqualTo(1));
 
-
-      // Now after some time, the two players should sync up, and the replay appliance should be marked as complete / disconnected.
-      context.RunGame(500);
 
       Assert.That(p1Remote._current_state, Is.EqualTo(EClientState.Running), "p1 remote should be running now");
       Assert.That(p2Remote._current_state, Is.EqualTo(EClientState.Running), "p2 remote should be running now");
