@@ -25,7 +25,7 @@ public class GGPOClient : IGGPOClient, IDisposable
   private IClockSource Clock = null!;
   public int CurTime { get { return Clock.CurTime; } }
 
-  public int ConnectTimeout { get { return this.Options.ReplayConnectTimeout; } }
+  public int ConnectTimeout { get { return this.Options.PeerConnectTimeout; } }
   public UInt32 ClientVersion { get { return this.Options.ClientVersion; } }
 
   public int ID { get; set; }
@@ -172,10 +172,11 @@ public class GGPOClient : IGGPOClient, IDisposable
       RemotePort = port,
       IsReplayClient = true,
       SessionId = this.SessionId,
-      ConnectTimeout = GGPOClientOptions.DEFAULT_CONNECT_TIMEOUT
+      ConnectTimeout = GGPOConsts.DEFAULT_CONNECT_TIMEOUT,
     };
 
     var replayClient = new GGPOEndpoint(this, epOps, this._local_connect_status);
+    replayClient.EndpointType = EEndpointType.ReplayAppliance;
     this._endpoints.Add(replayClient);
     return replayClient;
   }
@@ -928,17 +929,25 @@ public class GGPOClient : IGGPOClient, IDisposable
 
         if (info.u.datagram.code == (byte)EDatagramCode.DATAGRAM_CODE_DISCONNECT)
         {
-          var pi = info.u.datagram.player_index;
+          if (endpoint.IsDisconnected) { return; }
+          // I think we can just disconnect the endpoint directly, and not care about what the
+          // playerIndex might be...
+          if (endpoint.EndpointType == EEndpointType.ReplayAppliance){
+            Log.Info("Got disconnect signal from replay appliance!");
+          }
+          endpoint.Disconnect(this.CurrentFrame, false);  
+        
+          //var pi = info.u.datagram.player_index;
 
-          // Disconnect datagrams come in bursts, so if we have already handled it for this index,
-          // then we can skip raising the event multiple times.
-          // NOTE:  We may want to keep more information about the conditions of a disconnect....
-          if (_endpoints[pi].IsDisconnected) { return; }
+          //// Disconnect datagrams come in bursts, so if we have already handled it for this index,
+          //// then we can skip raising the event multiple times.
+          //// NOTE:  We may want to keep more information about the conditions of a disconnect....
+          //if (_endpoints[pi].IsDisconnected) { return; }
 
-          // Log.Info("disconnect notice was received...");
-          // The endpoint has disconnected.... what do we do?
-          int frameCount = _sync.GetFrameCount();
-          _endpoints[pi].Disconnect(frameCount);
+          //// Log.Info("disconnect notice was received...");
+          //// The endpoint has disconnected.... what do we do?
+          //int frameCount = _sync.GetFrameCount();
+          //_endpoints[pi].Disconnect(frameCount);
         }
 
         _callbacks.on_event(ref info);
@@ -1015,7 +1024,6 @@ public class GGPOClient : IGGPOClient, IDisposable
 // ==========================================================================================
 public class GGPOClientOptions
 {
-  public const int DEFAULT_CONNECT_TIMEOUT = 5000;
 
   private const int DEFAULT_INPUT_SIZE = 5;   // This is for 3rd strike.
   private const int MAX_PLAYER_COUNT = 4;     // NOTE: This should be 2, but that will make trouble!
@@ -1040,7 +1048,7 @@ public class GGPOClientOptions
 
       ReplayHost = x.Host;
       ReplayPort = x.Port;
-      ReplayConnectTimeout = replayTimeout;
+      PeerConnectTimeout = replayTimeout;
     }
   }
 
@@ -1067,7 +1075,7 @@ public class GGPOClientOptions
   /// <summary>
   /// How long will we wait for a replay client connection to timeout.
   /// </summary>
-  public int ReplayConnectTimeout { get; private set; } = DEFAULT_CONNECT_TIMEOUT;
+  public int PeerConnectTimeout { get; private set; } = GGPOConsts.UNLIMITED_TIME; // GGPOConsts.DEFAULT_CONNECT_TIMEOUT;
 
   /// <summary>
   /// Verseion of this client.  It is a 32 bitmasked number as follows:
@@ -1108,7 +1116,7 @@ public interface IClockSource
 public class ClockTimer : IClockSource
 {
   private Stopwatch Clock = Stopwatch.StartNew();
-  public int CurTime { get { return (int)Clock.ElapsedMilliseconds; } }
+  public int CurTime { get { return (int)Clock.ElapsedMilliseconds + 1; } }
 }
 
 

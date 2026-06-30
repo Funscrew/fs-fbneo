@@ -30,7 +30,7 @@ public static class GGPOConsts
   public const int SYNC_PACKETS_COUNT = 5;
 
   public const int UNLIMITED_TIME = -1;
-
+  public const int DEFAULT_CONNECT_TIMEOUT = 5000;
 }
 
 // ================================================================================================================

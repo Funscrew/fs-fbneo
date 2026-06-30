@@ -48,19 +48,44 @@ namespace funscrewTesters
       GGPOEndpoint p1raep = p1.GetReplayApplianceEndpoint()!;
       Assert.IsNotNull(p1raep);
 
-      context.MsgQueue.SetPacketLossPct(p1.UDP.Endpoint, replayAppliance.UDP.Endpoint, 100.0f);
+      Assert.That(replayAppliance.ActiveSessionCount, Is.EqualTo(1), "There should be an active session!");
+      {
+        var rpc1 = p1.GetReplayApplianceEndpoint();
+        var rpc2 = p2.GetReplayApplianceEndpoint();
+        Assert.That(rpc1._current_state, Is.EqualTo(EClientState.Syncing), "The p1 replay appliance endpoint should be syncing!");
+        Assert.That(rpc2._current_state, Is.EqualTo(EClientState.Syncing), "The p2 replay appliance endpoint should be syncing!");
+      }
 
-      int useTimeout = GGPOClientOptions.DEFAULT_CONNECT_TIMEOUT * 2;
+      // NOTE: We don't get the event if bi-directional packet loss is set... that doesn't make sense....
+      context.MsgQueue.SetPacketLossPct(p1.UDP.Endpoint, replayAppliance.UDP.Endpoint, 100.0f, true);
 
-
-      context.RunUtilEvent(p1, EEventCode.GGPO_EVENTCODE_CONNECT_TIMEOUT, useTimeout);
 
       // We want to run until P1 -> RA times out and quits.
-      // Then we want to show that the replay appliance will / has shut down.
-      // The we want to show that p1/p2 drop their connections to the replay appliance.
-      // Then we show that p1/p2 will connect anyway and can exchange their data.
+      int useTimeout = GGPOConsts.DEFAULT_CONNECT_TIMEOUT * 2;
+      context.RunUtilEvent(p1, EEventCode.GGPO_EVENTCODE_CONNECT_TIMEOUT, useTimeout);
 
-      Assert.Fail("Please complete this test case!");
+
+      // Then we want to show that the replay appliance will / has shut down.
+      context.RunGame(500);
+      Assert.That(replayAppliance.ActiveSessionCount, Is.EqualTo(0), "There should be no more active sessions!");
+
+      // The we want to show that p1/p2 drop their connections to the replay appliance.
+      {
+        var rpc1 = p1.GetReplayApplianceEndpoint();
+        var rpc2 = p2.GetReplayApplianceEndpoint();
+        Assert.That(rpc1._current_state, Is.EqualTo(EClientState.Disconnected), "p1 replay appliance endpoint should be disconnected!");
+        Assert.That(rpc2._current_state, Is.EqualTo(EClientState.Disconnected), "p2 replay appliance endpoint should be disconnected!");
+      }
+
+      // Then we show that p1/p2 will connect anyway and can exchange their data.
+      {
+        var p1r = p1.GetRemotePlayer();
+        var p2r = p2.GetRemotePlayer();
+        Assert.That(p1r._current_state, Is.EqualTo(EClientState.Running), "P1 remote should be synced + running now!");
+        Assert.That(p2r._current_state, Is.EqualTo(EClientState.Running), "P2 remote should be synced + running now!");
+      }
+
+      // Assert.Fail("Please complete this test case!");
 
     }
 
@@ -117,7 +142,7 @@ namespace funscrewTesters
       // send a disconnect signal, and abandon the session.
 
       // TODO: A way to get the configured timeout.
-      var testTime = GGPOClientOptions.DEFAULT_CONNECT_TIMEOUT * 2;
+      var testTime = GGPOConsts.DEFAULT_CONNECT_TIMEOUT * 2;
       var evt = context.RunUtilEvent(p1, EEventCode.GGPO_EVENTCODE_DISCONNECTED_FROM_PEER, testTime);
       Assert.IsTrue(evt.isReplayEndpoint == 1, "The disconnecting endpoint should be from the replay appliance.");
       Assert.NotNull(evt);
@@ -305,7 +330,7 @@ namespace funscrewTesters
       ulong sessId = GetNextSessionId();
 
       // This is how we actually move the messages around....
-      var timeSource = new SimClock();
+      var timeSource = new SimTimer();
       var testQueue = new TestMessageQueue();
 
       var ops1 = new TestPlayerOptions()
@@ -330,10 +355,10 @@ namespace funscrewTesters
         GameName = gameName
       };
 
-      var p1GGPO = CreateGGPOClient( ops1, ops2, testQueue, sessId);
+      var p1GGPO = CreateGGPOClient(ops1, ops2, testQueue, sessId);
       p1GGPO.ID = 1;
 
-      var p2GGPO = CreateGGPOClient( ops2, ops1, testQueue, sessId);
+      var p2GGPO = CreateGGPOClient(ops2, ops1, testQueue, sessId);
       p2GGPO.ID = 2;
 
       var context = new TestContext(sessId, timeSource, testQueue, new[] { p1GGPO, p2GGPO }, new[] { ops1.InputBuffer, ops2.InputBuffer });

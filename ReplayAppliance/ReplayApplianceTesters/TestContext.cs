@@ -15,7 +15,7 @@ public class TestContext
   public const int TIME_INTERVAL = 1;
   public const int FRAME_INTERVAL = 16;
 
-  public SimClock Clock { get; private set; }
+  public SimTimer Clock { get; private set; }
   public TestMessageQueue MsgQueue { get; private set; }
   private List<GGPOClient> AllClients = new List<GGPOClient>();
   private List<byte[]> InputBuffers = new List<byte[]>();
@@ -29,7 +29,7 @@ public class TestContext
   public SessionOptions SessionOptions { get; set; } = null!;
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public TestContext(ulong sessionId_, SimClock timeSource_, TestMessageQueue msgQueue_, IList<GGPOClient> allClients_, IList<byte[]> inputBuffers_, ReplayAppliance? replay_ = null)
+  public TestContext(ulong sessionId_, SimTimer timeSource_, TestMessageQueue msgQueue_, IList<GGPOClient> allClients_, IList<byte[]> inputBuffers_, ReplayAppliance? replay_ = null)
   {
     SessionId = sessionId_;
     Clock = timeSource_;
@@ -169,6 +169,8 @@ public class TestContext
     {
       Assert.Fail($"Event: {eventCode} was not encountered after max time: {maxTime}!");
     }
+
+    Log.Debug($"Event was encountered on frame: {client.CurrentFrame}");
 
     return evt;
   }

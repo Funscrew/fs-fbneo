@@ -11,9 +11,9 @@ namespace funscrewTesters
 {
 
   // ==============================================================================================================================
-  public class SimClock : IClockSource
+  public class SimTimer : IClockSource
   {
-    private int _CurTime = 0;
+    private int _CurTime = 1;
     public int CurTime { get { return this._CurTime; } }
 
     // ----------------------------------------------------------------------------------------------------------------

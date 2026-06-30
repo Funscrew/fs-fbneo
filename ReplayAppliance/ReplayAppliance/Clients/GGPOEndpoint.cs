@@ -157,7 +157,7 @@ public class GGPOEndpoint
   public byte PlayerIndex { get { return Options.PlayerIndex; } }
   public bool IsLocalPlayer { get { return Options.IsLocal; } }
   public bool IsReplayClient { get { return Options.IsReplayClient; } }
-  public EEndpointType EndpointType { get; protected set; } = EEndpointType.Player;
+  public EEndpointType EndpointType { get; set; } = EEndpointType.Player;
 
   /// <summary>
   /// This is used on the replay appliance.
@@ -602,6 +602,12 @@ public class GGPOEndpoint
 
     int next_interval = 0;
     int now = (int)this.Client.CurTime;
+
+    // TEMP:
+    if (now > 5000 && this.RemoteIP.Port == 7003)
+    {
+      int agawg = 10;
+    }
 
     switch (_current_state)
     {

@@ -112,7 +112,7 @@ public class SessionOptions
   public string[] PlayerNames { get; set; }
   public IClockSource Clock { get; set; }
 
-public int ConnectTimeout { get; set; } = GGPOClientOptions.DEFAULT_CONNECT_TIMEOUT;
+public int ConnectTimeout { get; set; } = GGPOConsts.DEFAULT_CONNECT_TIMEOUT;
 }
 
 // ============================================================================================================================

@@ -102,17 +102,28 @@ namespace funscrewTesters
     /// <summary>
     /// Set parameters to simulate packet loss between clients.
     /// </summary>
-    internal void SetPacketLossPct(IPEndPoint from, IPEndPoint to, float lossPct)
+    /// <param name="isBiDirectional">
+    /// If true, loss percentage value for (from -> to) and (to -> from) will be configured.
+    /// </param>
+    internal void SetPacketLossPct(IPEndPoint from, IPEndPoint to, float lossPct, bool isBiDirectional)
     {
-      var match = LinkSettings.TryGetValue(from, to, out CLinkSettings settings);
-      if (!match)
+      if (isBiDirectional)
       {
-        settings = new CLinkSettings();
-
-        // BUG: This form doesn't work if there isn't already data for the keys.
-        LinkSettings.Add(from, to, settings);
+        SetPacketLossPct(from, to, lossPct, false);
+        SetPacketLossPct(to, from, lossPct, false);
       }
-      settings.PacketLossPct = lossPct;
+      else
+      {
+        var match = LinkSettings.TryGetValue(from, to, out CLinkSettings settings);
+        if (!match)
+        {
+          settings = new CLinkSettings();
+
+          // BUG: This form doesn't work if there isn't already data for the keys.
+          LinkSettings.Add(from, to, settings);
+        }
+        settings.PacketLossPct = lossPct;
+      }
     }
 
     // ---------------------------------------------------------------------------------------------------------------------------
