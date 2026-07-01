@@ -269,6 +269,10 @@ namespace funscrewTesters
       // Now let us read back the recording data, and make sure that it is correct.
       var rpFile = new ReplayFile(rpSess.Recorder.FilePath);
 
+      Assert.That(rpFile.GameState.Type , Is.EqualTo((uint8_t)EGameStateType.GAMESTATE_TYPE_FILE), "Invalid game state type.");
+      string statePath = rpFile.GameState.GetDataAsString();
+      Assert.That(statePath, Is.EqualTo(GAME_NAME + ".fs1"));
+
       // NOTE: Because packets and whatever may still be in flight, it is possible / likely that we won't
       // be able to capture every single frame that makes it to the players.  This is simply a result of latency
       // and how UDP networks are.

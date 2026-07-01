@@ -178,7 +178,7 @@ public unsafe struct CChatData
 
 
 // ========================================================================================================================
-enum EGameStateType : uint8_t
+public enum EGameStateType : uint8_t
 {
   GAMESTATE_TYPE_NONE = 0,         // No game state!
   GAMESTATE_TYPE_FILE,             // The replay data is stored in a file.
@@ -188,54 +188,21 @@ enum EGameStateType : uint8_t
 // ==============================================================================================================================
 public unsafe struct CGameState
 {
-  // NOT CURRENTLY IMPLEMENTED / SUPPORTED!
   public uint8_t Type;
   public uint32_t StartFrame = 0;
   public uint32_t DataSize = 0;
   public uint32_t CRC32 = 0;
 
   public byte* Data = null;
-//  public byte[]? Data = null;
 
   public CGameState() { }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  public string GetDataAsString() { 
+    string res = Encoding.UTF8.GetString(Data, (int)DataSize);
+    return res;
+  }
 }
-
-//struct CGameState
-//{
-//  // How / where is the state data stored?
-//  // Interpretation of the data (where to read files from, data compresssion, etc. are implementation defined).
-//  EGameStateType Type = GAMESTATE_TYPE_NONE;
-
-//  // Frame # of the save state.  If zero, then Size + data should be zero as well as this indicates that the replay starts
-//  // at system boot.
-//  uint32_t Frame = 0;
-
-//  // How much data is there?  (# of bytes in path, or # of bytes for total gamestate)
-//  uint32_t DataSize = 0;
-
-//  // CRC of data / data in file.
-//  // Use zero if you don't actually care about a CRC.
-//  // Interpretation of the CRC is also implementation defined.
-//  uint32_t CRC = 0;
-
-//  // Raw data (array of byte, or a path to the file that contains the state information.
-//  uint8_t* Data = nullptr;
-
-//  uint8_t IsCompressed = 0;
-
-//  uint32_t SizeOf()
-//  {
-//    return sizeof(uint8_t)          // Type 
-//      + (sizeof(uint32_t) * 3)   // Frame, DataSize, CRC 
-//      + DataSize;
-//  }
-
-//  void Read(istream& from);
-//  void Write(ostream& to);
-//};
-
-
-
 
 // ==============================================================================================================================
 public unsafe static class StringHelpers

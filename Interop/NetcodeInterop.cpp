@@ -86,7 +86,7 @@ API_EXPORT
 int ReplayFile_GetNextInput(CReplayFile* file, GameInput& input) {
   try {
     bool hasInput = file->GetNextInput(input);
-    if (!hasInput) { 
+    if (!hasInput) {
       return ERRORCODE_NO_GAMEINPUT;
     }
     return ERRORCODE_OK;
@@ -138,7 +138,7 @@ int ReplayFile_AddInput(CReplayFile* file, GameInput* input) {
 
 // ---------------------------------------------------------------------------------------------------------
 API_EXPORT
-int ReplayFile_AddChat(CReplayFile* file, const CChatData& chat) { 
+int ReplayFile_AddChat(CReplayFile* file, const CChatData& chat) {
   try
   {
     file->AddChatSegment(chat);
@@ -203,4 +203,24 @@ void ReplayFile_Destroy(CReplayFile* replayFile) {
   if (replayFile) {
     delete replayFile;
   }
+}
+
+
+// ---------------------------------------------------------------------------------------------------------
+/// Export the state information (if any) from the replay file.
+API_EXPORT
+int ReplayFile_GetGameState(CReplayFile* target, CGameState& state) {
+
+  try
+  {
+    target->GetState(state);
+  }
+  catch (const std::exception& ex)
+  {
+    _LastError.assign(ex.what());
+    return ERRORCODE_UNHANDLED;
+  }
+
+  return ERRORCODE_OK;
+
 }

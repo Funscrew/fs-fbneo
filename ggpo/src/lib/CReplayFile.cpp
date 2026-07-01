@@ -6,6 +6,10 @@
 
 using namespace std;
 
+// 16MB.  This is arbitrary and might be removed or otherwise enhanced....
+// Should be OK for now.....
+const size_t MAX_STATE_DATA_SIZE = 0x1000000;
+
 
 // PATCH: Workaround for no memcpy_s on linux....
 // TODO: There should be a real macro like '__STDC_LIB_EXT1__' to properly identify the feautre....
@@ -20,10 +24,7 @@ using namespace std;
 namespace ReplayData
 {
   const vector<uint8_t> FileId = { 'f', 's', 'n', 'e', 'o', '-', 'r', 'f' };
-  // const vector<uint8_t> Footer = { 'r', 'r', 'x', '-' };
-
   const int HEADER_STUB_SIZE = 8;
-  // const int FOOTER_STUB_SIZE = 4;
 }
 
 namespace StringTools
@@ -519,20 +520,11 @@ uint32_t CGameData::SizeOf() {
 
   // Player names.....
   res += sizeof(PlayerNames);
-
-  //if (PlayerNames) {
-  //  for (size_t i = 0; i < MaxPlayerCount; i++)
-  //  {
-  //    res += (PlayerNames[i].size());
-  //  }
-  //}
-
   return res;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
 CGameData::CGameData() {
-  // memset(PlayerNames, 0, sizeof(PlayerNames));
 }
 
 
@@ -544,17 +536,6 @@ void CGameData::Read(istream& from) {
   RDATA2(from, MaxPlayerCount);
   RDATA2(from, TotalInputSize);
   RDATA2(from, PlayerNames);
-  //for (uint8_t i = 0; i < MaxPlayerCount; i++)
-  //{
-  //  uint8_t nameSize;
-  //  RDATA2(from, nameSize);
-  //  if (nameSize > 0) {
-  //    std::string nameBuffer;
-  //    EZStream::ReadRawString(from, PlayerNames[i], nameSize);
-  //    SetPlayerName(nameBuffer, i);
-  //  }
-  //}
-
 }
 
 
@@ -566,34 +547,11 @@ void CGameData::Write(ostream& to) {
   WDATA2(to, MaxPlayerCount);
   WDATA2(to, TotalInputSize);
   WDATA2(to, PlayerNames);
-
-  //if (PlayerNames) {
-  //  // Write the player names.
-  //  for (size_t i = 0; i < MaxPlayerCount; i++)
-  //  {
-  //    auto& name = PlayerNames[i];
-  //    size_t size = name.size();
-  //    WDATA2(to, (uint8_t)size);
-
-  //    EZStream::WriteRawString(to, name);
-  //  }
-  //}
-  //else {
-  //  // Write the player names (empty)
-  //  for (size_t i = 0; i < MaxPlayerCount; i++)
-  //  {
-  //    WDATA2(to, (uint8_t)0);
-  //  }
-  //}
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
 void CReplayFile::WriteGameData() {
   CheckComplete();
-
-  //if (_GameData.StartFrame == 0) {
-  //  throw runtime_error("Inavlid start frame!  Must be > 0!");
-  //}
 
   streampos start = _Stream.tellp();
 
@@ -602,11 +560,7 @@ void CReplayFile::WriteGameData() {
   segHeader.Size = _GameData.SizeOf();
 
   WriteSegmentHeader(segHeader);
-  // EZStream::Write<CGameData>(_Stream, _GameData);
   _GameData.Write(_Stream);
-
-
-
 
   streampos end = _Stream.tellp();
   int64_t total = static_cast<int64_t>(end - start);
@@ -638,10 +592,10 @@ void CReplayFile::AddChatSegment(const CChatData& chat)
   CheckComplete();
 
   // Make sure that the chat data is at a reasonable place in the stream...
-  if (chat.Frame < LastUsedFrame || chat.Frame > LastUsedFrame + 1) { 
+  if (chat.Frame < LastUsedFrame || chat.Frame > LastUsedFrame + 1) {
     throw runtime_error("Invalid frame number for chat data!");
   }
-  if (chat.FromPlayerIndex == chat.ToPlayerIndex) { 
+  if (chat.FromPlayerIndex == chat.ToPlayerIndex) {
     throw runtime_error("from/to indexes may not be the same!");
   }
 
@@ -769,21 +723,21 @@ void CChatData::Write(ostream& to) const {
   WDATA2(to, ToPlayerIndex);
   WDATA2(to, Frame);
   WDATA2(to, DataSize);
-  
+
   EZStream::Write(to, Data, DataSize);
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
-CGameState::~CGameState() { 
+CGameState::~CGameState() {
   ClearData();
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
 void CGameState::Read(istream& from) {
+  // NOTE: We might end up splitting the state data from the rest of the state information.
+  // The purpose is that we might not want to immediately read in all of the state data, esp. if it is large, or
+  // we are not interested in consuming it....
 
-  // 16MB.  This is arbitrary and might be removed or otherwise enhanced....
-  // Should be OK for now.....
-  const size_t MAX_DATA_SIZE = 0x1000000;
 
   RDATA2(from, Type);
   RDATA2(from, StartFrame);
@@ -798,23 +752,34 @@ void CGameState::Read(istream& from) {
 
   if (DataSize) {
     // TODO: We will have to internally allocate space for the state!
-    if (DataSize > MAX_DATA_SIZE) { 
-      throw runtime_error("DataSize exceed MAX_DATA_SIZE!");
+    if (DataSize > MAX_STATE_DATA_SIZE) {
+      throw runtime_error("DataSize exceed MAX_STATE_DATA_SIZE!");
     }
     _Data = (uint8_t*)malloc(DataSize);
     from.read(reinterpret_cast<char*>(_Data), DataSize);
   }
+
+  // TODO: If set, then we want to check the file or data contents to make sure'
+  // that they are correct.
+  if (CRC32 != 0) {
+    throw runtime_error("CRC32 is not yet supported!");
+  }
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
-void CGameState::GetData(uint8_t** buffer, uint32_t* bufferSize) { 
+void CGameState::GetData(uint8_t** buffer, uint32_t* bufferSize) {
+  if (Type == (uint8_t)EGameStateType::GAMESTATE_TYPE_FILE)
+  {
+    // TODO: We will want to read in the file contents + present them as raw data.
+    throw runtime_error("not supported yet....");
+  }
   *bufferSize = DataSize;
   *buffer = _Data;
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
 void CGameState::GetDataAsString(char* intoBuffer, size_t bufferSize) {
-  if (bufferSize < DataSize + 1) { 
+  if (bufferSize < DataSize + 1) {
     throw runtime_error("buffer is not large enough to contain the string!");
   }
   memcpy(intoBuffer, _Data, DataSize);
@@ -823,7 +788,7 @@ void CGameState::GetDataAsString(char* intoBuffer, size_t bufferSize) {
 
 // ------------------------------------------------------------------------------------------------------------------------
 void CGameState::ClearData() {
-  if (_Data) { 
+  if (_Data) {
     free(_Data);
     _Data = nullptr;
   }
@@ -837,6 +802,14 @@ void CGameState::Write(ostream& to) {
   WDATA2(to, CRC32);
 
   if (_Data) {
+    if (DataSize == 0 || DataSize > MAX_STATE_DATA_SIZE) {
+      throw runtime_error("Invalid data size! zero or > MAX_STATE_DATA_SIZE");
+    }
     to.write(reinterpret_cast<char*>(_Data), DataSize);
   }
+
+  if (CRC32 != 0) {
+    throw runtime_error("CRC32 is not yet supported!");
+  }
+
 }

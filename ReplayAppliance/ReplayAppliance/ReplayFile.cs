@@ -57,6 +57,9 @@ public class ReplayFile : IDisposable
   [DllImport(LIB_NAME, EntryPoint = "ReplayFile_GetFooter", CallingConvention = CallingConvention.Cdecl)]
   private static extern int ReplayFile_GetFooter(IntPtr file, ref CFooterData gameData);
 
+  [DllImport(LIB_NAME, EntryPoint = "ReplayFile_GetGameState", CallingConvention = CallingConvention.Cdecl)]
+  private static extern int ReplayFile_GetGameState(IntPtr file, ref CGameState gameState);
+
 
   [DllImport(LIB_NAME, CallingConvention = CallingConvention.Cdecl)]
   private static extern void TestError();
@@ -76,8 +79,14 @@ public class ReplayFile : IDisposable
 
   public string Path { get; private set; }
 
+  private CGameState _GameState = default;
+  public CGameState GameState { get { return _GameState; } }
+
   private CFooterData _FooterData = default;
+
+
   public uint FrameCount { get { return _FooterData.FrameCount; } }
+
 
   // --------------------------------------------------------------------------------------------------------------------------
   /// <summary>
@@ -126,11 +135,13 @@ public class ReplayFile : IDisposable
       ThrowIfNotOK(code);
     }
     {
+      int code = ReplayFile_GetGameState(ReplayHandle, ref _GameState);
+      ThrowIfNotOK(code);
+    }
+    {
       int code = ReplayFile_GetFooter(ReplayHandle, ref _FooterData);
       ThrowIfNotOK(code);
     }
-
-    // ALL GOOD!
   }
 
   // --------------------------------------------------------------------------------------------------------------------------

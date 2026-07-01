@@ -35,7 +35,7 @@ void CMemRecorder::InitStream(const filesystem::path& path) {
 
 // ------------------------------------------------------------------------------------------------------------------------
 void CMemRecorder::AddMemory(int frame, void* data, size_t dataSize) {
-  if (frame != TotalFrames + 1) { throw new runtime_error("Invalid frame #!"); }
+  if (frame != TotalFrames + 1) { throw runtime_error("Invalid frame #!"); }
 
   WDATA2(_Stream, frame);
   WDATA2(_Stream, dataSize);

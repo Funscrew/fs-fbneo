@@ -1209,7 +1209,7 @@ int ProcessCommandLine(LPSTR lpCmdLine)
 
   // Enable memory recording / snapshot.
   if (memOptions != "") {
-    throw new runtime_error("Fuggedaboutit");
+    throw runtime_error("Fuggedaboutit");
     return 1;
 
     //RecordMem = true;
