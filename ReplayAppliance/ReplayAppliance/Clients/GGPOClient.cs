@@ -936,18 +936,6 @@ public class GGPOClient : IGGPOClient, IDisposable
             Log.Info("Got disconnect signal from replay appliance!");
           }
           endpoint.Disconnect(this.CurrentFrame, false);  
-        
-          //var pi = info.u.datagram.player_index;
-
-          //// Disconnect datagrams come in bursts, so if we have already handled it for this index,
-          //// then we can skip raising the event multiple times.
-          //// NOTE:  We may want to keep more information about the conditions of a disconnect....
-          //if (_endpoints[pi].IsDisconnected) { return; }
-
-          //// Log.Info("disconnect notice was received...");
-          //// The endpoint has disconnected.... what do we do?
-          //int frameCount = _sync.GetFrameCount();
-          //_endpoints[pi].Disconnect(frameCount);
         }
 
         _callbacks.on_event(ref info);

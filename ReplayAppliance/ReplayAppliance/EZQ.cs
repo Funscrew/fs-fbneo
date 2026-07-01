@@ -4,10 +4,10 @@ namespace drewCo.Tools
 {
   // ========================================================================================================
   /// <summary>
-  /// A simple little queue that uses a ring buffer internally.
+  /// A simple little queue (FIFO).
   /// </summary>
   // TODO: Put this in the tools lib!
-  [Obsolete("Use version from drewco.tools > 1.4.2.4")]
+  [Obsolete("Use version from drewco.tools > 1.5.1")]
   public class EZQ<T>
   {
     private int Capacity = 0;

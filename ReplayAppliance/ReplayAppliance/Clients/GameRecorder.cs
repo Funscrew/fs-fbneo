@@ -1,5 +1,7 @@
 ﻿using drewCo.Tools;
 using drewCo.Tools.Logging;
+using System.Runtime.CompilerServices;
+using System.Text;
 
 namespace funscrew
 {
@@ -48,11 +50,11 @@ namespace funscrew
 
 
     private ReplayFile ReplayFile = null!;
-    public string FilePath { get { return ReplayFile.Path; }}
+    public string FilePath { get { return ReplayFile.Path; } }
 
     // -----------------------------------------------------------------------------------------------------------------------
     // NOTE: In production environments, game data should not be allowed to be overwritten!
-    public GameRecorder(CGameData gameData_, string dataDir_, UInt64 sessionId_, bool overwriteExisting = false)
+    public unsafe GameRecorder(CGameData gameData_, string dataDir_, UInt64 sessionId_, bool overwriteExisting = false)
     {
       GameData = gameData_;
       SessionId = sessionId_;
@@ -71,8 +73,27 @@ namespace funscrew
         throw new InvalidOperationException($"Data file for session id: {SessionId} already exists!");
       }
 
-      // TODO: This is where we will create the stream for where the file data will go.
-      ReplayFile = new ReplayFile(usePath, GameData, null);
+
+      
+      var stateFilePathData = Encoding.UTF8.GetBytes($"{GameData.GameName}.fs1");
+      fixed( byte* buffer = stateFilePathData ) {
+
+        CGameState state = new CGameState();
+        state.Type = (uint8_t)EGameStateType.GAMESTATE_TYPE_FILE;
+        state.StartFrame = 0;
+        state.DataSize = (uint32_t)stateFilePathData.Length;
+        state.Data = buffer;
+
+        // NOTE: This would be a CRC32 for the contents of the indicated file!  We use zero for now b/c I don't care about checking it.
+        state.CRC32 = 0;
+
+        // We don't need state or its memory after it is written....
+        ReplayFile = new ReplayFile(usePath, GameData, state);
+        stateFilePathData = null;
+      }
+
+
+
 
       BaseFrames = new int[MAX_PLAYERS];
       int len = BaseFrames.Length;
@@ -94,29 +115,6 @@ namespace funscrew
       ReplayFile.Dispose();
     }
 
-
-    //// -----------------------------------------------------------------------------------------------------------------------
-    //// TODO: This belongs in tools somewhere.....
-    //private int CopyFixedString(string data, int maxSize, byte[] toBuffer, int offset)
-    //{
-    //  if (data.Length > maxSize)
-    //  {
-    //    throw new InvalidOperationException();
-    //  }
-    //  int len = data.Length;
-    //  int extra = maxSize - len;
-    //  for (int i = 0; i < len; i++)
-    //  {
-    //    toBuffer[offset + i] = (byte)data[i];
-    //  }
-    //  for (int i = 0; i < extra; i++)
-    //  {
-    //    toBuffer[len + i] = 0;
-    //  }
-
-    //  return maxSize;
-    //}
-
     // -----------------------------------------------------------------------------------------------------------------------
     /// <summary>
     /// Use this to complete the recording of the replay + indicate the
@@ -127,35 +125,6 @@ namespace funscrew
     {
       int useFrame = frame == -1 ? SyncedBaseFrame : frame;
       ReplayFile.CompleteWrite(reason, errReason, string.Empty);
-
-      //CheckComplete();
-
-      //// TODO: Some kind of sanity check for the frame #?
-      //const int COMPLETE_MSG_LEN = 64;
-      //string useMsg = message == null ? string.Empty : StringTools.Truncate(message, COMPLETE_MSG_LEN);
-
-      //using (var ms = new MemoryStream(0x100))
-      //{
-      //  // NOTE: In a perfect world we use our own write buffer.
-      //  EZWriter.Write(ms, (byte)reason);
-      //  EZWriter.Write(ms, (byte)errReason);
-      //  EZWriter.Write(ms, frame);
-
-      //  CopyFixedString(useMsg, COMPLETE_MSG_LEN, WriteBuffer, 0);
-      //  ms.Write(WriteBuffer, 0, COMPLETE_MSG_LEN);
-
-      //  // Write the end code so that we know that the file is actually completed correctly.
-      //  EZWriter.Write(ms, ReplayFile.Footer);
-
-      //  WriteSegmentData(EDataSegmentType.Complete, ms);
-
-      //  // We will put the total file size at the end, as a kind of checksum, I guess...
-      //  long finalSize = (int)(DataStream.Position + sizeof(long));
-      //  EZWriter.Write(DataStream, finalSize);
-      //}
-
-      //CloseStream();
-
       RecordingComplete = true;
     }
 
@@ -256,7 +225,6 @@ namespace funscrew
         SyncedBaseFrame = startMergeFrame;
       }
 
-      // throw new Exception();
       return true;
     }
 
@@ -299,7 +267,6 @@ namespace funscrew
 
       // Write that data to disk!
       ReplayFile.AddInput(ref merged);
-      // WriteInputSegment(ref merged);
 
       // Add it to the active window of inputs (which are used for live playback)
       this.MergedInputs.Push(merged);

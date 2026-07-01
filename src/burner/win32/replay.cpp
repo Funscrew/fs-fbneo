@@ -460,8 +460,8 @@ INT32 StartReplay(const TCHAR* szFileName)
   CGameState state;
   _ReplayFile->GetState(state);
 
-  nCurrentFrame = state.Frame;
-  nReplayCurrentFrame = state.Frame;
+  nCurrentFrame = state.StartFrame;
+  nReplayCurrentFrame = state.StartFrame;
 
   // NOTE: Do we really need both frames?
   if (nCurrentFrame == 0 && nReplayCurrentFrame == 0)

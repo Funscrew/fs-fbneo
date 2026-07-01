@@ -255,7 +255,7 @@ bool CReplayFile::GetNextInput(GameInput& input) {
         throw runtime_error("Unexpected input frame was encountered!");
       }
 
-      auto readSize = CurInputGroupCount * _GameData.TotalInputSize;
+      uint16_t readSize = CurInputGroupCount * _GameData.TotalInputSize;
       if (readSize != segHeader.Size - (sizeof(uint32_t) + sizeof(uint16_t)))
       {
         throw runtime_error("Invalid data size in InputData segment!");
@@ -711,7 +711,7 @@ void CReplayFile::FlushPendingInputData()
 void CReplayFile::AddInputSegment(const GameInput& input) {
   CheckComplete();
 
-  if (input.frame != LastUsedFrame + 1) {
+  if ((uint32_t)input.frame != LastUsedFrame + 1) {
     throw runtime_error("Incorrect frame #!");
   }
   LastUsedFrame = input.frame;
@@ -774,33 +774,69 @@ void CChatData::Write(ostream& to) const {
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
-void CGameState::Read(istream& from) {
-  RDATA2(from, Type);
-  RDATA2(from, Frame);
-  RDATA2(from, DataSize);
-  RDATA2(from, CRC);
+CGameState::~CGameState() { 
+  ClearData();
+}
 
-  if (Type == GAMESTATE_TYPE_NONE) {
-    if (Frame != 0 || DataSize != 0 || CRC != 0) {
+// ------------------------------------------------------------------------------------------------------------------------
+void CGameState::Read(istream& from) {
+
+  // 16MB.  This is arbitrary and might be removed or otherwise enhanced....
+  // Should be OK for now.....
+  const size_t MAX_DATA_SIZE = 0x1000000;
+
+  RDATA2(from, Type);
+  RDATA2(from, StartFrame);
+  RDATA2(from, DataSize);
+  RDATA2(from, CRC32);
+
+  if (Type == (uint8_t)EGameStateType::GAMESTATE_TYPE_NONE) {
+    if (StartFrame != 0 || DataSize != 0 || CRC32 != 0) {
       throw runtime_error("Invalid data for GAMESTATE_TYPE_NONE!");
     }
-
   }
+
   if (DataSize) {
     // TODO: We will have to internally allocate space for the state!
-    throw runtime_error("write some code so we can allocate space for the game state!");
-    from.read(reinterpret_cast<char*>(Data), DataSize);
+    if (DataSize > MAX_DATA_SIZE) { 
+      throw runtime_error("DataSize exceed MAX_DATA_SIZE!");
+    }
+    _Data = (uint8_t*)malloc(DataSize);
+    from.read(reinterpret_cast<char*>(_Data), DataSize);
+  }
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+void CGameState::GetData(uint8_t** buffer, uint32_t* bufferSize) { 
+  *bufferSize = DataSize;
+  *buffer = _Data;
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+void CGameState::GetDataAsString(char* intoBuffer, size_t bufferSize) {
+  if (bufferSize < DataSize + 1) { 
+    throw runtime_error("buffer is not large enough to contain the string!");
+  }
+  memcpy(intoBuffer, _Data, DataSize);
+  intoBuffer[DataSize] = 0;
+}
+
+// ------------------------------------------------------------------------------------------------------------------------
+void CGameState::ClearData() {
+  if (_Data) { 
+    free(_Data);
+    _Data = nullptr;
   }
 }
 
 // ------------------------------------------------------------------------------------------------------------------------
 void CGameState::Write(ostream& to) {
   WDATA2(to, (uint8_t)Type);
-  WDATA2(to, Frame);
+  WDATA2(to, StartFrame);
   WDATA2(to, DataSize);
-  WDATA2(to, CRC);
+  WDATA2(to, CRC32);
 
-  if (Data) {
-    to.write(reinterpret_cast<char*>(Data), DataSize);
+  if (_Data) {
+    to.write(reinterpret_cast<char*>(_Data), DataSize);
   }
 }

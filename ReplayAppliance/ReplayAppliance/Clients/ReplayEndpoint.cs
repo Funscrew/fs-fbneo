@@ -152,8 +152,6 @@ namespace funscrew.Clients
           ++useCount;
         }
 
-        // Log.Info($"sending input ack: {msg.u.input_ack.start_frame} - {useCount}");
-
         msg.u.input_ack.frame_count = useCount;
         SendMsg(ref msg);
       }

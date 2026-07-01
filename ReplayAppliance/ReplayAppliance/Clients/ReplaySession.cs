@@ -1,6 +1,5 @@
 ﻿using drewCo.Tools.Logging;
 using System.Net;
-using System.Reflection;
 
 namespace funscrew.Clients;
 
@@ -237,7 +236,6 @@ public class ReplaySession : IGGPOClient
     if (this.IsComplete) { return; }
 
     HandleEvents();
-
 
     if (!IsSyncing)
     {

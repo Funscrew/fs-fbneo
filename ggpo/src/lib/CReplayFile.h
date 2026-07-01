@@ -91,7 +91,7 @@ private:
 };
 
 // ========================================================================================================================
-enum EGameStateType : uint8_t {
+enum class EGameStateType : uint8_t {
   GAMESTATE_TYPE_NONE = 0,         // No game state!
   GAMESTATE_TYPE_FILE,             // The replay data is stored in a file.
   GAMESTATE_TYPE_DATA,             // The replay data is raw data.
@@ -99,13 +99,15 @@ enum EGameStateType : uint8_t {
 
 // ========================================================================================================================
 struct CGameState {
+  ~CGameState();
+
   // How / where is the state data stored?
   // Interpretation of the data (where to read files from, data compresssion, etc. are implementation defined).
-  EGameStateType Type = GAMESTATE_TYPE_NONE;
+  uint8_t Type = (uint8_t)EGameStateType::GAMESTATE_TYPE_NONE;
 
   // Frame # of the save state.  If zero, then Size + data should be zero as well as this indicates that the replay starts
   // at system boot.
-  uint32_t Frame = 0;
+  uint32_t StartFrame = 0;
 
   // How much data is there?  (# of bytes in path, or # of bytes for total gamestate)
   uint32_t DataSize = 0;
@@ -113,21 +115,30 @@ struct CGameState {
   // CRC of data / data in file.
   // Use zero if you don't actually care about a CRC.
   // Interpretation of the CRC is also implementation defined.
-  uint32_t CRC = 0;
+  uint32_t CRC32 = 0;
 
-  // Raw data (array of byte, or a path to the file that contains the state information.
-  uint8_t* Data = nullptr;
 
-  uint8_t IsCompressed = 0;
 
   uint32_t SizeOf() {
-    return sizeof(uint8_t)          // Type 
+    return sizeof(uint8_t)       // Type 
       + (sizeof(uint32_t) * 3)   // Frame, DataSize, CRC 
       + DataSize;
   }
 
   void Read(istream& from);
   void Write(ostream& to);
+  void ClearData();
+
+  void GetData(uint8_t * *buffer, uint32_t * bufferSize);
+
+  // Get a UTF-8 string representation of the data.  Typically this is used when Type == GAMESTATE_TYPE_FILE
+  void GetDataAsString(char* intoBuffer, size_t bufferSize);
+
+  private: 
+    // Raw data (array of byte, or a path to the file that contains the state information.
+    uint8_t* _Data = nullptr;
+
+
 };
 
 // ========================================================================================================================
@@ -160,7 +171,7 @@ struct CChatData
   // NOTE: There is an error if all indexes are the same number!
   uint8_t FromPlayerIndex = 0;
   uint8_t ToPlayerIndex = 0;
-  int32_t Frame = 0;
+  uint32_t Frame = 0;
 
 
   void Read(istream& from);

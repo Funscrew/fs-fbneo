@@ -84,9 +84,6 @@ namespace funscrewTesters
         Assert.That(p1r._current_state, Is.EqualTo(EClientState.Running), "P1 remote should be synced + running now!");
         Assert.That(p2r._current_state, Is.EqualTo(EClientState.Running), "P2 remote should be synced + running now!");
       }
-
-      // Assert.Fail("Please complete this test case!");
-
     }
 
 
