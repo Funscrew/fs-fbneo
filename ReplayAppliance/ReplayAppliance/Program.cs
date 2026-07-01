@@ -177,55 +177,21 @@ public partial class Program
   // --------------------------------------------------------------------------------------------------------------------------
   private static int RunReplayAppliance(ReplayOptions ops)
   {
-
-
     Log.Info("Setting up replay appliance...");
-
-    //// CLIOptions = ops;
-
-    //ClientOptions = new GGPOClientOptions(ops.GameName, 0, ops.LocalPort, ops.ProtocolVersion, ops.SessionId)
-    //{
-    //  Callbacks = new GGPOSessionCallbacks()
-    //  {
-    //    begin_game = OnBeginGame,
-    //    free_buffer = OnFreeBuffer,
-    //    on_event = OnEvent,
-    //    rollback_frame = OnRollback,
-    //    save_game_state = SaveGameState,
-    //    load_game_state = LoadGameState
-    //  }
-    //};
-
-    //ClientMode = EMode.Replay;
 
     var udp = new UdpBlaster(ops.ReplayPort);
     ReplayAppliance replayAppliance = new ReplayAppliance(ops, udp, new ClockTimer());
 
-
-    var spOps = new SessionPrimerOptions() { Port = ops.RequestPort };
-    var sp = new SessionPrimer(spOps, replayAppliance);
+    var sp = new SessionPrimer(ops, replayAppliance);
 
     Console.CancelKeyPress += (s, e) =>
     {
       sp.EndListen();
-      // replayAppliance.Shutdown();
     };
 
     Task frontDoorTask = sp.BeginListen();
 
-    //Task applianceTask = replayAppliance.BeginUpdateLoop();
-    //var all = new[] { serverTask, applianceTask };
-    //Task.WaitAll(all);
-
     frontDoorTask.Wait();
-
-    // Thread.Sleep(5000);
-
-    // This would be the end of the program....
-    // sp.EndListen();
-
-    //Log.Info("complete!");
-    //Console.ReadKey();
 
     return 0;
   }

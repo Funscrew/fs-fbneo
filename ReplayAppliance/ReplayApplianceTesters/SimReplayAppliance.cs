@@ -9,7 +9,7 @@ namespace funscrewTesters
     private byte[] _SendBuffer = new byte[0x400];
 
     // --------------------------------------------------------------------------------------------------------------------------
-    public SimSessionPrimer(SessionPrimerOptions ops_, ReplayAppliance replayAppliance_)
+    public SimSessionPrimer(ReplayOptions ops_, ReplayAppliance replayAppliance_)
       : base(ops_, replayAppliance_)
     { }
 

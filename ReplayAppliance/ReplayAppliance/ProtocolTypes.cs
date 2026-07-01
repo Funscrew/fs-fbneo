@@ -31,6 +31,9 @@ public static class GGPOConsts
 
   public const int UNLIMITED_TIME = -1;
   public const int DEFAULT_CONNECT_TIMEOUT = 5000;
+
+  public const int REPLAY_APPLIANCE_PORT = 7003;
+  public const int FRONT_DOOR_PORT = 5000;         // NOTE: This is the port that the 'front door' listens on.
 }
 
 // ================================================================================================================

@@ -181,11 +181,8 @@ public class TestContext
     var context = this;
     SimReplayAppliance replayAppliance = CreateTestReplayAppliance();
 
-    var spOps = new SessionPrimerOptions()
-    {
-      Port = TestBase.FRONT_DOOR_PORT,
-    };
-    var frontDoor = new SimSessionPrimer(spOps, replayAppliance);
+    var replayOps = new ReplayOptions();
+    var frontDoor = new SimSessionPrimer(replayOps, replayAppliance);
     context.SetSessionPrimer(frontDoor);
     context.SetReplayAppliance(replayAppliance);
 
@@ -200,10 +197,10 @@ public class TestContext
     var replayOps = new ReplayOptions()
     {
       ReplayDataDir = "replay-data",
-      ReplayPort = TestBase.REPLAY_APPLIANCE_PORT,
-      RequestPort = TestBase.FRONT_DOOR_PORT
+      ReplayPort = GGPOConsts.REPLAY_APPLIANCE_PORT,
+      ServicePort = GGPOConsts.FRONT_DOOR_PORT
     };
-    var blaster = new SimUdp(TestBase.REPLAY_APPLIANCE_HOST, TestBase.REPLAY_APPLIANCE_PORT, context.Clock, context.MsgQueue, false, TestBase.SIM_PING, TestBase.SIM_JITTER);
+    var blaster = new SimUdp(TestBase.REPLAY_APPLIANCE_HOST, GGPOConsts.REPLAY_APPLIANCE_PORT, context.Clock, context.MsgQueue, false, TestBase.SIM_PING, TestBase.SIM_JITTER);
     var res = new SimReplayAppliance(replayOps, blaster, context.Clock);
 
     return res;

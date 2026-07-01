@@ -16,7 +16,7 @@ public class SessionPrimer : IDisposable
 {
   public const UInt64 TEST_SESSION_ID = 12345;
 
-  public SessionPrimerOptions Options { get; private set; }
+  public ReplayOptions Options { get; private set; }
 
   private CancellationTokenSource CTSource = default!;
   private CancellationToken CancelToken = default!;
@@ -25,7 +25,7 @@ public class SessionPrimer : IDisposable
   private SessionIDGenerator IDGenerator = new SessionIDGenerator();
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public SessionPrimer(SessionPrimerOptions options_, ReplayAppliance replayAppliance_)
+  public SessionPrimer(ReplayOptions options_, ReplayAppliance replayAppliance_)
   {
     Options = options_;
     CTSource = new CancellationTokenSource();
@@ -42,12 +42,16 @@ public class SessionPrimer : IDisposable
   // --------------------------------------------------------------------------------------------------------------------------
   public Task BeginListen()
   {
-    Log.Info($"The front door is open on port {Options.Port}");
+    Log.Info($"The front door is open on port {Options.ServicePort}");
+
+    if (Options.UseTestSession) {
+      throw new NotSupportedException("test session is not yet supported!");
+    }
 
 
     var res = Task.Factory.StartNew(() =>
     {
-      Listener = new TcpListener(IPAddress.Any, Options.Port);
+      Listener = new TcpListener(IPAddress.Any, Options.ServicePort);
       Listener.Start();
 
       while (!this.CancelToken.IsCancellationRequested)
@@ -129,24 +133,11 @@ public class SessionPrimer : IDisposable
       // Dirty trick to force network event.
       using (var client = new TcpClient())
       {
-        client.Connect("127.0.0.1", Options.Port);
+        client.Connect("127.0.0.1", Options.ServicePort);
       }
     }
   }
 }
-
-
-// ==============================================================================================================================
-public class SessionPrimerOptions
-{
-  public const int DEFAULT_PORT = 5000;
-
-  /// <summary>
-  /// The port to listen on.
-  /// </summary>
-  public int Port { get; set; } = DEFAULT_PORT;
-}
-
 
 // ==============================================================================================================================
 public interface ISessionIDGenerator

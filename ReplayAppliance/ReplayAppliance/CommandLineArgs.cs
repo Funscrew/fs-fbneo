@@ -16,7 +16,7 @@ public class SessionRequestOptions
   public string Host { get; set; } = "localhost";
 
   [Option("port", Required = true, HelpText = "(TCP) Port to listen on for session start requests.")]
-  public int Port { get; set; } = SessionPrimerOptions.DEFAULT_PORT;
+  public int Port { get; set; } = GGPOConsts.FRONT_DOOR_PORT;
 
   [Option("timeout", Required = false, HelpText = "Request timeout.")]
   public milliseconds Timeout { get; set; } = 5000;
@@ -40,15 +40,14 @@ public class SessionRequestOptions
 [Verb("replay-appliance-ex")]
 public class ReplayOptions
 {
-  // REFACTOR: This should live somewhere else....
-  public const int DEFAULT_PORT = 7002;
-
-  [Option("request-port", Required = true, HelpText = "(TCP) Port to listen on for session start requests.")]
-  public int RequestPort { get; set; } = SessionPrimerOptions.DEFAULT_PORT;
+  [Option("service-port", Required = true, HelpText = "(TCP) Port to listen on for session start requests.")]
+  public int ServicePort { get; set; } = GGPOConsts.FRONT_DOOR_PORT;
 
   [Option("replay-port", Required = true, HelpText = "(UDP) Port where replay data will be sent.")]
-  public int ReplayPort { get; set; } = DEFAULT_PORT;
+  public int ReplayPort { get; set; } = GGPOConsts.REPLAY_APPLIANCE_PORT;
 
+  [Option("use-test-session", Required = false, HelpText = "If set, leaves a test session with ID 12345 always running.  Don't do this in production tho!")]
+  public bool UseTestSession { get; set; } = false;
 
   /// <summary>
   /// Where will the data for the replays be stored?

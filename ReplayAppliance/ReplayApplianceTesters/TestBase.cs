@@ -26,12 +26,8 @@ namespace funscrewTesters
     public const int PLAYER2_PORT = 7001;
 
     public const string REPLAY_APPLIANCE_HOST = "100.100.100.100";
-    public const int REPLAY_APPLIANCE_PORT = 7003;
-    public const int FRONT_DOOR_PORT = 5000;         // NOTE: This is the port that the 'front door' listens on.
 
     public const int REPLAY_APPLIANCE_TIMEOUT = 5000;
-
-    //public const UInt64 DEFAULT_SESSION_ID = 12345;
 
     // --------------------------------------------------------------------------------------------------------------------------
     private static void NoOp_BeginGame(string gameName)

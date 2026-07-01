@@ -37,10 +37,10 @@ namespace funscrewTesters
       ReplaySession rpSess = frontDoor.BeginSession(context.SessionId, context.SessionOptions);
 
       GGPOClient p1 = context.Player1Client;
-      p1.AddReplayAppliance(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT);
+      p1.AddReplayAppliance(REPLAY_APPLIANCE_HOST, GGPOConsts.REPLAY_APPLIANCE_PORT);
 
       GGPOClient p2 = context.Player2Client;
-      p2.AddReplayAppliance(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT);
+      p2.AddReplayAppliance(REPLAY_APPLIANCE_HOST, GGPOConsts.REPLAY_APPLIANCE_PORT);
 
       GGPOEndpoint p1ep = p1.GetLocalPlayer()!;
       Assert.IsNotNull(p1ep);
@@ -109,7 +109,7 @@ namespace funscrewTesters
 
       // We will connect only one player at this time, and run the system for a bit.
       GGPOClient p1 = context.Player1Client;
-      p1.AddReplayAppliance(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT);
+      p1.AddReplayAppliance(REPLAY_APPLIANCE_HOST, GGPOConsts.REPLAY_APPLIANCE_PORT);
 
       var p1Remote = p1.GetRemotePlayer() as SimGGPOEndpoint;
       Assert.IsNotNull(p1Remote);
@@ -181,10 +181,10 @@ namespace funscrewTesters
 
       // Each of the players will need to send their data to the replay appliance.
       var p1 = context.Player1Client;
-      var raep1 = p1.AddReplayAppliance(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT);
+      var raep1 = p1.AddReplayAppliance(REPLAY_APPLIANCE_HOST, GGPOConsts.REPLAY_APPLIANCE_PORT);
 
       var p2 = context.Player2Client;
-      var raep2 = p2.AddReplayAppliance(REPLAY_APPLIANCE_HOST, REPLAY_APPLIANCE_PORT);
+      var raep2 = p2.AddReplayAppliance(REPLAY_APPLIANCE_HOST, GGPOConsts.REPLAY_APPLIANCE_PORT);
 
       // NOTE: Choose as little time as possible to get the clients synced.
       // Maybe some kind of a callback or 'run until'...?
