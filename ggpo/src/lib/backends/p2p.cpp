@@ -807,26 +807,68 @@ void Peer2PeerBackend::CheckInitialSync()
 }
 
 // ----------------------------------------------------------------------------------------------------------
-bool Peer2PeerBackend::IsReadyToSync(const UdpMsg* syncRequest)
+bool Peer2PeerBackend::IsReadyToSync(const UdpMsg* msg)
 {
 
-  // This should always be a sync request....
-  _ASSERT(syncRequest->header.type == UdpMsg::SyncRequest);
+  switch (msg->header.type)
+  {
+  case UdpMsg::SyncRequest:
 
-  // We are always ready to connect to the replay appliance.
-  if (syncRequest->u.sync_request.endpointType == EEndpointType::ReplayAppliance) { return true; }
+    // We are always ready to connect to the replay appliance.
+    if (msg->u.sync_request.endpointType == (uint8_t)EEndpointType::ReplayAppliance)
+    {
+      return true;
+    }
+
+    break;
+
+  case UdpMsg::SyncReply:
+    // Special case for replay appliance...?
+    if (msg->u.sync_reply.isReady == 1 && msg->u.sync_reply.endpointType == (uint8_t)EEndpointType::ReplayAppliance)
+    {
+      return true;
+    }
+
+    break;
+
+  default:
+    throw std::runtime_error("Unsupported message type: {msg.header.type}!");
+  }
 
   // Check all endpoints for replay appliance + see if we are synced with it yet.
-  for (size_t i = 0; i < _endpointCount; i++)
+  for (int i = 0; i < _endpointCount; i++)
   {
     auto ep = _endpoints[i];
-    if (ep->IsReplayClient()) {
+    if (ep->IsReplayClient() && !ep->IsDisconnected())
+    {
       bool res = ep->IsRunning();
       return res;
     }
   }
 
   return true;
+
+
+
+
+  //// This should always be a sync request....
+  //_ASSERT(syncRequest->header.type == UdpMsg::SyncRequest);
+
+  //// We are always ready to connect to the replay appliance.
+  //if (syncRequest->u.sync_request.endpointType == EEndpointType::ReplayAppliance) { return true; }
+
+  //// Check all endpoints for replay appliance + see if we are synced with it yet.
+  //for (size_t i = 0; i < _endpointCount; i++)
+  //{
+  //  auto ep = _endpoints[i];
+  //  if (ep->IsReplayClient()) {
+  //    bool res = ep->IsRunning();
+  //    return res;
+  //  }
+  //}
+
+  //return true;
+
 }
 
 // ----------------------------------------------------------------------------------------------------------

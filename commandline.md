@@ -34,7 +34,7 @@ Here is an example command line of connecting to a ReplayAppliance:
 
 ### Test EchoClient
 ```
---rom sfiii3nr1 direct -l localhost:7001 -r localhost:7000 --player 1 --name "Screwie" --delay 1
+--rom sfiii3nr1 direct -l 127.0.0.1:7001 -r 127.0.0.1:7000 --player 2 --name "Archie" --delay 1
 ```
 
 other stuff...
@@ -53,3 +53,24 @@ call ReplayAppliance\bin\Debug\net8.0\ReplayAppliance.exe replay-appliance --ses
 Install a copy of fightcade + any ROMS you want to work with if you haven't already.  Then, copy the content from __&lt;fightcadeinstalldirectory&gt;emulator\fbneo__ to the folder: __&lt;fs-fbneo-repo-directory&gt;projectfiles\visualstudio-2022\Debug__.
 
 You will now be able to load and run any ROMS that you want to debug against.
+
+
+
+
+## Test : Echo Client + fs-fbneo
+C#
+input-echo --game-name "sfiii3nr1" --player 1 --name "Joe" --local-port 7000 --session-id 12345 --remote "127.0.0.1:7001-2"
+
+C++
+--rom sfiii3nr1 direct -l 127.0.0.1:7001 -r 127.0.0.1:7000 --player 2 --name "Archie" --delay 1
+
+
+
+## Test: Echo Client + fs-fbneo + ReplayAppliance
+Start the replay appliance in test mode first!
+
+C# 
+input-echo --game-name "sfiii3nr1" --player 1 --name "Joe" --replay-options "127.0.0.1:7002" --session-id "12345" --local-port 7000 --session-id 12345 --remote "127.0.0.1:7001-2"
+
+C++
+--rom sfiii3nr1 direct -l 127.0.0.1:7001 -r 127.0.0.1:7000 --player 2 --name "Archie" --delay 1 -s 127.0.0.1:7002 -i 12345
