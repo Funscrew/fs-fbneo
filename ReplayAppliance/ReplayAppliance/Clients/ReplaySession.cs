@@ -49,15 +49,17 @@ public class ReplaySession : IGGPOClient
   public int CurrentFrame { get; } = -1;
   public string GameName { get { return SessionArgs.GameName; } }
 
-  public int CurTime { get { return SessionArgs.Clock.CurTime; } }
+  private IClockSource Clock = null!;
+  public int CurTime { get { return Clock.CurTime; } }
 
   public IUdpBlaster UDP { get; private set; } = null!;
 
   public bool IsSyncing { get; private set; } = true;
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public ReplaySession(IUdpBlaster udp_, UInt64 sessionId_, GameRecorder recorder_, SessionOptions sessOps_, GGPOSessionCallbacks callbacks_)
+  public ReplaySession(IClockSource clock_, IUdpBlaster udp_, UInt64 sessionId_, GameRecorder recorder_, SessionOptions sessOps_, GGPOSessionCallbacks callbacks_)
   {
+    Clock = clock_;
     UDP = udp_;
     SessionId = sessionId_;
     Recorder = recorder_;

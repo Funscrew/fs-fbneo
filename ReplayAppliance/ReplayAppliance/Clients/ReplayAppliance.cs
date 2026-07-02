@@ -54,16 +54,7 @@ public class ReplayAppliance
   {
     Options = ops_;
     UDP = udp_;
-
-    // NOTE: I don't think that this should apply in test cases....
-    // Maybe we will make it an option or something....
-    if (!UDP.IsBlocking && false)
-    {
-      throw new InvalidOperationException("ReplayAppliance requires a blocking IUdpBlaster instance!");
-    }
-
     Clock = clock_;
-    // LocalConnectStatus = localConnectStatus_;
 
     CancelToken = CTSource.Token;
 
@@ -76,7 +67,7 @@ public class ReplayAppliance
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public virtual unsafe ReplaySession BeginSession(UInt64 sessionId, SessionOptions sessionOps)
+  public virtual unsafe ReplaySession BeginSession(UInt64 sessionId, SessionOptions sessOps)
   {
     Log.Info($"Starting new session with id: {sessionId}...");
     lock (SessionLock)
@@ -87,22 +78,22 @@ public class ReplayAppliance
       }
 
 
-      bool overwrite = sessionId == SessionPrimer.TEST_SESSION_ID;
+      bool overwrite = sessionId == GGPOConsts.TEST_SESSION_ID;
       if (overwrite)
       {
-        Log.Info($"Test Session ID: {SessionPrimer.TEST_SESSION_ID} detected!  Existing data will be overwritten!");
+        Log.Info($"Test Session ID: {GGPOConsts.TEST_SESSION_ID} detected!  Existing data will be overwritten!");
       }
 
       var gameData = new CGameData()
       {
-        GameName = sessionOps.GameName,
-        GameVersion = sessionOps.GameVersion,
-        MaxPlayerCount = sessionOps.MaxPlayerCount,
-        TotalInputSize = sessionOps.TotalInputSize
+        GameName = sessOps.GameName,
+        GameVersion = sessOps.GameVersion,
+        MaxPlayerCount = sessOps.MaxPlayerCount,
+        TotalInputSize = sessOps.TotalInputSize
       };
 
       uint8_t index = 0;
-      foreach (var item in sessionOps.PlayerNames)
+      foreach (var item in sessOps.PlayerNames)
       {
         gameData.SetPlayerName(index, item);
         ++index;
@@ -121,7 +112,7 @@ public class ReplayAppliance
         load_game_state = NoOp_LoadGame,
       };
 
-      var session = new ReplaySession(this.UDP, sessionId, recorder, sessionOps, callbacks);
+      var session = new ReplaySession(this.Clock, this.UDP, sessionId, recorder, sessOps, callbacks);
       IdToSession.Add(sessionId, session);
       ActiveSessions.Add(session);
 
@@ -138,7 +129,7 @@ public class ReplayAppliance
     lock (SessionLock)
     {
 
-      EndPoint ep = default!;
+      EndPoint ep = new IPEndPoint(IPAddress.Any, 0);//  default!;
 
       // This is a blocking call!
       while (true)
@@ -214,12 +205,34 @@ public class ReplayAppliance
     }
   }
 
+  // --------------------------------------------------------------------------------------------------------------------------
+  public void EndWork()
+  {
+    if (!CTSource.IsCancellationRequested)
+    {
+      CTSource.Cancel();
+    }
+  }
 
   // --------------------------------------------------------------------------------------------------------------------------
   // NOTE: This should only be used in production.  Not suitable for test code....
-  public Task BeginUpdateLoop()
+  public Task BeginWork()
   {
-    throw new InvalidOperationException("Don't use this!");
+
+    var res = Task.Factory.StartNew(() =>
+    {
+      Log.Info("Starting ReplayAppliance update loop.");
+
+      while (!CancelToken.IsCancellationRequested)
+      {
+        this.Update();
+      }
+
+    }, CancelToken);
+
+    return res;
+
+    // throw new InvalidOperationException("Don't use this!");
     // return default!;
 
     //var res = Task.Factory.StartNew(() =>
@@ -324,7 +337,7 @@ public class ReplayAppliance
         // put these on some kind of "suspicious" list and trigger a blacklist if there are too many of them?
         Log.Debug($"There is no sessions associated with the address: {receivedFrom.ToString()}");
         return null;
-       /// throw new InvalidOperationException("There is no session associated with this address!");
+        /// throw new InvalidOperationException("There is no session associated with this address!");
       }
     }
 
@@ -364,13 +377,6 @@ public class ReplayAppliance
     Log.Info($"A remote endpoint for session: {replaySesh.SessionId} was added...");
 
     return res;
-  }
-
-
-  // --------------------------------------------------------------------------------------------------------------------------
-  public void Shutdown(bool forceDisconnect)
-  {
-    throw new NotImplementedException();
   }
 
 

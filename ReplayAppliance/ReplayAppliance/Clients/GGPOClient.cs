@@ -144,6 +144,7 @@ public class GGPOClient : IGGPOClient, IDisposable
   // ----------------------------------------------------------------------------------------
   private void ValidateOptions()
   {
+    // if (Options.LocalPort == Options.
     if (Options.Callbacks == null)
     {
       throw new InvalidOperationException("Callbacks are null!");

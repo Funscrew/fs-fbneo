@@ -2,6 +2,8 @@
 using System.Net;
 using System.Net.Sockets;
 
+
+
 // TODO: Others may find this useful!
 namespace funscrew
 {
@@ -22,7 +24,6 @@ namespace funscrew
     void AddToBlacklist(UInt64 address);
     void RemoveFromBlacklist(UInt64 address);
 
-    bool IsBlocking { get; }
     IPEndPoint Endpoint { get; }
 
     // --------------------------------------------------------------------------------------------------------------------------
@@ -40,7 +41,7 @@ namespace funscrew
     // --------------------------------------------------------------------------------------------------------------------------
     public static AddrHash GetAddrHash(EndPoint receivedFrom)
     {
-      var ip  = receivedFrom as IPEndPoint;
+      var ip = receivedFrom as IPEndPoint;
       if (ip == null) { throw new ArgumentException($"{nameof(receivedFrom)} is not an {nameof(IPEndPoint)} instance!"); }
 
       return GetAddrHash(ip);
@@ -53,7 +54,12 @@ namespace funscrew
   /// </summary>
   public sealed class UdpBlaster : IUdpBlaster
   {
-    private readonly Socket Socket;
+    public const microseconds ONE_SECOND = 1000 * 1000;
+    public const int NO_DELAY = 0;
+
+    private readonly Socket _Socket;
+    private readonly Socket[] ReadSockets = null!;
+
     private bool IsDisposed;
 
     // OPTIONS:
@@ -64,15 +70,16 @@ namespace funscrew
     public IPEndPoint Endpoint { get; private set; }
 
     /// <summary>
-    /// Is set, receive operations are blocking.
+    /// How long to wait when polling to receive data.
     /// </summary>
-    /// <remarks>Not the same as the socket blocking.</remarks>
-    public bool IsBlocking { get; private set; } = false;
+    public int PollDelayTime { get; private set; } = 0;
 
     // ------------------------------------------------------------------------------------------------------------
-    public UdpBlaster(int localPort, bool isBlocking = false)
-        : this(localPort, IPAddress.Any, isBlocking)
-    { }
+    public UdpBlaster(int localPort, int pollDelayTime_)
+        : this(localPort, IPAddress.Any)
+    {
+      PollDelayTime = pollDelayTime_;
+    }
 
     // ------------------------------------------------------------------------------------------------------------
     public void AddToBlacklist(UInt64 at)
@@ -88,27 +95,27 @@ namespace funscrew
 
     // ------------------------------------------------------------------------------------------------------------
     // Use port zero (0) to use an ephemeral port.
-    public UdpBlaster(int localPort, IPAddress localAddress, bool isBlocking = false)
+    public UdpBlaster(int localPort, IPAddress localAddress)
     {
-      Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-      Socket.Blocking = true;
-      IsBlocking = true;
+      _Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
+      _Socket.Blocking = true;
+      ReadSockets = new[] { _Socket };
 
       IPEndPoint bindEndPoint = new IPEndPoint(localAddress, localPort);
-      Socket.Bind(bindEndPoint);
+      _Socket.Bind(bindEndPoint);
       Endpoint = bindEndPoint;
 
       // Suppress WSAECONNRESET (“connection forcibly closed”) on Windows for UDP.
       TryDisableConnReset();
 
-      Socket.ReceiveBufferSize = RECEIVE_BUFFER_SIZE;
+      _Socket.ReceiveBufferSize = RECEIVE_BUFFER_SIZE;
     }
 
     public int LocalPort
     {
       get
       {
-        IPEndPoint ep = (IPEndPoint)Socket.LocalEndPoint;
+        IPEndPoint ep = (IPEndPoint)_Socket.LocalEndPoint;
         return ep.Port;
       }
     }
@@ -117,7 +124,7 @@ namespace funscrew
     {
       get
       {
-        IPEndPoint ep = (IPEndPoint)Socket.LocalEndPoint;
+        IPEndPoint ep = (IPEndPoint)_Socket.LocalEndPoint;
         return ep.Address;
       }
     }
@@ -134,7 +141,7 @@ namespace funscrew
 
       try
       {
-        Socket.Shutdown(SocketShutdown.Both);
+        _Socket.Shutdown(SocketShutdown.Both);
       }
       catch (SocketException)
       {
@@ -145,7 +152,7 @@ namespace funscrew
 
       try
       {
-        Socket.Close();
+        _Socket.Close();
       }
       catch
       {
@@ -171,10 +178,8 @@ namespace funscrew
       // TODO: If we want ipv6 support, then we should reintroduce this..
       // In reality, we will use the network family that we initialize this with!
       // TODO: This is probably making garbage....
-      //  EndPoint ep = remoteEndPoint; // ForceIPv6(remoteEndPoint);
       var span = new ReadOnlySpan<byte>(buffer, 0, size);
-      int sent = Socket.SendTo(span, SocketFlags.None, remoteEndPoint);
-      //int sent = Socket.SendTo(buffer, 0, size, SocketFlags.None, remoteEndPoint);
+      int sent = _Socket.SendTo(span, SocketFlags.None, remoteEndPoint);
       return sent;
     }
 
@@ -186,20 +191,48 @@ namespace funscrew
         throw new ArgumentNullException(nameof(buffer));
       }
 
-      // EndPoint any = Remote; //new IPEndPoint(IPAddress.IPv6Any, 0);
-      if (IsBlocking || Socket.Available > 0)
+      // Man... Socket.select sux
+      // NOTE: This is actually where we would use the 'is blocking' type code from before, but we would call it something better like 'MinPollTime'
+      // The reason is because in some cases we have an external loop (ont a timer) that is calling these functions to receive data, and sometimes,
+      // like for a server application, we have a blind while loop with no exact timer.
+      ReadSockets[0] = _Socket;
+
+      Socket.Select(ReadSockets, null, null, PollDelayTime);
+      var target = ReadSockets[0];
+      if (target != null)
       {
-        int read = Socket.ReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref remote);
-
-        // TODO: This will create garbage.  Probably not the end of the world tho?
-        var hash = IUdpBlaster.GetAddrHash((IPEndPoint)remote);
-        if (Blacklist.Contains(hash))
+        if (target.Available > 0)
         {
-          return 0;
-        }
+          int read = target.ReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref remote);
+          // target.RemoteEndPoint = remote;
 
-        return read;
+          var hash = IUdpBlaster.GetAddrHash((IPEndPoint)remote);
+          if (Blacklist.Contains(hash))
+          {
+            return 0;
+          }
+
+          return read;
+        }
       }
+
+      return 0;
+
+      // LEGACY:
+      //// EndPoint any = Remote; //new IPEndPoint(IPAddress.IPv6Any, 0);
+      //if (Socket.Available > 0)
+      //{
+      //  int read = Socket.ReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref remote);
+
+      //  // TODO: This will create garbage.  Probably not the end of the world tho?
+      //  var hash = IUdpBlaster.GetAddrHash((IPEndPoint)remote);
+      //  if (Blacklist.Contains(hash))
+      //  {
+      //    return 0;
+      //  }
+
+      //  return read;
+      //}
 
       // Nothing!
       return 0;
@@ -213,7 +246,7 @@ namespace funscrew
         throw new ArgumentOutOfRangeException(nameof(milliseconds));
       }
 
-      Socket.ReceiveTimeout = milliseconds;
+      _Socket.ReceiveTimeout = milliseconds;
     }
 
     // ------------------------------------------------------------------------------------------
@@ -224,7 +257,7 @@ namespace funscrew
         throw new ArgumentOutOfRangeException(nameof(milliseconds));
       }
 
-      Socket.SendTimeout = milliseconds;
+      _Socket.SendTimeout = milliseconds;
     }
 
 
@@ -242,7 +275,7 @@ namespace funscrew
         const int SIO_UDP_CONNRESET = -1744830452;
         byte[] inValue = new byte[] { 0, 0, 0, 0 }; // FALSE to disable errors
         byte[] outValue = new byte[4];
-        Socket.IOControl((IOControlCode)SIO_UDP_CONNRESET, inValue, outValue);
+        _Socket.IOControl((IOControlCode)SIO_UDP_CONNRESET, inValue, outValue);
       }
     }
 

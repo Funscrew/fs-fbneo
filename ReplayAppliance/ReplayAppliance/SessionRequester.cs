@@ -110,9 +110,8 @@ public class SessionOptions
   public uint16_t MaxPlayerCount = 0;
   public uint16_t TotalInputSize = 0;
   public string[] PlayerNames { get; set; }
-  public IClockSource Clock { get; set; }
 
-public int ConnectTimeout { get; set; } = GGPOConsts.DEFAULT_CONNECT_TIMEOUT;
+  public int ConnectTimeout { get; set; } = GGPOConsts.DEFAULT_CONNECT_TIMEOUT;
 }
 
 // ============================================================================================================================

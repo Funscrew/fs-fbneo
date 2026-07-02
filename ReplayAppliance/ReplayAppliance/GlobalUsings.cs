@@ -6,3 +6,4 @@ global using uint64_t = System.UInt64;
 
 global using AddrHash = System.UInt64;
 
+global using microseconds = int;

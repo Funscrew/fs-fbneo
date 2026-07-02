@@ -30,10 +30,13 @@ public static class GGPOConsts
   public const int SYNC_PACKETS_COUNT = 5;
 
   public const int UNLIMITED_TIME = -1;
+  public const int NO_TIMEOUT = -1;
   public const int DEFAULT_CONNECT_TIMEOUT = 5000;
 
   public const int REPLAY_APPLIANCE_PORT = 7003;
   public const int FRONT_DOOR_PORT = 5000;         // NOTE: This is the port that the 'front door' listens on.
+
+  public const UInt64 TEST_SESSION_ID = 12345;
 }
 
 // ================================================================================================================
@@ -133,7 +136,7 @@ public struct SyncRequest
 {
   public uint random_request;   // please reply back with this random data
   public uint8_t player_index;     // Players must identify their desired index.
-  
+
   public uint8_t endpointType;    // Type of endpoint (application defined).  Use a value for EEndpointType or whatever you want.
   public uint64_t session_id;     // Used for replay ids.  This is the form of a unix timestamp in milliseconds!  For p2p connections, this can be zero, but is ignored.
 

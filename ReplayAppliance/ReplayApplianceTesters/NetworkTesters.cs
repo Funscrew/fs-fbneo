@@ -366,7 +366,6 @@ namespace funscrewTesters
 
       var sessOps = new SessionOptions()
       {
-        Clock = context.Clock,
         GameName = gameName,
         GameVersion = gameVersion,
         TotalInputSize = 10,

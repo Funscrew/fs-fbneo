@@ -522,7 +522,7 @@ static void CloseRecord()
   // INT32 nFrames = GetCurrentFrame() - nStartFrame;
   auto curFrame = GetCurrentFrame();
 
-  _GameRecorder->CompleteReplay(curFrame, ECompletionReason::NormalDisconnect, EErrorReason::None, "");
+  _GameRecorder->CompleteReplay(ECompletionReason::NormalDisconnect, EErrorReason::None, "");
   // TODO: _DEL
   delete(_GameRecorder);
   _GameRecorder = nullptr;

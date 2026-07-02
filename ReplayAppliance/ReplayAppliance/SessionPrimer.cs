@@ -14,7 +14,6 @@ namespace funscrew;
 /// REFACTOR: 'FrontDoor' or similar....
 public class SessionPrimer : IDisposable
 {
-  public const UInt64 TEST_SESSION_ID = 12345;
 
   public ReplayOptions Options { get; private set; }
 
@@ -40,16 +39,13 @@ public class SessionPrimer : IDisposable
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public Task BeginListen()
+  public Task[] BeginListen()
   {
     Log.Info($"The front door is open on port {Options.ServicePort}");
 
-    if (Options.UseTestSession) {
-      throw new NotSupportedException("test session is not yet supported!");
-    }
+    Task? testMonitor = CreateTestSessionMonitor();
 
-
-    var res = Task.Factory.StartNew(() =>
+    var mainTask = Task.Factory.StartNew(() =>
     {
       Listener = new TcpListener(IPAddress.Any, Options.ServicePort);
       Listener.Start();
@@ -109,8 +105,68 @@ public class SessionPrimer : IDisposable
 
     }, this.CancelToken);
 
+    int len = testMonitor != null ? 2 : 1;
+    var res = new Task[len];
+    if (len > 1)
+    {
+      res[0] = testMonitor!;
+      res[1] = mainTask;
+    }
+    else
+    {
+      res[0] = mainTask;
+    }
 
     return res;
+  }
+
+  private Task? CreateTestSessionMonitor()
+  {
+    Task? testTask = null;
+    if (Options.UseTestSession)
+    {
+      ReplaySession? activeSession = null;
+      Log.Info("Setting up test session monitor!");
+      testTask = Task.Factory.StartNew(() =>
+      {
+        const int CHECK_DELAY = 1000;
+
+        // This is a pretty crunchy way to do it, but every second we will check to see if the test session is running.
+        // If not, then we will start it up.
+        Thread.Sleep(CHECK_DELAY);
+
+
+        if (activeSession != null)
+        {
+          if (activeSession.IsComplete)
+          {
+            Log.Info("The test session is marked as complete!  We will restart it!");
+
+            // TODO: Cleanup, replay file copies, etc.
+            activeSession = null;
+          }
+        }
+
+        if (activeSession == null)
+        {
+          activeSession = BeginSession(GGPOConsts.TEST_SESSION_ID, new SessionOptions()
+          {
+            GameName = "sfiii3nr1",
+            GameVersion = "123-a",
+            PlayerNames = new string[] { "Joe", "Archie" },
+            MaxPlayerCount = 2,
+            TotalInputSize = 10,
+            ConnectTimeout = 1000      // A very long timeout period is OK!
+          });
+        }
+
+      }, this.CancelToken);
+
+
+      // throw new NotSupportedException("test session is not yet supported!");
+    }
+
+    return testTask;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------

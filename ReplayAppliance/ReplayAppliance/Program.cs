@@ -2,9 +2,10 @@
 using drewCo.Tools;
 using drewCo.Tools.Logging;
 using funscrew.Clients;
-using System.Runtime.InteropServices;
 using System.Diagnostics;
+using System.Linq;
 using System.Net.WebSockets;
+using System.Runtime.InteropServices;
 
 namespace funscrew;
 
@@ -64,7 +65,7 @@ public partial class Program
 
 
     // TEMP: ?
-    return res;
+    // return res;
 
     if (res != 0)
     {
@@ -179,19 +180,23 @@ public partial class Program
   {
     Log.Info("Setting up replay appliance...");
 
-    var udp = new UdpBlaster(ops.ReplayPort);
+    var udp = new UdpBlaster(ops.ReplayPort, UdpBlaster.ONE_SECOND);
     ReplayAppliance replayAppliance = new ReplayAppliance(ops, udp, new ClockTimer());
+    Task raWorkTask = replayAppliance.BeginWork();
 
     var sp = new SessionPrimer(ops, replayAppliance);
 
     Console.CancelKeyPress += (s, e) =>
     {
       sp.EndListen();
+      replayAppliance.EndWork();
     };
 
-    Task frontDoorTask = sp.BeginListen();
+    // Session Primer looks for TCP traffic to begin new sessions.
+    Task[] fdTasks = sp.BeginListen();
 
-    frontDoorTask.Wait();
+    // UUUUUUUUUUgly
+    Task.WaitAll(fdTasks.Concat(new[] { raWorkTask }).ToArray());
 
     return 0;
   }
@@ -249,7 +254,7 @@ public partial class Program
 
     CLIOptions = ops;
 
-    ClientOptions = new GGPOClientOptions(ops.GameName, (byte)(ops.PlayerNumber - 1), Defaults.LOCAL_PORT, ops.ProtocolVersion, ops.SessionId)
+    ClientOptions = new GGPOClientOptions(ops.GameName, (byte)(ops.PlayerNumber - 1), ops.LocalPort, ops.ProtocolVersion, ops.SessionId)
     {
       Callbacks = new GGPOSessionCallbacks()
       {
@@ -299,7 +304,7 @@ public partial class Program
 
           FileTools.CreateDirectory(cliOps.DataDir);
 
-          var udp = new UdpBlaster(ClientOptions.LocalPort);
+          var udp = new UdpBlaster(ClientOptions.LocalPort, UdpBlaster.NO_DELAY);
           Client = new ReplayAppliance_LEGACY(ClientOptions, cliOps, udp, new ClockTimer());
           Client.Lock();
           // NOTE: Remotes are setup inside of the client.
@@ -309,7 +314,7 @@ public partial class Program
       case EMode.Echo:
         {
           var cliOps = CLIOptions as InputEchoOptions;
-          var udp = new UdpBlaster(ClientOptions.LocalPort);
+          var udp = new UdpBlaster(ClientOptions.LocalPort, UdpBlaster.NO_DELAY);
           Client = new InputEchoClient(ClientOptions, cliOps, udp, new ClockTimer());
 
           var local = Client.AddLocalPlayer(cliOps.PlayerName, (byte)(ClientOptions.PlayerIndex), null);

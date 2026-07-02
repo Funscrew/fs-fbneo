@@ -60,9 +60,9 @@ namespace funscrew
       SessionId = sessionId_;
       DataDir = dataDir_;
 
-      if (SessionId == SessionPrimer.TEST_SESSION_ID)
+      if (SessionId == GGPOConsts.TEST_SESSION_ID)
       {
-        Log.Debug($"Magic session id: {SessionPrimer.TEST_SESSION_ID} was used, replay overwrite is enabled!");
+        Log.Debug($"Magic session id: {GGPOConsts.TEST_SESSION_ID} was used, replay overwrite is enabled!");
         overwriteExisting = true;
       }
 
