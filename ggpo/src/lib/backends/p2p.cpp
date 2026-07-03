@@ -421,6 +421,7 @@ GGPOErrorCode Peer2PeerBackend::AddPlayer(GGPOPlayer* player)
     auto ep = new GGPOEndpoint();
     LocalPlayer = ep;
     LocalPlayer->PlayerIndex(player->player_index);
+    ep->IsLocalPlayer = true;
 
     _endpoints[_endpointCount] = ep;
     _endpointCount++;
@@ -792,11 +793,28 @@ void Peer2PeerBackend::CheckInitialSync()
     for (i = 0; i < _endpointCount; i++) {
       // xxx: IsInitialized() must go... we're actually using it as a proxy for "represents the local player"
       // NOTE IsInitialized() returns false when it is the local player.
-      if (_endpoints[i]->IsInitialized() &&
-        !_endpoints[i]->IsSynchronized() &&
-        !_local_connect_status[i].disconnected) {
-        return;
-      }
+      auto ep = _endpoints[i];
+      auto epi = ep->PlayerIndex();
+
+
+      if (ep->IsLocalPlayer) { continue; }
+      if (ep->IsReplayClient() && ep->IsDisconnected()) { continue; }
+      if (!ep->IsSynchronized()) { return; }
+
+      // OLD 2:
+      //if (!ep->IsInitialized() &&
+      //  !ep->IsSynchronized() &&
+      //  !_local_connect_status[epi].disconnected)
+      //{
+      //  return;
+      //}
+
+      // OLD 1:
+      //if (_endpoints[i]->IsInitialized() &&
+      //  !_endpoints[i]->IsSynchronized() &&
+      //  !_local_connect_status[i].disconnected) {
+      //  return;
+      //}
     }
 
     GGPOEvent info;

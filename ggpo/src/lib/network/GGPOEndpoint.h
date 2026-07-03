@@ -102,9 +102,12 @@ public:
 
   void Synchronize();
   bool GetPeerConnectStatus(int id, int* frame);
+
+  // [OBSOLETE]
   bool IsInitialized() { return _udp != NULL; }
   bool IsSynchronized() { return _current_state == Running; }
   bool IsDisconnected() { return _current_state == Disconnected; }
+
 
   bool IsRunning() { return _current_state == Running; }
   void SendInput(GameInput& input);
@@ -134,8 +137,10 @@ public:
   inline uint8_t PlayerIndex() const { return _playerIndex; }
   inline void PlayerIndex(uint8_t value) { _playerIndex = value; }
 
+  bool IsLocalPlayer = false;
+
 protected:
-  
+
   EEndpointType EndpointType = EEndpointType::Player;
 
   GGPOSession* _Client = nullptr;
@@ -181,6 +186,7 @@ protected:
   bool OnData(UdpMsg* msg, int len);
 
   uint64_t _sessionId = 0;
+
 
 protected:
   /*

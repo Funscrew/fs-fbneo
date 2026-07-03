@@ -70,7 +70,12 @@ C++
 Start the replay appliance in test mode first!
 
 C# 
-input-echo --game-name "sfiii3nr1" --player 1 --name "Joe" --replay-options "127.0.0.1:7002" --session-id "12345" --local-port 7000 --session-id 12345 --remote "127.0.0.1:7001-2"
+input-echo --game-name "sfiii3nr1" --player 1 --name "Joe" --replay-options "127.0.0.1:7002" --session-id "12345" --local-port 7000 --remote "127.0.0.1:7001-2"
 
 C++
 --rom sfiii3nr1 direct -l 127.0.0.1:7001 -r 127.0.0.1:7000 --player 2 --name "Archie" --delay 1 -s 127.0.0.1:7002 -i 12345
+
+
+
+
+input-echo --game-name "sfiii3nr1" --player 1 --name "Joe" --session-id "12345" --local-port 7000 --remote "127.0.0.1:7001-2"

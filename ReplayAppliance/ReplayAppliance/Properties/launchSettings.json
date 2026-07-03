@@ -10,7 +10,7 @@
     },
     "Echo-Client-With-Replay": {
       "commandName": "Project",
-      "commandLineArgs": "input-echo --game-name \"sfiii3nr1\" --player 1 --name \"Joe\" --replay-options \"127.0.0.1:7002\" --session-id \"12345\" --local-port 7000 --session-id 12345 --remote \"127.0.0.1:7001-2\""
+      "commandLineArgs": "input-echo --game-name \"sfiii3nr1\" --player 1 --name \"Joe\" --session-id \"12345\" --local-port 7000 --remote \"127.0.0.1:7001-2\"\r\n"
     },
     "Replay": {
       "commandName": "Project",
