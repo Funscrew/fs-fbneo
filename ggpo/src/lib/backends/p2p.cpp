@@ -619,6 +619,7 @@ void Peer2PeerBackend::OnUdpProtocolEvent(UdpEvent& evt, const GGPOEndpoint* end
     CheckInitialSync();
     break;
 
+  
   case UdpEvent::NetworkInterrupted:
     info.event_code = GGPO_EVENTCODE_CONNECTION_INTERRUPTED;
     info.player_index = playerIndex;
@@ -646,6 +647,8 @@ void Peer2PeerBackend::OnUdpProtocolEvent(UdpEvent& evt, const GGPOEndpoint* end
     info.player_index = (uint8_t)playerIndex;
     e.isReplayEndpoint = (uint8_t)(endpoint->IsReplayClient() ? 1 : 0);
     _callbacks.on_event(&info);
+
+    CheckInitialSync();
 
     break;
 

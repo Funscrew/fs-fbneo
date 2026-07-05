@@ -79,3 +79,44 @@ C++
 
 
 input-echo --game-name "sfiii3nr1" --player 1 --name "Joe" --session-id "12345" --local-port 7000 --remote "127.0.0.1:7001-2"
+
+
+
+## Manual Test Scenarios:
+
+### ONE:
+Conditions:
+- fs-fbneo client connecting to unreachable replay appliance:
+- EchoClient : Connecting to other player, NO replay appliance connection listed.
+
+Command Line Args:
+fs-fbneo: 
+```
+--rom sfiii3nr1 direct -l 127.0.0.1:7001 -r 127.0.0.1:7000 --player 2 --name "Archie" --delay 1
+```
+ReplayAppliance:
+```
+input-echo --game-name "sfiii3nr1" --player 1 --name "Joe" --session-id "12345" --local-port 7000 --remote "127.0.0.1:7001-2" --replay-options "127.0.0.1:7002"
+```
+
+
+#### Tests:
+1. Start fsfbneo client first, then start EchoClient. -- fsfbneo client replay appliance connection will time out after configured time (~5 seconds), and games will sync + operate as normal.
+2. Start EchoCLient first, then start fs-fbneo.  -- Same expected results as above.  After timeout period on fs-fbneo side, the games will sync + operate as normal.
+
+## TWO:
+Same as test ONE, but this time EchoClient attempts to connect to the ReplayAppliance, but fs-fbneo does not.
+
+Command Line Args:
+fs-fbneo: 
+```
+--rom sfiii3nr1 direct -l 127.0.0.1:7001 -r 127.0.0.1:7000 --player 2 --name "Archie" --delay 1 -s 127.0.0.1:7002 -i 12345
+```
+ReplayAppliance:
+```
+input-echo --game-name "sfiii3nr1" --player 1 --name "Joe" --session-id "12345" --local-port 7000 --remote "127.0.0.1:7001-2"
+```
+
+#### Tests:
+1. Start fs-fbneo client first, then start EchoClient. -- EchoClient replay appliance connection will time out after configured time (~5 seconds), and games will sync + operate as normal.
+2. Start EchoCLient first, then start fs-fbneo.  -- Same expected results as above.  After timeout period on EchoClient side, the games will sync + operate as normal.

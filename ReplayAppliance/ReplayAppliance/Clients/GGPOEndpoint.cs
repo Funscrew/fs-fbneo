@@ -619,12 +619,16 @@ public class GGPOEndpoint
           var timeoutAt = SyncStartTime + Options.ConnectTimeout;
           if (Options.ConnectTimeout != GGPOConsts.UNLIMITED_TIME && now > timeoutAt)
           {
+            Utils.LogIt(LogCategories.SYNC, "Sync failed on ednpoint!");
+
             // Connection timed out!  Let's end things here!
             Disconnect(0, true);
 
             // Queue the event....
             UdpEvent evt = new UdpEvent(EEventType.SyncFailed);
             QueueEvent(evt);
+
+
           }
           else if (_last_send_time + next_interval < now)
           {

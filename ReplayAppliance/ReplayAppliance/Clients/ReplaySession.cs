@@ -87,7 +87,8 @@ public class ReplaySession : IGGPOClient
   // --------------------------------------------------------------------------------------------------------------------------
   public bool IsReadyToSync(ref UdpMsg msg)
   {
-    // We are only ready once we have all connections made!
+    // return true;
+    //// We are only ready once we have all connections made!
     bool res = this.EndpointCount == this.SessionArgs.MaxPlayerCount;
     return res;
   }
