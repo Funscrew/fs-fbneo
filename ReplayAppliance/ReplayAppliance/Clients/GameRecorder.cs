@@ -123,6 +123,7 @@ namespace funscrew
     /// </summary>
     public void CompleteReplay(int frame, ECompletionReason reason, EErrorReason errReason, string? message)
     {
+      if (RecordingComplete) { return; }
       int useFrame = frame == -1 ? SyncedBaseFrame : frame;
       ReplayFile.CompleteWrite(reason, errReason, string.Empty);
       RecordingComplete = true;
@@ -152,7 +153,7 @@ namespace funscrew
         // We don't want to use exceptions for flow control, rather we need to set an error state on the recorder!
         // throw new InvalidOperationException($"Input buffer for player: {playerIndex} is full!");
 
-        this.OnError(EErrorReason.InputBufferFull, $"Too many unmerged inputs!: {playerIndex}");
+        this.OnError(EErrorReason.InputBufferFull, $"Too many unmerged inputs from Player:{playerIndex + 1}! (size={buf.Capacity})");
         return false;
       }
 

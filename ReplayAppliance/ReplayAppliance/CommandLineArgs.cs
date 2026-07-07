@@ -37,7 +37,7 @@ public class SessionRequestOptions
 }
 
 // ==============================================================================================================================
-[Verb("replay-appliance-ex")]
+[Verb("replay-appliance")]
 public class ReplayOptions
 {
   [Option("service-port", Required = true, HelpText = "(TCP) Port to listen on for session start requests.")]
@@ -78,31 +78,6 @@ public abstract class ClientOptions
   /// </summary>
   [Option("session-id", Required = true, HelpText = "Session ID.  This should match between clients and should be unique.")]
   public UInt64 SessionId { get; set; } = 0;
-}
-
-// ==============================================================================================================================
-/// <summary>
-/// This client will listen to two or more connected endpoints and record / merge the input packets
-/// that are sent along.
-/// </summary>
-[Verb("replay-appliance")]
-public class ReplayApplianceOptions : ClientOptions
-{
-  /// <summary>
-  /// Time in ms. for how long we will wait for the expected players to connect / sync.
-  /// </summary>
-  [Option("startup-timeout", Required = false, HelpText = "Time in ms. that we will wait for connections.  Use -1 for unlimited time.")]
-  public int StartupTimeout { get; set; } = GGPOConsts.UNLIMITED_TIME;
-
-  [Option("data-dir", Required = false, HelpText = "Directory where replay data files will be stored.")]
-  public string DataDir { get; set; } = "replays";
-
-  [Option("game-name", Required = true, HelpText = "The name of the game")]
-  public string GameName { get; set; } = null!;
-
-  [Option("game-version", Required = true, HelpText = "Version of the game.  Max 16 chars.")]
-  public string GameVersion { get; set; } = null!;
-
 }
 
 // ==============================================================================================================================

@@ -92,11 +92,11 @@ Conditions:
 Command Line Args:
 fs-fbneo: 
 ```
---rom sfiii3nr1 direct -l 127.0.0.1:7001 -r 127.0.0.1:7000 --player 2 --name "Archie" --delay 1
+--rom sfiii3nr1 direct -l 127.0.0.1:7001 -r 127.0.0.1:7000 --player 2 --name "Archie" --delay 1 -s 127.0.0.1:7002 -i 12345
 ```
 ReplayAppliance:
 ```
-input-echo --game-name "sfiii3nr1" --player 1 --name "Joe" --session-id "12345" --local-port 7000 --remote "127.0.0.1:7001-2" --replay-options "127.0.0.1:7002"
+input-echo --game-name "sfiii3nr1" --player 1 --name "Joe" --session-id "12345" --local-port 7000 --remote "127.0.0.1:7001-2"
 ```
 
 
@@ -110,9 +110,9 @@ Same as test ONE, but this time EchoClient attempts to connect to the ReplayAppl
 Command Line Args:
 fs-fbneo: 
 ```
---rom sfiii3nr1 direct -l 127.0.0.1:7001 -r 127.0.0.1:7000 --player 2 --name "Archie" --delay 1 -s 127.0.0.1:7002 -i 12345
+--rom sfiii3nr1 direct -l 127.0.0.1:7001 -r 127.0.0.1:7000 --player 2 --name "Archie" --delay 1
 ```
-ReplayAppliance:
+EchoClient (via ReplayAppliance):
 ```
 input-echo --game-name "sfiii3nr1" --player 1 --name "Joe" --session-id "12345" --local-port 7000 --remote "127.0.0.1:7001-2"
 ```
@@ -120,3 +120,27 @@ input-echo --game-name "sfiii3nr1" --player 1 --name "Joe" --session-id "12345" 
 #### Tests:
 1. Start fs-fbneo client first, then start EchoClient. -- EchoClient replay appliance connection will time out after configured time (~5 seconds), and games will sync + operate as normal.
 2. Start EchoCLient first, then start fs-fbneo.  -- Same expected results as above.  After timeout period on EchoClient side, the games will sync + operate as normal.
+
+
+
+### THREE
+Connecting to actual ReplayAppliance server.  This combines the above two scenarios
+but this time they are allowed to connect to the server, and the game session should be recorded.
+
+Command Line Args:
+ReplayAppliance:
+```
+replay-appliance --service-port 5000 --replay-port 7002  --use-test-session
+```
+
+
+FS-FBNEO:
+```
+--rom sfiii3nr1 direct -l 127.0.0.1:7001 -r 127.0.0.1:7000 --player 2 --name "Archie" --delay 1 -s 127.0.0.1:7002 -i 12345
+```
+
+Echo Client:
+```
+input-echo --game-name "sfiii3nr1" --player 1 --name "Joe" --session-id "12345" --local-port 7000 --remote "127.0.0.1:7001-2" --replay-options "127.0.0.1:7002"
+```
+

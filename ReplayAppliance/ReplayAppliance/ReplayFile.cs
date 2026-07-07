@@ -1,4 +1,5 @@
-﻿using System;
+﻿using drewCo.Tools.Logging;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
@@ -200,6 +201,11 @@ public class ReplayFile : IDisposable
   public void CompleteWrite(ECompletionReason completionReason, EErrorReason errReason, string message)
   {
     Debug.Assert(message != null);
+
+    if (ReplayHandle == IntPtr.Zero) { 
+      Log.Warning($"The replay handle is null! TID: {Thread.CurrentThread.ManagedThreadId}");
+      return;
+    }
 
     byte[] msgData = Encoding.UTF8.GetBytes(message);
     byte msgSize = (byte)msgData.Length;

@@ -14,7 +14,7 @@
     },
     "Replay": {
       "commandName": "Project",
-      "commandLineArgs": "replay-appliance-ex --service-port 5000 --replay-port 7002  --use-test-session"
+      "commandLineArgs": "replay-appliance --service-port 5000 --replay-port 7002  --use-test-session"
     },
     "Session Request": {
       "commandName": "Project",

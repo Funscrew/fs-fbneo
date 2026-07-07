@@ -169,7 +169,7 @@ bool __cdecl ggpo_on_event_callback(GGPOEvent* info)
   case GGPO_EVENTCODE_CONNECTED_TO_PEER:
   {
     // TODO: Use a const here:
-    if (info->player_index == 255) { 
+    if (info->player_index == 255) {
       // We have connected to a replay appliance.  We don't need to mess with the overlay, unless we want to indicate that we are
       // connected (maybe via icon or something in debug mode?....)
       return true;
@@ -222,11 +222,13 @@ bool __cdecl ggpo_on_event_callback(GGPOEvent* info)
   }
 
   case GGPO_EVENTCODE_DISCONNECTED_FROM_PEER:
-    VidOverlaySetSystemMessage(_T("Disconnected from Peer"));
-    VidSSetSystemMessage(_T("Disconnected from Peer"));
-    if (bReplayRecording) {
-      AviStop();
-      bMediaExit = true;
+    if (!info->isReplayEndpoint) {
+      VidOverlaySetSystemMessage(_T("Disconnected from Peer"));
+      VidSSetSystemMessage(_T("Disconnected from Peer"));
+      if (bReplayRecording) {
+        AviStop();
+        bMediaExit = true;
+      }
     }
     break;
 
@@ -259,7 +261,7 @@ bool __cdecl ggpo_on_event_callback(GGPOEvent* info)
       // NOTE: I have the player index, but not the actual lookup table for them... that should come from the client...
       // NOTE: I can't include 'ggposession.h' at this time because it will break the compilation.  I will go back and
       // find a proper way to include it later......
-      char* playerName =  ggpo_get_playerName(ggpo, info->player_index);
+      char* playerName = ggpo_get_playerName(ggpo, info->player_index);
       ANSIToTCHAR(playerName, szUser, MAX_NAME_SIZE);
 
       ANSIToTCHAR(msg, szText, info->u.datagram.dataSize);
@@ -669,10 +671,10 @@ int InitDirectConnection(DirectConnectionOptions& ops, GGPOLogOptions& logOps)
   char* useReplayIp = nullptr;
   uint64_t useSessionId = 0;
 
-  if (ops.replayAddr.length() > 0) { 
+  if (ops.replayAddr.length() > 0) {
     useReplayIp = ops.replayAddr.data();
 
-    if (ops.replayId == 0) { 
+    if (ops.replayId == 0) {
       throw std::exception("Invalid or missing replay id!");
     }
     useSessionId = ops.replayId;

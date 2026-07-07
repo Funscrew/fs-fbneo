@@ -120,6 +120,7 @@ public class SessionPrimer : IDisposable
     return res;
   }
 
+  // --------------------------------------------------------------------------------------------------------------------------
   private Task? CreateTestSessionMonitor()
   {
     Task? testTask = null;
@@ -129,37 +130,38 @@ public class SessionPrimer : IDisposable
       Log.Info("Setting up test session monitor!");
       testTask = Task.Factory.StartNew(() =>
       {
-        const int CHECK_DELAY = 1000;
-
-        // This is a pretty crunchy way to do it, but every second we will check to see if the test session is running.
-        // If not, then we will start it up.
-        Thread.Sleep(CHECK_DELAY);
-
-
-        if (activeSession != null)
+        while (!this.CancelToken.IsCancellationRequested)
         {
-          if (activeSession.IsComplete)
-          {
-            Log.Info("The test session is marked as complete!  We will restart it!");
+          const int CHECK_DELAY = 1000;
 
-            // TODO: Cleanup, replay file copies, etc.
-            activeSession = null;
+          // This is a pretty crunchy way to do it, but every second we will check to see if the test session is running.
+          // If not, then we will start it up.
+          Thread.Sleep(CHECK_DELAY);
+
+          if (activeSession != null)
+          {
+            if (activeSession.IsComplete)
+            {
+              Log.Info("The test session is marked as complete!  We will restart it!");
+
+              // TODO: Cleanup, replay file copies, etc.
+              activeSession = null;
+            }
+          }
+
+          if (activeSession == null)
+          {
+            activeSession = BeginSession(GGPOConsts.TEST_SESSION_ID, new SessionOptions()
+            {
+              GameName = "sfiii3nr1",
+              GameVersion = "123-a",
+              PlayerNames = new string[] { "Joe", "Archie" },
+              MaxPlayerCount = 2,
+              TotalInputSize = 10,
+              ConnectTimeout = 1000      // A very long timeout period is OK!
+            });
           }
         }
-
-        if (activeSession == null)
-        {
-          activeSession = BeginSession(GGPOConsts.TEST_SESSION_ID, new SessionOptions()
-          {
-            GameName = "sfiii3nr1",
-            GameVersion = "123-a",
-            PlayerNames = new string[] { "Joe", "Archie" },
-            MaxPlayerCount = 2,
-            TotalInputSize = 10,
-            ConnectTimeout = 1000      // A very long timeout period is OK!
-          });
-        }
-
       }, this.CancelToken);
 
 

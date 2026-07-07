@@ -173,6 +173,8 @@ public class ReplaySession : IGGPOClient
   // --------------------------------------------------------------------------------------------------------------------------
   private void CompleteSession(int curFrame, ECompletionReason reason, EErrorReason errReason, string? message)
   {
+    if (this.IsComplete) { return; }
+
     DisconnectAll();
 
     Recorder.CompleteReplay(curFrame, reason, errReason, message);
@@ -469,12 +471,11 @@ public class ReplaySession : IGGPOClient
           // Disconnect datagrams come in bursts, so if we have already handled it for this index,
           // then we can skip raising the event multiple times.
           // NOTE:  We may want to keep more information about the conditions of a disconnect....
-          if (Endpoints[pi].IsDisconnected) { return; }
+          if (endpoint.IsDisconnected) { return; }
 
-          // Log.Info("disconnect notice was received...");
           // The endpoint has disconnected.... what do we do?
           int frameCount = Sync.GetFrameCount();
-          Endpoints[pi].Disconnect(frameCount);
+          endpoint.Disconnect(frameCount);
         }
 
         Callbacks.on_event(ref info);

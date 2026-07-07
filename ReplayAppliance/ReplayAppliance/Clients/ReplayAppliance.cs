@@ -311,7 +311,6 @@ public class ReplayAppliance
       if (!this.IdToSession.TryGetValue(sid, out useSession))
       {
         Log.Warning($"Invalid session ID!  Connection from: {receivedFrom.ToString()} should be blacklisted!");
-        // throw new InvalidOperationException("Invalid session ID!  Connection should be blacklisted!");
         UDP.Blacklist.Add(hashedAddr);
         return null;
       }

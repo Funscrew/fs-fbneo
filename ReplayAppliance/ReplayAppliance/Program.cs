@@ -4,7 +4,7 @@ using drewCo.Tools.Logging;
 using funscrew.Clients;
 using System.Diagnostics;
 using System.Linq;
-using System.Net.WebSockets;
+using System.Net.WebSockets; 
 using System.Runtime.InteropServices;
 
 namespace funscrew;
@@ -55,12 +55,10 @@ public partial class Program
 
     Log.Info("Welcome to ReplayAppliance");
 
-    int res = Parser.Default.ParseArguments<SessionRequestOptions, ReplayOptions, InputEchoOptions,
-                                            ReplayApplianceOptions>(args).MapResult(
+    int res = Parser.Default.ParseArguments<SessionRequestOptions, ReplayOptions, InputEchoOptions>(args).MapResult(
                                             (SessionRequestOptions ops) => TestSessionRequest(ops),
                                             (ReplayOptions ops) => RunReplayAppliance(ops),
                                             (InputEchoOptions ops) => RunEchoClient(ops),
-                                            (ReplayApplianceOptions ops) => SetupClientOptions(ops),
                                             errs => 1);
 
 
@@ -220,34 +218,6 @@ public partial class Program
   }
 
   // ------------------------------------------------------------------------------------------------------
-  [Obsolete("we aren't going to use this anymore....sooon")]
-  private static unsafe int SetupClientOptions(ReplayApplianceOptions ops)
-  {
-    throw new NotSupportedException("This isn't supported anymore!");
-
-    Log.Info("Setting up replay appliance...");
-
-    CLIOptions = ops;
-
-    ClientOptions = new GGPOClientOptions(ops.GameName, 0, ops.LocalPort, ops.ProtocolVersion, ops.SessionId)
-    {
-      Callbacks = new GGPOSessionCallbacks()
-      {
-        begin_game = OnBeginGame,
-        free_buffer = OnFreeBuffer,
-        on_event = OnEvent,
-        rollback_frame = OnRollback,
-        save_game_state = SaveGameState,
-        load_game_state = LoadGameState
-      }
-    };
-
-    ClientMode = EMode.Replay;
-
-    return 0;
-  }
-
-  // ------------------------------------------------------------------------------------------------------
   private static unsafe int RunEchoClient(InputEchoOptions ops)
   {
     Log.Info("Setting up echo client....");
@@ -260,7 +230,7 @@ public partial class Program
       {
         begin_game = OnBeginGame,
         free_buffer = OnFreeBuffer,
-        on_event = OnEvent,
+        on_event = OnEchoClientEvent,
         rollback_frame = OnRollback,
         save_game_state = SaveGameState,
         load_game_state = LoadGameState
@@ -286,30 +256,6 @@ public partial class Program
 
     switch (ClientMode)
     {
-
-      case EMode.Replay:
-        {
-
-
-          ReplayApplianceOptions cliOps = (CLIOptions as ReplayApplianceOptions)!;
-
-          // TODO: We will have to come up with a robust way to create session ids....
-          if (cliOps.SessionId == 0)
-          {
-            Log.Warning("Session ID is zero.  A new one will be generated, but this probably isn't what you want.");
-
-            long ts = DateTimeOffset.Now.ToUnixTimeMilliseconds();
-            cliOps.SessionId = (ulong)ts;
-          }
-
-          FileTools.CreateDirectory(cliOps.DataDir);
-
-          var udp = new UdpBlaster(ClientOptions.LocalPort, UdpBlaster.NO_DELAY);
-          Client = new ReplayAppliance_LEGACY(ClientOptions, cliOps, udp, new ClockTimer());
-          Client.Lock();
-          // NOTE: Remotes are setup inside of the client.
-        }
-        break;
 
       case EMode.Echo:
         {
@@ -399,32 +345,36 @@ public partial class Program
   }
 
   // ------------------------------------------------------------------------------------------------------
-  private static unsafe bool OnEvent(ref GGPOEvent evt)
+  private static unsafe bool OnEchoClientEvent(ref GGPOEvent evt)
   {
-    if (evt.event_code == EEventCode.GGPO_EVENTCODE_DATAGRAM)
-    {
-      if (evt.u.datagram.code == (byte)EDatagramCode.DATAGRAM_CODE_CHAT)
-      {
-        fixed (byte* pData = evt.u.datagram.data)
-        {
-          string text = AnsiHelpers.PtrToFixedLengthString(pData, evt.u.datagram.dataSize, GGPOConsts.MAX_GGPO_DATA_SIZE);
-          Log.Info($"Text is: {text}");
-        }
-      }
-
-      else if (evt.u.datagram.code == (byte)EDatagramCode.DATAGRAM_CODE_DISCONNECT)
-      {
-        Log.Info("disconnect notice was received...");
-        ReconnectTime = Clock.Elapsed.TotalSeconds + ((float)RECONNECT_WAIT_TIME / 1000.0f);
-      }
-
-      else
-      {
-        int angaweghag = 10;
-      }
-    }
-
+    // LEGACY:
+    // This is just some old lumpy test code.  Leaving it in a few more revisions for historical reasons.
     return true;
+
+    //if (evt.event_code == EEventCode.GGPO_EVENTCODE_DATAGRAM)
+    //{
+    //  if (evt.u.datagram.code == (byte)EDatagramCode.DATAGRAM_CODE_CHAT)
+    //  {
+    //    fixed (byte* pData = evt.u.datagram.data)
+    //    {
+    //      string text = AnsiHelpers.PtrToFixedLengthString(pData, evt.u.datagram.dataSize, GGPOConsts.MAX_GGPO_DATA_SIZE);
+    //      Log.Info($"Text is: {text}");
+    //    }
+    //  }
+
+    //  else if (evt.u.datagram.code == (byte)EDatagramCode.DATAGRAM_CODE_DISCONNECT)
+    //  {
+    //    Log.Info("disconnect notice was received...");
+    //    ReconnectTime = Clock.Elapsed.TotalSeconds + ((float)RECONNECT_WAIT_TIME / 1000.0f);
+    //  }
+
+    //  else
+    //  {
+    //    int angaweghag = 10;
+    //  }
+    //}
+
+    //return true;
   }
 
 
