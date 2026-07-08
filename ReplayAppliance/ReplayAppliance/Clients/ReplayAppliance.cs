@@ -421,7 +421,7 @@ public class ReplayAppliance
   // --------------------------------------------------------------------------------------------------------------------------
   private bool NoOp_Event(ref GGPOEvent arg)
   {
-    Log.Debug("ggpo callback: event");
+    // Log.Debug("ggpo callback: event");
     return true;
   }
 

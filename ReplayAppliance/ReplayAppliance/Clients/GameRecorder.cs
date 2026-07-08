@@ -147,8 +147,6 @@ namespace funscrew
     /// Returns false if the frame already exists</returns>
     public unsafe bool AddInput(int playerIndex, ref GameInput input)
     {
-      if (playerIndex == 0)  { Log.Info($"got input on frame: {input.frame} for p1"); }
-
       var buf = PlayerBuffers[playerIndex];
 
       if (buf.IsFull)

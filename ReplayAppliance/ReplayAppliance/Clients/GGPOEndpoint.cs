@@ -970,30 +970,23 @@ public class GGPOEndpoint
     }
 
     // New stuff......
+    // NOTE: We need to add this to the C++ client as well.....
     bool continueSync = true;
     if (msg.u.sync_reply.isReady == 0)
     {
-      Log.Info("remote indicates it is not ready!");
       Utils.LogIt(LogCategories.SYNC, "Remote endpoint is replying to sync, but not ready!");
-      continueSync = false; /// return false;
-      return false;
+      continueSync = false;
     }
 
     // We need to check the main client for readyness as well!
     if (continueSync && !this.Client.IsReadyToSync(ref msg))
     {
-      if (PlayerIndex == 0) {
-        Log.Warning("not ready to sync!  Sync reply is ignored..");
-      }
-
       Utils.LogIt(LogCategories.SYNC, "Local client is still not ready to fully sync!");
-      // return false;
       continueSync = false;
-      return false;
     }
 
 
-    if (!_connected)
+    if (!_connected && continueSync)
     {
       var evt = new UdpEvent(EEventType.Connected);
 
@@ -1032,7 +1025,7 @@ public class GGPOEndpoint
     }
 
     Utils.LogIt(LogCategories.SYNC, "%d round trips remaining", SyncState.roundtrips_remaining);
-    if (--SyncState.roundtrips_remaining == 0)
+    if (continueSync && --SyncState.roundtrips_remaining == 0)
     {
       var e = new UdpEvent(EEventType.Synchronized);
       QueueEvent(e);
