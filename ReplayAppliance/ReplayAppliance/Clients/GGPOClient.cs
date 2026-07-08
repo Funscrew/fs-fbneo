@@ -307,7 +307,6 @@ public class GGPOClient : IGGPOClient, IDisposable
     if (IsComplete) { return; }
 
     // Receive all messages + send them off to the correct endpoints.
-    // This is basically a soft-router.
     while (true)
     {
       int received = this.UDP.Receive(_ReceiveBuffer, ref ReceivedFrom);

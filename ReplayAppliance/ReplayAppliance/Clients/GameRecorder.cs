@@ -23,7 +23,10 @@ namespace funscrew
 
     // Each player will also have their inputs in their own slightly larger buffers.
     // These buffers should never overflow and if they so then there is a problem.
-    const int PLAYER_INPUT_BUFFER_SIZE = 0x70;
+    // OPTIONS: Ten seconds @ 60fps: NOTE: This is maybe a bit too big in actual application....
+    const int PLAYER_INPUT_BUFFER_SIZE = 60 * 10;     //  0x70;
+
+    // OPTIONS:
     const int MAX_PLAYERS = 2;
 
     /// <summary>
@@ -144,6 +147,8 @@ namespace funscrew
     /// Returns false if the frame already exists</returns>
     public unsafe bool AddInput(int playerIndex, ref GameInput input)
     {
+      if (playerIndex == 0)  { Log.Info($"got input on frame: {input.frame} for p1"); }
+
       var buf = PlayerBuffers[playerIndex];
 
       if (buf.IsFull)

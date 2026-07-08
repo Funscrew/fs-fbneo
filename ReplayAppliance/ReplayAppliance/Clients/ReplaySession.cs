@@ -175,6 +175,8 @@ public class ReplaySession : IGGPOClient
   {
     if (this.IsComplete) { return; }
 
+    Log.Verbose("The session is complete, all clients will be disconnected!");
+
     DisconnectAll();
 
     Recorder.CompleteReplay(curFrame, reason, errReason, message);
@@ -236,6 +238,7 @@ public class ReplaySession : IGGPOClient
       }
 
       Endpoints[i].OnLoopPoll();
+
     }
 
     if (this.IsComplete) { return; }

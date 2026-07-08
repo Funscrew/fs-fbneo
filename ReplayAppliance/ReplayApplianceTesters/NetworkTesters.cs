@@ -66,6 +66,8 @@ namespace funscrewTesters
 
 
       // Then we want to show that the replay appliance will / has shut down.
+      // NOTE: It should be able to disconnect after this much time.....
+      // NOTE: Unlike a default endpoint, the replay endpoints have a HARD sync timeout...  Now that I think about it, the base should too.....
       context.RunGame(500);
       Assert.That(replayAppliance.ActiveSessionCount, Is.EqualTo(0), "There should be no more active sessions!");
 

@@ -76,7 +76,7 @@ public class GGPOEndpoint
 
   private EndPoint RemoteEP;
 
-  private GGPOEndpointOptions Options = null!;
+  protected GGPOEndpointOptions Options = null!;
 
   private MsgHandler<UdpMsg>[] MsgHandlers = new MsgHandler<UdpMsg>[9];
 
@@ -603,11 +603,11 @@ public class GGPOEndpoint
     int next_interval = 0;
     int now = (int)this.Client.CurTime;
 
-    // TEMP:
-    if (now > 5000 && this.RemoteIP.Port == 7003)
-    {
-      int agawg = 10;
-    }
+    //// TEMP:
+    //if (now > 5000 && this.RemoteIP.Port == 7003)
+    //{
+    //  int agawg = 10;
+    //}
 
     switch (_current_state)
     {
@@ -627,8 +627,6 @@ public class GGPOEndpoint
             // Queue the event....
             UdpEvent evt = new UdpEvent(EEventType.SyncFailed);
             QueueEvent(evt);
-
-
           }
           else if (_last_send_time + next_interval < now)
           {
@@ -917,6 +915,7 @@ public class GGPOEndpoint
   // ------------------------------------------------------------------------
   internal bool OnSyncRequest(ref UdpMsg msg, int msgLen)
   {
+
     if (_remote_magic_number != 0 && msg.header.magic != _remote_magic_number)
     {
       Utils.LogIt(LogCategories.SYNC, "SyncRequest from unknown endpoint :%d != %d)", msg.header.magic, _remote_magic_number);
@@ -936,30 +935,32 @@ public class GGPOEndpoint
     reply.u.sync_reply.SetPlayerName(Client.LocalPlayerName);
     reply.u.sync_reply.SetGameName(Client.GameName);
 
+
+    if ((this.RemoteEP as IPEndPoint).Port == 7000)
+    {
+      Log.Info($"Sending sync reply to 7000: ready = {reply.u.sync_reply.isReady}");
+    }
+
+
     SendMsg(ref reply);
+
+
+
     return true;
   }
 
   // ------------------------------------------------------------------------
   private unsafe bool OnSyncReply(ref UdpMsg msg, int msgLen)
   {
+    if ((this.RemoteEP as IPEndPoint).Port == 7000)
+    {
+      Log.Info("got sync reply from 7000");
+    }
+
     if (_current_state != EClientState.Syncing)
     {
       Utils.LogIt(LogCategories.SYNC, "SyncReply while not synching");
       return msg.header.magic == _remote_magic_number;
-    }
-
-    if (msg.u.sync_reply.isReady == 0)
-    {
-      Utils.LogIt(LogCategories.SYNC, "Remote endpoint is replying to sync, but not ready!");
-      return false;
-    }
-
-    // We need to check the main client for readyness as well!
-    if (!this.Client.IsReadyToSync(ref msg))
-    {
-      Utils.LogIt(LogCategories.SYNC, "Local client is still not ready to fully sync!");
-      return false;
     }
 
     if (msg.u.sync_reply.random_reply != SyncState.random)
@@ -967,6 +968,30 @@ public class GGPOEndpoint
       Utils.LogIt(LogCategories.SYNC, "mismatched reply: %d != %d", msg.u.sync_reply.random_reply, SyncState.random);
       return false;
     }
+
+    // New stuff......
+    bool continueSync = true;
+    if (msg.u.sync_reply.isReady == 0)
+    {
+      Log.Info("remote indicates it is not ready!");
+      Utils.LogIt(LogCategories.SYNC, "Remote endpoint is replying to sync, but not ready!");
+      continueSync = false; /// return false;
+      return false;
+    }
+
+    // We need to check the main client for readyness as well!
+    if (continueSync && !this.Client.IsReadyToSync(ref msg))
+    {
+      if (PlayerIndex == 0) {
+        Log.Warning("not ready to sync!  Sync reply is ignored..");
+      }
+
+      Utils.LogIt(LogCategories.SYNC, "Local client is still not ready to fully sync!");
+      // return false;
+      continueSync = false;
+      return false;
+    }
+
 
     if (!_connected)
     {

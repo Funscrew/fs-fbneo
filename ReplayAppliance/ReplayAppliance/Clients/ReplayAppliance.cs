@@ -49,6 +49,10 @@ public class ReplayAppliance
 
   private byte[] _ReceiveBuffer = new byte[4096];
 
+  // OPTIONS: This is a hard value for how often we will update the sessions.
+  private const milliseconds UPDATE_INTERVAL = 20;
+  private long LastUpdateTime = 0;
+
   // --------------------------------------------------------------------------------------------------------------------------
   public ReplayAppliance(ReplayOptions ops_, IUdpBlaster udp_, IClockSource clock_)
   {
@@ -128,7 +132,7 @@ public class ReplayAppliance
 
     lock (SessionLock)
     {
-
+      // FIX: This is going to create garbage....
       EndPoint ep = new IPEndPoint(IPAddress.Any, 0);//  default!;
 
       // This is a blocking call!
@@ -148,8 +152,25 @@ public class ReplayAppliance
         {
           Log.Error("Could not deliver message to session!  It may not be in service anymore....");
         }
+
+        // Here we want to run updates after a certain amount of time.....
+        UpdateSessions();
       }
 
+      UpdateSessions();
+    }
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private void UpdateSessions()
+  {
+    // Log.Info("running updates on active sessions....");
+    if (ActiveSessions.Count == 0) { return; }
+
+    var now = this.Clock.CurTime;
+    var elapsed = now - LastUpdateTime;
+    if (elapsed >= UPDATE_INTERVAL)
+    {
       // Update all sessions:
       // NOTE:  If we have a lot of sessions, we might get better perf by have some kind of
       // 'last updated' timestamp + 'force update every x. ms' type of deal.
@@ -161,9 +182,9 @@ public class ReplayAppliance
 
         if (sess.IsComplete) { CompleteSessions.Add(sess); }
       }
-
       CleanupCompleteSessions();
 
+      LastUpdateTime = now;
     }
   }
 
@@ -336,7 +357,6 @@ public class ReplayAppliance
         // put these on some kind of "suspicious" list and trigger a blacklist if there are too many of them?
         Log.Debug($"There is no sessions associated with the address: {receivedFrom.ToString()}");
         return null;
-        /// throw new InvalidOperationException("There is no session associated with this address!");
       }
     }
 
@@ -351,6 +371,9 @@ public class ReplayAppliance
   private GGPOEndpoint AddReplayEndpoint(ReplaySession replaySesh, IPEndPoint from, UdpMsg msg)
   {
     var playerIndex = msg.u.sync_request.player_index;
+
+    Log.Info($"Adding replay endpoint for player index: {playerIndex}!");
+
     var ops = new GGPOEndpointOptions()
     {
       Delay = 0,

@@ -158,7 +158,7 @@ public class SessionPrimer : IDisposable
               PlayerNames = new string[] { "Joe", "Archie" },
               MaxPlayerCount = 2,
               TotalInputSize = 10,
-              ConnectTimeout = 1000      // A very long timeout period is OK!
+              ConnectTimeout = GGPOConsts.DEFAULT_CONNECT_TIMEOUT      // A very long timeout period is OK!
             });
           }
         }

@@ -26,7 +26,6 @@ namespace funscrew.Clients
 
     private int StartTime = 0;
 
-
     // --------------------------------------------------------------------------------------------------------------------------  
     public ReplayEndpoint(ReplaySession session_, GGPOEndpointOptions ops_, ConnectStatus[] localConnectStatus_)
       : base(session_, ops_, localConnectStatus_)
@@ -49,6 +48,7 @@ namespace funscrew.Clients
         if (elapsed >= Client.ConnectTimeout)
         {
           // We are going to disconnect.
+          Log.Warning($"A client disconnected because the timeput period: {Client.ConnectTimeout} expired!");
           Disconnect(Client.CurrentFrame, true);
           ConnectionTimedOut = true;
           return;
