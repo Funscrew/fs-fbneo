@@ -426,16 +426,6 @@ public class GGPOClient : IGGPOClient, IDisposable
     }
   }
 
-  //// ----------------------------------------------------------------------------------------------------------
-  //private void UpdateReplayClient()
-  //{
-  //  if (ReplayClient != null)
-  //  {
-  //    // Events are handled internally.
-  //    ReplayClient.OnLoopPoll();
-  //  }
-  //}
-
   // ----------------------------------------------------------------------------------------------------------
   private unsafe int Poll2Players(int current_frame)
   {
@@ -480,59 +470,6 @@ public class GGPOClient : IGGPOClient, IDisposable
   {
     // I'm not really sure how we want to handle this in the future...
     throw new NotSupportedException("Only two players are currently supported!");
-    //uint16 i, queue;
-    //int last_received;
-
-    //// discard confirmed frames as appropriate
-    //int total_min_confirmed = MAX_INT;
-    //for (queue = 0; queue < _num_players; queue++)
-    //{
-    //  bool queue_connected = true;
-    //  int queue_min_confirmed = MAX_INT;
-    //  Utils.Log("considering playerIndex %d.", queue);
-    //  for (i = 0; i < _endpoints.Count; i++)
-    //  {
-    //    // we're going to do a lot of logic here in consideration of endpoint i.
-    //    // keep accumulating the minimum confirmed point for all n*n packets and
-    //    // throw away the rest.
-    //    if (_endpoints[i].IsRunning())
-    //    {
-    //      bool connected = _endpoints[i].GetPeerConnectStatus((int)queue, &last_received);
-
-    //      queue_connected = queue_connected && connected;
-    //      queue_min_confirmed = Math.Min(last_received, queue_min_confirmed);
-    //      Utils.Log("  endpoint %d: connected = %d, last_received = %d, queue_min_confirmed = %d.", i, connected, last_received, queue_min_confirmed);
-    //    }
-    //    else
-    //    {
-    //      Utils.Log("  endpoint %d: ignoring... not running.", i);
-    //    }
-    //  }
-    //  // merge in our local status only if we're still connected!
-    //  if (!_local_connect_status[queue].disconnected)
-    //  {
-    //    queue_min_confirmed = Math.Min(_local_connect_status[queue].last_frame, queue_min_confirmed);
-    //  }
-    //  Utils.Log("  local endp: connected = %d, last_received = %d, queue_min_confirmed = %d.", !_local_connect_status[queue].disconnected, _local_connect_status[queue].last_frame, queue_min_confirmed);
-
-    //  if (queue_connected)
-    //  {
-    //    total_min_confirmed = Math.Min(queue_min_confirmed, total_min_confirmed);
-    //  }
-    //  else
-    //  {
-    //    // check to see if this disconnect notification is further back than we've been before.  If
-    //    // so, we need to re-adjust.  This can happen when we detect our own disconnect at frame n
-    //    // and later receive a disconnect notification for frame n-1.
-    //    if (!_local_connect_status[queue].disconnected || _local_connect_status[queue].last_frame > queue_min_confirmed)
-    //    {
-    //      Utils.Log("disconnecting playerIndex %d by remote request.", queue);
-    //      DisconnectPlayer(queue, queue_min_confirmed);
-    //    }
-    //  }
-    //  Utils.Log("  total_min_confirmed = %d.", total_min_confirmed);
-    //}
-    //return total_min_confirmed;
   }
 
   // ----------------------------------------------------------------------------------------------------------
@@ -600,13 +537,13 @@ public class GGPOClient : IGGPOClient, IDisposable
   // ----------------------------------------------------------------------------------------
   protected virtual bool AddLocalInput(byte[] values, int isize)
   {
-
     // NOTE: When this function is called, we already know that we aren't in rollback!
     // REDUNDANT CHECK:
     if (_sync.InRollback())
     {
       return false;
     }
+
     // REDUNDANT CHECK:
     if (_synchronizing)
     {
@@ -619,7 +556,6 @@ public class GGPOClient : IGGPOClient, IDisposable
     // Feed the input for the current frame into the synchronzation layer.
     if (!_sync.AddLocalInput(Options.PlayerIndex, ref input))
     {
-      // return GGPO_ERRORCODE_PREDICTION_THRESHOLD;
       return false;
     }
 
@@ -645,11 +581,6 @@ public class GGPOClient : IGGPOClient, IDisposable
         var ep = _endpoints[i];
         ep.SendInput(ref input);
       }
-
-      //if (ReplayClient != null)
-      //{
-      //  ReplayClient.SendInput(ref input);
-      //}
     }
 
     return true;
@@ -715,7 +646,6 @@ public class GGPOClient : IGGPOClient, IDisposable
         {
           OnDisconnect(endpoint);
         }
-
         break;
 
       case EEventType.Disconnected:
@@ -752,9 +682,6 @@ public class GGPOClient : IGGPOClient, IDisposable
     {
       // Effectively disconnect the endpoint so it no longer sends / receives data...
       endpoint.Disconnect(0, false);
-
-      // Log.Info($"Received disconnect signal from ReplayAppliance on session: {this.SessionId}");
-      // this._endpoints.Remove(endpoint);
     }
   }
 

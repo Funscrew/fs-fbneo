@@ -803,21 +803,6 @@ void Peer2PeerBackend::CheckInitialSync()
       if (ep->IsLocalPlayer) { continue; }
       if (ep->IsReplayClient() && ep->IsDisconnected()) { continue; }
       if (!ep->IsSynchronized()) { return; }
-
-      // OLD 2:
-      //if (!ep->IsInitialized() &&
-      //  !ep->IsSynchronized() &&
-      //  !_local_connect_status[epi].disconnected)
-      //{
-      //  return;
-      //}
-
-      // OLD 1:
-      //if (_endpoints[i]->IsInitialized() &&
-      //  !_endpoints[i]->IsSynchronized() &&
-      //  !_local_connect_status[i].disconnected) {
-      //  return;
-      //}
     }
 
     GGPOEvent info;
