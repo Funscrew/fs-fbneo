@@ -732,10 +732,8 @@ public class GGPOClient : IGGPOClient, IDisposable
         break;
 
       default:
-        Log.Warning($"There is no handler for event type: {evt.type}!");
+        Utils.LogIt(LogCategories.DEBUG, "There is no handler for event type:%s", (int)evt.type);
         break;
-        // throw new InvalidOperationException("Unsupported event type!");
-
     }
   }
 
@@ -813,40 +811,6 @@ public class GGPOClient : IGGPOClient, IDisposable
   {
     Log.Warning($"Function: {nameof(DisconnectEndpoint)} is called, but doesn't do anything!");
     return;
-    //int frameCount = _sync.GetFrameCount();
-
-    //if (!endpoint.IsReplayClient)
-    //{
-    //  var playerIndex = endpoint.PlayerIndex;
-
-    //  GGPOEvent info = new GGPOEvent();
-    //  int framecount = _sync.GetFrameCount();
-
-    //  _endpoints[playerIndex].Disconnect(frameCount);
-
-    //  Utils.LogIt(LogCategories.ENDPOINT, "Changing player: %d local connect status for last frame from %d to %d on disconnect request (current: %d).", playerIndex, _local_connect_status[playerIndex].last_frame, syncto, framecount);
-
-    //  _local_connect_status[playerIndex].disconnected = true;
-    //  _local_connect_status[playerIndex].last_frame = syncto;
-
-    //  if (syncto < framecount)
-    //  {
-    //    Utils.LogIt(LogCategories.ENDPOINT, "adjusting simulation to account for the fact that %d disconnected @ %d.", playerIndex, syncto);
-    //    _sync.AdjustSimulation(syncto);
-    //    Utils.LogIt(LogCategories.ENDPOINT, "finished adjusting simulation.");
-    //  }
-
-    //  info.event_code = EEventCode.GGPO_EVENTCODE_DISCONNECTED_FROM_PEER;
-    //  info.player_index = playerIndex;
-    //  _callbacks.on_event(ref info);
-
-    //  CheckInitialSync();
-    //}
-    //else
-    //{
-    //  // NOTE: All endpoints should be disconnected this way.....
-    //  endpoint.Disconnect(frameCount);
-    //}
   }
 
   // ----------------------------------------------------------------------------------------------------------
@@ -932,10 +896,11 @@ public class GGPOClient : IGGPOClient, IDisposable
           if (endpoint.IsDisconnected) { return; }
           // I think we can just disconnect the endpoint directly, and not care about what the
           // playerIndex might be...
-          if (endpoint.EndpointType == EEndpointType.ReplayAppliance){
-            Log.Info("Got disconnect signal from replay appliance!");
-          }
-          endpoint.Disconnect(this.CurrentFrame, false);  
+          //// TODO: Maybe a differnt logging category for all this?
+          //if (endpoint.EndpointType == EEndpointType.ReplayAppliance){
+          //  Log.Info("Got disconnect signal from replay appliance!");
+          //}
+          endpoint.Disconnect(this.CurrentFrame, false);
         }
 
         _callbacks.on_event(ref info);
@@ -959,17 +924,9 @@ public class GGPOClient : IGGPOClient, IDisposable
         var ep = _endpoints[i];
         int epi = ep.PlayerIndex;
 
-        if (ep.IsLocalPlayer)  { continue; }
-        if (ep.IsReplayClient && ep.IsDisconnected)  { continue; }
+        if (ep.IsLocalPlayer) { continue; }
+        if (ep.IsReplayClient && ep.IsDisconnected) { continue; }
         if (!ep.IsSynchronized()) { return; }
-
-        // OLD : 1
-        //if (!ep.IsLocalPlayer &&
-        //    !ep.IsSynchronized() &&
-        //    !_local_connect_status[epi].disconnected)
-        //{
-        //  return;
-        //}
       }
 
       GGPOEvent info = new GGPOEvent();

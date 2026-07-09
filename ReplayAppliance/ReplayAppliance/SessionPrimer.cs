@@ -1,4 +1,5 @@
-﻿using drewCo.Tools.Logging;
+﻿using drewCo.Tools;
+using drewCo.Tools.Logging;
 using funscrew.Clients;
 using System.Net;
 using System.Net.Sockets;
@@ -136,6 +137,7 @@ public class SessionPrimer : IDisposable
 
           // This is a pretty crunchy way to do it, but every second we will check to see if the test session is running.
           // If not, then we will start it up.
+          // We could also do an event based approach, but this will be OK!
           Thread.Sleep(CHECK_DELAY);
 
           if (activeSession != null)
@@ -151,6 +153,17 @@ public class SessionPrimer : IDisposable
 
           if (activeSession == null)
           {
+            // Check for + copy any output replay file first.
+            string replayPath = Path.Combine(Options.ReplayDataDir, $"{GGPOConsts.TEST_SESSION_ID}.replay");
+
+            if (File.Exists(replayPath))
+            {
+              // NOTE: For convenience, I am using the FC replay extension here.
+              Log.Info("Copying existing replay data...");
+              string uniquePath = FileTools.GetSequentialFileName(Options.ReplayDataDir, "replay", ".fr");
+              File.Copy(replayPath, uniquePath, true);
+            }
+
             activeSession = BeginSession(GGPOConsts.TEST_SESSION_ID, new SessionOptions()
             {
               GameName = "sfiii3nr1",

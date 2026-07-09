@@ -577,7 +577,27 @@ bool GGPOEndpoint::OnSyncReply(UdpMsg* msg, int len)
     return false;
   }
 
-  if (!_connected) {
+
+  // New stuff......
+  // NOTE: We need to add this to the C++ client as well.....
+  bool continueSync = true;
+  if (msg->u.sync_reply.isReady == 0)
+  {
+    Utils::LogIt(CATEGORY_SYNC, "Remote endpoint is replying to sync, but not ready!");
+    continueSync = false;
+  }
+
+  // We need to check the main client for readyness as well!
+  if (continueSync && !_Client->IsReadyToSync(msg))
+  {
+    Utils::LogIt(CATEGORY_SYNC, "Local client is still not ready to fully sync!");
+    continueSync = false;
+  }
+
+
+
+
+  if (!_connected && continueSync) {
     auto evt = UdpEvent(UdpEvent::Connected);
     strcpy_s(evt.u.connected.playerName, msg->u.sync_reply.playerName);
 

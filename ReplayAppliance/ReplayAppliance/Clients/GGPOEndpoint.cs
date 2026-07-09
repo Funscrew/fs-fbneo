@@ -603,12 +603,6 @@ public class GGPOEndpoint
     int next_interval = 0;
     int now = (int)this.Client.CurTime;
 
-    //// TEMP:
-    //if (now > 5000 && this.RemoteIP.Port == 7003)
-    //{
-    //  int agawg = 10;
-    //}
-
     switch (_current_state)
     {
       case EClientState.Syncing:
@@ -935,16 +929,7 @@ public class GGPOEndpoint
     reply.u.sync_reply.SetPlayerName(Client.LocalPlayerName);
     reply.u.sync_reply.SetGameName(Client.GameName);
 
-
-    if ((this.RemoteEP as IPEndPoint).Port == 7000)
-    {
-      Log.Info($"Sending sync reply to 7000: ready = {reply.u.sync_reply.isReady}");
-    }
-
-
     SendMsg(ref reply);
-
-
 
     return true;
   }
@@ -952,11 +937,6 @@ public class GGPOEndpoint
   // ------------------------------------------------------------------------
   private unsafe bool OnSyncReply(ref UdpMsg msg, int msgLen)
   {
-    if ((this.RemoteEP as IPEndPoint).Port == 7000)
-    {
-      Log.Info("got sync reply from 7000");
-    }
-
     if (_current_state != EClientState.Syncing)
     {
       Utils.LogIt(LogCategories.SYNC, "SyncReply while not synching");

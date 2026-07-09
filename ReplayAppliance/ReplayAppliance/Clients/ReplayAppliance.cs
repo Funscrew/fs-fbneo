@@ -14,14 +14,8 @@ namespace funscrew.Clients;
 /// </summary>
 public class ReplayAppliance
 {
-  // private ReplayApplianceOptions ReplayOptions = default!;
-
   // The two clients that we expect to receive data from.  These will be the remote endpoints that we
   // then set up.
-  // private HashSet<SocketAddress> ConnectedClients = new HashSet<SocketAddress>();
-  // private bool AllConnected = false;
-  // private List<int> ConnectedPlayerIndexes = new List<int>();
-
   public List<string> Errors { get; private set; } = new List<string>();
 
   // We will have a list of active sessions, each of which will have their own game recorder.
@@ -31,14 +25,6 @@ public class ReplayAppliance
   protected List<ReplaySession> ActiveSessions = new List<ReplaySession>(0xff);
   protected List<ReplaySession> CompleteSessions = new List<ReplaySession>(0xff);
 
-  /// <summary>
-  /// This is the set of all known connected clients regardless of their session.
-  /// Each entry is a hash of the IP + port.
-  /// When sessions expire or are closed, this set should be updated.
-  /// </summary>
-  // private HashSet<UInt64> AllConnections = new HashSet<UInt64>();
-
-  // public GameRecorder Recorder { get; private set; }
   private ReplayOptions Options = null!;
 
   private CancellationTokenSource CTSource = new CancellationTokenSource();
@@ -239,7 +225,6 @@ public class ReplayAppliance
   // NOTE: This should only be used in production.  Not suitable for test code....
   public Task BeginWork()
   {
-
     var res = Task.Factory.StartNew(() =>
     {
       Log.Info("Starting ReplayAppliance update loop.");
@@ -252,67 +237,6 @@ public class ReplayAppliance
     }, CancelToken);
 
     return res;
-
-    // throw new InvalidOperationException("Don't use this!");
-    // return default!;
-
-    //var res = Task.Factory.StartNew(() =>
-    //{
-
-    //  EndPoint ep = default!;
-    //  while (true)
-    //  {
-
-    //  lblReceiveData:
-
-    //    bool updated = Update();
-    //    if (!updated)
-    //    {
-    //      // AAIIIIIEEEEE EVIL! EVIL! EVIL! CALL THE COAST GUARD!!!!!
-    //      goto lblReceiveData;
-    //    }
-
-    //    // This is a blocking call!
-    //    int received = UDP.Receive(_ReceiveBuffer, ref ep);
-    //    if (received == 0)
-    //    {
-    //      // AAIIIIIEEEEE EVIL! EVIL! EVIL! CALL THE COAST GUARD!!!!!
-    //      goto lblReceiveData;
-    //    }
-
-    //    UdpMsg msg = new UdpMsg();
-    //    UdpMsg.FromBytes(_ReceiveBuffer, ref msg, received);
-
-    //    if (msg.header.type == EMsgType.Heartbeat)
-    //    {
-    //      goto lblReceiveData;
-    //    }
-
-    //    ReplaySession? sess = DeliverMessage(ref msg, received, (IPEndPoint)ep);
-    //    if (sess == null)
-    //    {
-    //      // NOTE: Possibly got data from a blacklist client?
-    //      goto lblReceiveData;
-    //    }
-
-    //    sess.DoPoll();
-
-
-    //    // The rest of 'DoPoll'
-
-
-    //    // TEMP: TEST:
-    //    if (Clock.CurTime > 2000)
-    //    {
-    //      Log.Info("Test timeout has expired!");
-    //      break;
-    //    }
-    //  }
-
-
-    //}, CancelToken);
-
-    //return res;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------

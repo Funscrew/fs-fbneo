@@ -331,7 +331,7 @@ public static class Utils
   {
     int* pSrc = (int*)data;
 
-    int res  = *pSrc;
+    int res = *pSrc;
     return res;
   }
 }
@@ -361,6 +361,7 @@ public static class LogCategories
   public const string UDP = "UDP";
   public const string INPUT_QUEUE = "INPQ";
   public const string TIMESYNC = "TIME";
+  public const string DEBUG = "DEBUG";
 
   /// <summary>This happens when we attempt to retrieve an input from 'SynchronizeInputs' but frame data
   /// from the remote is not available.  It isn't a real input, and may get rolled back!

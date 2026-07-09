@@ -361,8 +361,6 @@ public class ReplaySession : IGGPOClient
         {
           Log.Info($"Disconnect signal received on session: {this.SessionId} from: {endpoint.PlayerIndex}");
           DisconnectAll();
-
-          // HandleDisconnect(endpoint);
         }
         // TODO: Detect + log chat messages here!
 
