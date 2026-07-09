@@ -293,7 +293,8 @@ INT32 ReplayInput()
   if (hasInput) {
 
     // TODO: Frame check for parity....
-    if (gi.frame != nCurrentFrame) {
+    // NOTE: Settings + subtracting 'nStart' frame would make more sense... 
+    if (gi.frame != (nCurrentFrame - nReplayCurrentFrame)) {
       // NOTE: this is temp check while we are getting the most basic version of the feature
       // running the way that we would expect it to.
       throw runtime_error("next input is wrong!");
@@ -460,17 +461,44 @@ INT32 StartReplay(const TCHAR* szFileName)
   CGameState state;
   _ReplayFile->GetState(state);
 
+  // NOTE: Start frames might be included in the state file?
+  // NOTE: Do we really need both frames?
   nCurrentFrame = state.StartFrame;
   nReplayCurrentFrame = state.StartFrame;
 
-  // NOTE: Do we really need both frames?
-  if (nCurrentFrame == 0 && nReplayCurrentFrame == 0)
-  {
-    StartFromReset(nullptr);
+  // NOTE: Would starting from a specific state also be a good thing?
+  StartFromReset(nullptr);
+
+
+  if (state.Type == (uint8_t)EGameStateType::GAMESTATE_TYPE_FILE) {
+    char statePath[MAX_PATH];
+    state.GetDataAsString(statePath, MAX_PATH);
+
+    // NOTE: Sprintf might also be a bad choice if UTF8 is involved.
+    // NOTE: We can also check 'datasize' from the state information to do all this....
+    char fullPath[MAX_PATH];
+
+    // TEMP: This is to overcome a bug/typo in our example file.
+    int len = sprintf(fullPath, "savestates\\sfiii3nr1_fbneo.fs");
+    fullPath[len] = 0;
+
+    // TODO: This is actually a UTF8 path, and we should convert it correctly!
+    auto szPath = ANSIToTCHAR(fullPath, NULL, NULL);
+    if (!std::filesystem::exists(szPath)) {
+      // TODO: Dialog
+      throw runtime_error("STATE FILE does not exist at path!");
+    }
+
+    if (BurnStateLoad(szPath, 1, &DrvInitCallback)) {
+      throw runtime_error("Could not load state data correctly!");
+      return 1;
+    }
+
   }
-  else {
-    throw runtime_error("No support for state loading on replay (yet)");
+  else if (state.Type == (uint8_t)EGameStateType::GAMESTATE_TYPE_DATA) {
+    throw runtime_error("No support for state loading from raw data (yet)");
   }
+
 
   // Begin the replay from here.
   nReplayStatus = EReplayStatus::REPLAY_STATUS_REPLAY;

@@ -1021,44 +1021,38 @@ int ProcessCommandLine(LPSTR lpCmdLine)
   app.add_flag("-a", resFlag, "Use game resolution for fullscreen modes.");
   app.add_flag("-w", screenFlag, "Disable auto switch to fullscreen on loading driver.");
 
-  // record / replay options.
-  std::string recordPath;
-  std::string replayPath;
-  auto* recordOp = app.add_option("--record", recordPath, "Record inputs to file.");
-  auto* replayOp = app.add_option("--replay", replayPath, "Replay inputs from file.");
-  recordOp->excludes(replayOp);
-
   // Logging options for GGPO.  NOTE: This could be combined with the other logging facilities at some point.
   // TODO: Some kind of command line option to load all options from a single file.  This makes it easier
   // to setup + save run profiles for the application.
   std::string logPath = "";
   app.add_option("--logf", logPath, "File where GGPO data will be logged.");
 
-  // @@AAR:
-  // There was some legacy code in there that was used to output lists of information.
-  // At time of writing it was putting that data in stdout, which just gets black-holed
-  // in windows builds.  I kept it in place in case someone wanted to get it into a file,
-  // etc. in the future.
-  std::map<std::string, EListOption> listOptions{
-    { "megadrive", EListOption::mdonly }
-    , { "pc", EListOption::pceonly }
-    , { "tg16", EListOption::tg16only }
-    , { "sgx", EListOption::sgxonly }
-    , { "sg1000", EListOption::sg1000only }
-    , { "coleco", EListOption::colecoonly }
-    , { "sms", EListOption::smsonly }
-    , { "gamegear", EListOption::ggonly }
-    , { "msx", EListOption::msxonly }
-    , { "spectrum", EListOption::spectrumonly }
-    , { "nes", EListOption::nesonly }
-    , { "fds", EListOption::fdsonly }
-    , { "extra", EListOption::extrainfo }
-  };
-  EListOption listOption = EListOption::none;
-  auto list = app.add_subcommand("listinfo", "Export rom list.");
-  list->add_option("-o,--option", listOption, "Filter for output list")
-    ->required(false)
-    ->transform(CLI::CheckedTransformer(listOptions, CLI::ignore_case));
+  // @@AAR : 7.8.2026 : Removing it entirely to help clean some stuff up.
+  //// @@AAR:
+  //// There was some legacy code in there that was used to output lists of information.
+  //// At time of writing it was putting that data in stdout, which just gets black-holed
+  //// in windows builds.  I kept it in place in case someone wanted to get it into a file,
+  //// etc. in the future.
+  //std::map<std::string, EListOption> listOptions{
+  //  { "megadrive", EListOption::mdonly }
+  //  , { "pc", EListOption::pceonly }
+  //  , { "tg16", EListOption::tg16only }
+  //  , { "sgx", EListOption::sgxonly }
+  //  , { "sg1000", EListOption::sg1000only }
+  //  , { "coleco", EListOption::colecoonly }
+  //  , { "sms", EListOption::smsonly }
+  //  , { "gamegear", EListOption::ggonly }
+  //  , { "msx", EListOption::msxonly }
+  //  , { "spectrum", EListOption::spectrumonly }
+  //  , { "nes", EListOption::nesonly }
+  //  , { "fds", EListOption::fdsonly }
+  //  , { "extra", EListOption::extrainfo }
+  //};
+  //EListOption listOption = EListOption::none;
+  //auto list = app.add_subcommand("listinfo", "Export rom list.");
+  //list->add_option("-o,--option", listOption, "Filter for output list")
+  //  ->required(false)
+  //  ->transform(CLI::CheckedTransformer(listOptions, CLI::ignore_case));
 
 
   // Options to initiate a direct connection to another player.
@@ -1072,10 +1066,19 @@ int ProcessCommandLine(LPSTR lpCmdLine)
   directConnect->add_option("-s,--replay", directOps.replayAddr, "Replay appliance address");
   directConnect->add_option("-i,--replay-id", directOps.replayId, "Session ID for the replay.");
 
-  std::string loadPath = "";
-  auto load = app.add_subcommand("load", "Load a game state (.fs), or replay file (.fr)");
-  load->add_option("-f,--file", loadPath, "Path of the file to load.");
+  std::string statePath = "";
+  auto stateOp = app.add_option("-s,--state", statePath, "Load an intitial state from the given path. (.fs)");
 
+  // record / replay options.
+  std::string recordPath = "";
+  std::string replayPath = "";
+  auto recordOp = app.add_option("--record", recordPath, "Record inputs to file.");
+  auto replayOp = app.add_option("--replay", replayPath, "Replay inputs from file.");
+
+  // You can record, or replay, or load a state, but only one!
+  // NOTE: I can see a future argument for allowing both STATE and RECORD options at the same time.
+  recordOp->excludes(replayOp, stateOp);
+  replayOp->excludes(recordOp, stateOp);
 
   // Only allow one subcommand.
   app.require_subcommand(0, 1);
@@ -1117,12 +1120,12 @@ int ProcessCommandLine(LPSTR lpCmdLine)
 
 
   // Handle subcommands, if any.
-  if (list->parsed())
-  {
-    int res = HandleListInfoCommand(listOption);
-    return res;
-  }
-  else if (directConnect->parsed())
+  //if (list->parsed())
+  //{
+  //  int res = HandleListInfoCommand(listOption);
+  //  return res;
+  //}
+  if (directConnect->parsed())
   {
     // GGPO logging, if set.
     GGPOLogOptions logOps;
@@ -1156,29 +1159,6 @@ int ProcessCommandLine(LPSTR lpCmdLine)
       return res;
     }
   }
-  else if (load->parsed())
-  {
-    if (!std::filesystem::exists(loadPath))
-    {
-      // TODO: Standard error dialog.
-      throw std::exception("File does not exist!");
-    }
-    if (ends_with(loadPath, ".fs")) {
-      if (!BurnStateLoad(ANSIToTCHAR(loadPath.data(), NULL, NULL), 1, &DrvInitCallback)) {
-        return 1;
-      }
-    }
-    else if (ends_with(loadPath, ".fr"))
-    {
-      if (!StartReplay(ANSIToTCHAR(loadPath.data(), NULL, NULL))) {
-        return 1;
-      }
-    }
-    else {
-      // Error dialog:
-      throw std::exception("File is not a state (.fs) or replay (.fr) file!");
-    }
-  }
 
   else {
     // Default, load a rom if set....
@@ -1204,28 +1184,47 @@ int ProcessCommandLine(LPSTR lpCmdLine)
         FBAPopupDisplay(PUF_TYPE_ERROR);
         return 1;
       }
+
     }
   }
 
-  // Enable memory recording / snapshot.
-  if (memOptions != "") {
-    throw runtime_error("Fuggedaboutit");
-    return 1;
+  // Record / Replay / State?
+  if (replayPath != "") {
+    if (!std::filesystem::exists(replayPath))
+    {
+      // TODO: DIALOG
+      throw runtime_error("replay file does not exist at path!");
+    }
 
-    //RecordMem = true;
+    auto szPath = ANSIToTCHAR(replayPath.data(), NULL, NULL);
+    int replayStarted = StartReplay(szPath);
+    if (replayStarted) {
+      return replayStarted;
+    }
+  }
+  else if (recordPath != "") {
+    throw runtime_error("not supported!");
+  }
+  else if (statePath != "") {
+    throw runtime_error("not supported!");
 
-    //// MemFilePath = memOptions;
-    //// Make the folder, etc.  TODO: This will use the memOptions in the future.
-    //CreateDirectory(_T("mem"), nullptr);
+    // OLD!
+    //if (!std::filesystem::exists(statePath))
+    //{
+    //  // TODO: Standard error dialog.
+    //  throw std::exception("File does not exist!");
+    //}
+    //if (ends_with(statePath, ".fs")) {
+    //  if (!BurnStateLoad(ANSIToTCHAR(statePath.data(), NULL, NULL), 1, &DrvInitCallback)) {
+    //    return 1;
+    //  }
+    //}
+    //else {
+    //  // Error dialog:
+    //  // TODO: Allow any old extension, as long as the file is of the correct format, it is OK!
+    //  throw std::exception("File is not a state (.fs) file!");
+    //}
 
-    //MemRecorder = new CMemRecorder(memOptions.data(), ERecordOptions::All);
-
-    // NOTE: This is where we would 
-    //// TEMP: Let's assume a dir, and make a sequential file name.
-    //WIN32_FIND_DATA wfd;
-    //memset(&wfd, 0, sizeof(WIN32_FIND_DATA));
-    //wchar_t szFindPath[MAX_PATH] = L"mem\\*.mem";
-    //HANDLE hFind = FindFirstFile(szFindPath, &wfd);
   }
 
   POST_INITIALISE_MESSAGE;
