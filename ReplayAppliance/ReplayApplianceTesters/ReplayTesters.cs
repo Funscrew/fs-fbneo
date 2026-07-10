@@ -41,7 +41,7 @@ namespace funscrewTesters
         GameName = TEST_GAME_NAME,
         MaxPlayerCount = 2,
         TotalInputSize = 2 * INPUT_SIZE
-      }, TEST_DATA_DIR, sessionId, true);
+      }, TEST_DATA_DIR, sessionId, TEST_GAME_NAME, true);
 
 
       // Add some inputs for the players...
