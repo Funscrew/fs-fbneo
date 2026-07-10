@@ -324,8 +324,8 @@ bool __cdecl ggpo_begin_game_callback(const char* name)
       }
     }
 
-    // NOTE: This is data that will have to be sent to the ReplayAppliance?  At least the game name?
     // regular savestate
+    // NOTE: That this can happen for ranked games as well....
     _stprintf(tfilename, _T("savestates\\%s_fbneo.fs"), tname);
     if (FindFirstFile(tfilename, &fd) != INVALID_HANDLE_VALUE) {
       // Load our save-state file (freeplay, event mode, etc.)

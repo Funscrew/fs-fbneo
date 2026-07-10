@@ -39,12 +39,9 @@ namespace funscrew
 
     private GameInput[] MergeBuffer = null;
 
-    // private Stream DataStream = null!;
     private CGameData GameData = default;
 
     private byte[] WriteBuffer = new byte[0x800];
-
-    //public string FilePath { get; private set; } = null!;
 
     public bool RecordingComplete { get; private set; } = false;
     public bool HasError { get { return ErrorReason != EErrorReason.None; } }
@@ -57,7 +54,7 @@ namespace funscrew
 
     // -----------------------------------------------------------------------------------------------------------------------
     // NOTE: In production environments, game data should not be allowed to be overwritten!
-    public unsafe GameRecorder(CGameData gameData_, string dataDir_, UInt64 sessionId_, bool overwriteExisting = false)
+    public unsafe GameRecorder(CGameData gameData_, string dataDir_, UInt64 sessionId_, string stateFileName, bool overwriteExisting = false)
     {
       GameData = gameData_;
       SessionId = sessionId_;
@@ -76,14 +73,20 @@ namespace funscrew
         throw new InvalidOperationException($"Data file for session id: {SessionId} already exists!");
       }
 
+      // NOTE: The emulator will run a lookup for the state file name.
+      // There are some weirdo rules / names for ranked / unranked even tho they don't appear to matter...
+      // Therefore, I am not going to include any directory information at this time....
+      // NOTE: There are a small handful of 'ranked' games like KOF97 that originall have both a '_fbneo' and a '_fbneo_ranked' version.
+      // I have no clue what the difference is, or how we might reliably detect it...
+      // Probably some kind of bullshit hard-coded lookup table?  Not really sure what to do about it long term....
+      // Maybe a game distribution system can figure it out?
+      var stateFilePathData = Encoding.UTF8.GetBytes(stateFileName);
 
-      
-      var stateFilePathData = Encoding.UTF8.GetBytes($"{GameData.GameName}.fs1");
-      fixed( byte* buffer = stateFilePathData ) {
-
+      fixed (byte* buffer = stateFilePathData)
+      {
         CGameState state = new CGameState();
         state.Type = (uint8_t)EGameStateType.GAMESTATE_TYPE_FILE;
-        state.StartFrame = 0;
+        state.StartFrame = 0;   // 0 == NOT SET.
         state.DataSize = (uint32_t)stateFilePathData.Length;
         state.Data = buffer;
 

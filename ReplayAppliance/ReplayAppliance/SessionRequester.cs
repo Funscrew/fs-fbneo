@@ -103,6 +103,7 @@ public class SessionOptions
 {
   public string GameName { get; set; }
   public string GameVersion { get; set; }
+  public bool IsRanked { get; set; } = false;
 
   /// <summary>
   /// NOTE: This says 'max player count', but is really the total count of expected players for the session.  When protocol gets updated, we can think about stuff like absolute max + players jumping in and out of a session.

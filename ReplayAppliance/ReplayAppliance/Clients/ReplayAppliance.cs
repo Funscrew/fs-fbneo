@@ -2,6 +2,7 @@
 using drewCo.Tools.Logging;
 using System.Diagnostics;
 using System.Net;
+using System.Text;
 
 namespace funscrew.Clients;
 
@@ -89,7 +90,9 @@ public class ReplayAppliance
         ++index;
       }
 
-      var recorder = new GameRecorder(gameData, Options.ReplayDataDir, sessionId, overwrite);
+      string stateFilePath = GetStateFilePath(gameData.GameName, sessOps.IsRanked);
+
+      var recorder = new GameRecorder(gameData, Options.ReplayDataDir, sessionId, stateFilePath, overwrite);
 
 
       // TODO: We can care about handling events later (maybe begingame), but the rest of these can be safely ignored!
@@ -107,6 +110,53 @@ public class ReplayAppliance
       ActiveSessions.Add(session);
 
       return session;
+    }
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  /// <summary>
+  /// HACK:
+  /// I got this by doing a dir on the savestates file from fbneo.
+  /// Ideally a per-game system would have an actual way to define this stuff properly.
+  /// </summary>
+  private static string[] RankedGameList = new[] {
+    "avengrgs",
+    "breakrev",
+    "doubledr",
+    "kof97",
+    "landmakr",
+    "neobombe",
+    "ninjamas",
+    "sfa3"
+  };
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private bool HasRankedStateFile(string gameName)
+  {
+    // TODO: We would have some kind of lookup table or otherwise....
+    bool res = RankedGameList.Contains(gameName);
+    return res;
+  }
+
+  // --------------------------------------------------------------------------------------------------------------------------
+  private string GetStateFilePath(string gameName, bool isRanked)
+  {
+    // HACK:
+    // This function is making a big assumption about the state files, and how they are named.
+    // Obviously this will only work for FBNEO, but we can figure out a better way in the future...
+    // NOTE: There are a small handful of 'ranked' games like KOF97 that originall have both a '_fbneo' and a '_fbneo_ranked' version.
+    // I have no clue what the difference is, or how we might reliably detect it...
+    // Probably some kind of bullshit hard-coded lookup table?  Not really sure what to do about it long term....
+    // Maybe a game distribution system can figure it out?
+    if (isRanked && HasRankedStateFile(gameName))
+    {
+      string res = $"{gameName}_fbneo_ranked.fs";
+      return res;
+    }
+    else
+    {
+      string res = $"{gameName}_fbneo.fs";
+      return res;
     }
   }
 

@@ -72,6 +72,8 @@ static INT32 RecordDialog();
 
 // burner_win32.h
 unsigned char nControls[INPUTSIZE];
+typedef std::filesystem::path iopath;
+
 
 // -------------------------------------------------------------------------------------------------------------------------
 void RecordInput(int packedInputSize)
@@ -470,20 +472,23 @@ INT32 StartReplay(const TCHAR* szFileName)
   StartFromReset(nullptr);
 
 
+  const size_t MAX_PATH_SIZE = 1024;
+
   if (state.Type == (uint8_t)EGameStateType::GAMESTATE_TYPE_FILE) {
-    char statePath[MAX_PATH];
-    state.GetDataAsString(statePath, MAX_PATH);
+
+    // NOTE: This is a UTF8 string!
+    char statePath[MAX_PATH_SIZE];
+    state.GetDataAsString(statePath, MAX_PATH_SIZE);
+
+    iopath dir = "savestates";
+    iopath finalPath = dir / statePath;
 
     // NOTE: Sprintf might also be a bad choice if UTF8 is involved.
     // NOTE: We can also check 'datasize' from the state information to do all this....
-    char fullPath[MAX_PATH];
-
-    // TEMP: This is to overcome a bug/typo in our example file.
-    int len = sprintf(fullPath, "savestates\\sfiii3nr1_fbneo.fs");
-    fullPath[len] = 0;
+    // char fullPath[MAX_PATH];
 
     // TODO: This is actually a UTF8 path, and we should convert it correctly!
-    auto szPath = ANSIToTCHAR(fullPath, NULL, NULL);
+    auto szPath = ANSIToTCHAR(finalPath.u8string().c_str(), NULL, NULL);
     if (!std::filesystem::exists(szPath)) {
       // TODO: Dialog
       throw runtime_error("STATE FILE does not exist at path!");
