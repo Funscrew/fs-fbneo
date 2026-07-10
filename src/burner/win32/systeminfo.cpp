@@ -1030,18 +1030,18 @@ static INT_PTR CALLBACK SysInfoProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM l
 
 						_stprintf(szChoice, _T("%s system information.txt"), szAppExeName);
 
-						memset(&ofn, 0, sizeof(ofn));
-						ofn.lStructSize = sizeof(ofn);
-						ofn.hwndOwner = hDlg;
-						ofn.lpstrFilter = szFilter;
-						ofn.lpstrFile = szChoice;
-						ofn.nMaxFile = sizeof(szChoice) / sizeof(TCHAR);
-						ofn.lpstrInitialDir = _T(".");
-						ofn.Flags = OFN_NOCHANGEDIR | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
-						ofn.lpstrDefExt = _T("txt");
-						ofn.lpstrTitle = FBALoadStringEx(hAppInst, IDS_DISK_SAVEREPORT, true);
+						memset(&openFileName, 0, sizeof(openFileName));
+						openFileName.lStructSize = sizeof(openFileName);
+						openFileName.hwndOwner = hDlg;
+						openFileName.lpstrFilter = szFilter;
+						openFileName.lpstrFile = szChoice;
+						openFileName.nMaxFile = sizeof(szChoice) / sizeof(TCHAR);
+						openFileName.lpstrInitialDir = _T(".");
+						openFileName.Flags = OFN_NOCHANGEDIR | OFN_HIDEREADONLY | OFN_OVERWRITEPROMPT;
+						openFileName.lpstrDefExt = _T("txt");
+						openFileName.lpstrTitle = FBALoadStringEx(hAppInst, IDS_DISK_SAVEREPORT, true);
 
-						if (GetSaveFileName(&ofn)) {
+						if (GetSaveFileName(&openFileName)) {
 							fp = _tfopen(szChoice, _T("wb"));
 						}
 					}

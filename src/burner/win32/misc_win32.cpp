@@ -169,7 +169,7 @@ void RegisterExtensions(bool bCreateKeys)
 {
 	HKEY myKeys[4];
 
-	TCHAR* myKeynames1[1] = { _T(".fr") };
+	TCHAR* myKeynames1[1] = { _T(REPLAY_EXT) };
 	TCHAR* myKeynames2[1] = { _T(".fs") };
 	TCHAR* myKeynames3[4] = { _T("FBAlpha"), _T("shell"), _T("open"), _T("command") };
 	TCHAR* myKeynames4[2] = { _T("FBAlpha"), _T("DefaultIcon") };

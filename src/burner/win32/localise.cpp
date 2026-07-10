@@ -1651,15 +1651,15 @@ static void MakeOfn()
 	_stprintf(szFilter, _T("%s"), FBALoadStringEx(hAppInst, IDS_LOCAL_FILTER, true));
 	memcpy(szFilter + _tcslen(szFilter), _T(" (*.flt)\0*.flt\0\0"), 16 * sizeof(TCHAR));
 
-	memset(&ofn, 0, sizeof(ofn));
-	ofn.lStructSize = sizeof(ofn);
-	ofn.hwndOwner = hScrnWnd;
-	ofn.lpstrFilter = szFilter;
-	ofn.lpstrFile = szChoice;
-	ofn.nMaxFile = sizeof(szChoice) / sizeof(TCHAR);
-	ofn.lpstrInitialDir = _T(".\\config\\localisation");
-	ofn.Flags = OFN_NOCHANGEDIR | OFN_HIDEREADONLY;
-	ofn.lpstrDefExt = _T("flt");
+	memset(&openFileName, 0, sizeof(openFileName));
+	openFileName.lStructSize = sizeof(openFileName);
+	openFileName.hwndOwner = hScrnWnd;
+	openFileName.lpstrFilter = szFilter;
+	openFileName.lpstrFile = szChoice;
+	openFileName.nMaxFile = sizeof(szChoice) / sizeof(TCHAR);
+	openFileName.lpstrInitialDir = _T(".\\config\\localisation");
+	openFileName.Flags = OFN_NOCHANGEDIR | OFN_HIDEREADONLY;
+	openFileName.lpstrDefExt = _T("flt");
 
 	return;
 }
@@ -1670,12 +1670,12 @@ int FBALocaliseLoadTemplate()
 	MakeOfn();
 	TCHAR szTitle[100];
 	_stprintf(szTitle, _T("%s"), FBALoadStringEx(hAppInst, IDS_LOCAL_SELECT, true));
-	ofn.lpstrTitle = szTitle;
-	ofn.Flags |= OFN_OVERWRITEPROMPT;
+	openFileName.lpstrTitle = szTitle;
+	openFileName.Flags |= OFN_OVERWRITEPROMPT;
 
 	int bOldPause = bRunPause;
 	bRunPause = 1;
-	int nRet = GetOpenFileName(&ofn);
+	int nRet = GetOpenFileName(&openFileName);
 	bRunPause = bOldPause;
 
 	if (nRet == 0) {
@@ -1691,12 +1691,12 @@ int FBALocaliseCreateTemplate()
 	MakeOfn();
 	TCHAR szTitle[100];
 	_stprintf(szTitle, _T("%s"), FBALoadStringEx(hAppInst, IDS_LOCAL_CREATE, true));
-	ofn.lpstrTitle = szTitle;
-	ofn.Flags |= OFN_OVERWRITEPROMPT;
+	openFileName.lpstrTitle = szTitle;
+	openFileName.Flags |= OFN_OVERWRITEPROMPT;
 
 	int bOldPause = bRunPause;
 	bRunPause = 1;
-	int nRet = GetSaveFileName(&ofn);
+	int nRet = GetSaveFileName(&openFileName);
 	bRunPause = bOldPause;
 
 	if (nRet == 0) {

@@ -2,15 +2,15 @@
 
 static void MakeOfn()
 {
-	memset(&ofn, 0, sizeof(ofn));
-	ofn.lStructSize = sizeof(ofn);
-	ofn.hwndOwner = hScrnWnd;
-	ofn.lpstrFilter = _T("FB Alpha skin files (*.bmp,*.png)\0*.bmp;*.png\0\0)");
-	ofn.lpstrFile = szChoice;
-	ofn.nMaxFile = sizeof(szChoice) / sizeof(TCHAR);
-	ofn.lpstrInitialDir = _T("");
-	ofn.Flags = OFN_NOCHANGEDIR | OFN_HIDEREADONLY;
-	ofn.lpstrDefExt = _T("png");
+	memset(&openFileName, 0, sizeof(openFileName));
+	openFileName.lStructSize = sizeof(openFileName);
+	openFileName.hwndOwner = hScrnWnd;
+	openFileName.lpstrFilter = _T("FB Alpha skin files (*.bmp,*.png)\0*.bmp;*.png\0\0)");
+	openFileName.lpstrFile = szChoice;
+	openFileName.nMaxFile = sizeof(szChoice) / sizeof(TCHAR);
+	openFileName.lpstrInitialDir = _T("");
+	openFileName.Flags = OFN_NOCHANGEDIR | OFN_HIDEREADONLY;
+	openFileName.lpstrDefExt = _T("png");
 	return;
 }
 
@@ -20,11 +20,11 @@ int SelectPlaceHolder()
 	int bOldPause;
 
 	MakeOfn();
-	ofn.lpstrTitle = FBALoadStringEx(hAppInst, IDS_PLACEHOLDER_LOAD, true);
+	openFileName.lpstrTitle = FBALoadStringEx(hAppInst, IDS_PLACEHOLDER_LOAD, true);
 
 	bOldPause = bRunPause;
 	bRunPause = 1;
-	nRet = GetOpenFileName(&ofn);
+	nRet = GetOpenFileName(&openFileName);
 	bRunPause = bOldPause;
 
 	if (nRet == 0) {		// Error

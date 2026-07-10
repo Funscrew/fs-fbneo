@@ -12,14 +12,14 @@ static bool bMemCardFC1Format;
 
 static int MakeOfn()
 {
-	memset(&ofn, 0, sizeof(ofn));
-	ofn.lStructSize = sizeof(ofn);
-	ofn.hwndOwner = hScrnWnd;
-	ofn.lpstrFile = szMemoryCardFile;
-	ofn.nMaxFile = sizeof(szMemoryCardFile);
-	ofn.lpstrInitialDir = _T(".");
-	ofn.Flags = OFN_NOCHANGEDIR | OFN_HIDEREADONLY;
-	ofn.lpstrDefExt = _T("fc");
+	memset(&openFileName, 0, sizeof(openFileName));
+	openFileName.lStructSize = sizeof(openFileName);
+	openFileName.hwndOwner = hScrnWnd;
+	openFileName.lpstrFile = szMemoryCardFile;
+	openFileName.nMaxFile = sizeof(szMemoryCardFile);
+	openFileName.lpstrInitialDir = _T(".");
+	openFileName.Flags = OFN_NOCHANGEDIR | OFN_HIDEREADONLY;
+	openFileName.lpstrDefExt = _T("fc");
 
 	return 0;
 }
@@ -165,13 +165,13 @@ int	MemCardCreate()
 
 	_stprintf (szMemoryCardFile, _T("memorycard"));
 	MakeOfn();
-	ofn.lpstrTitle = FBALoadStringEx(hAppInst, IDS_MEMCARD_CREATE, true);
-	ofn.lpstrFilter = szFilter;
-	ofn.Flags |= OFN_OVERWRITEPROMPT;
+	openFileName.lpstrTitle = FBALoadStringEx(hAppInst, IDS_MEMCARD_CREATE, true);
+	openFileName.lpstrFilter = szFilter;
+	openFileName.Flags |= OFN_OVERWRITEPROMPT;
 
 	int bOldPause = bRunPause;
 	bRunPause = 1;
-	nRet = GetSaveFileName(&ofn);
+	nRet = GetSaveFileName(&openFileName);
 	bRunPause = bOldPause;
 
 	if (nRet == 0) {
@@ -220,12 +220,12 @@ int	MemCardSelect()
 	memcpy(pszTemp, _T(" (MEMCARD.\?\?\?)\0MEMCARD.\?\?\?\0\0"), 28 * sizeof(TCHAR));
 
 	MakeOfn();
-	ofn.lpstrTitle = FBALoadStringEx(hAppInst, IDS_MEMCARD_SELECT, true);
-	ofn.lpstrFilter = szFilter;
+	openFileName.lpstrTitle = FBALoadStringEx(hAppInst, IDS_MEMCARD_SELECT, true);
+	openFileName.lpstrFilter = szFilter;
 
 	int bOldPause = bRunPause;
 	bRunPause = 1;
-	nRet = GetOpenFileName(&ofn);
+	nRet = GetOpenFileName(&openFileName);
 	bRunPause = bOldPause;
 
 	if (nRet == 0) {

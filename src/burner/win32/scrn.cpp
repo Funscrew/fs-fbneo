@@ -161,19 +161,19 @@ int CreateDatfileWindows(int bType)
 	_stprintf(szFilter, FBALoadStringEx(hAppInst, IDS_DISK_ALL_DAT, true), _T(APP_TITLE));
 	memcpy(szFilter + _tcslen(szFilter), _T(" (*.dat)\0*.dat\0\0"), 16 * sizeof(TCHAR));
 
-	memset(&ofn, 0, sizeof(ofn));
-	ofn.lStructSize = sizeof(ofn);
-	ofn.hwndOwner = hScrnWnd;
-	ofn.lpstrFilter = szFilter;
-	ofn.lpstrFile = szChoice;
-	ofn.nMaxFile = sizeof(szChoice) / sizeof(TCHAR);
-	ofn.lpstrInitialDir = _T(".");
-	ofn.Flags = OFN_NOCHANGEDIR | OFN_HIDEREADONLY;
-	ofn.lpstrDefExt = _T("dat");
-	ofn.lpstrTitle = szTitle;
-	ofn.Flags |= OFN_OVERWRITEPROMPT;
+	memset(&openFileName, 0, sizeof(openFileName));
+	openFileName.lStructSize = sizeof(openFileName);
+	openFileName.hwndOwner = hScrnWnd;
+	openFileName.lpstrFilter = szFilter;
+	openFileName.lpstrFile = szChoice;
+	openFileName.nMaxFile = sizeof(szChoice) / sizeof(TCHAR);
+	openFileName.lpstrInitialDir = _T(".");
+	openFileName.Flags = OFN_NOCHANGEDIR | OFN_HIDEREADONLY;
+	openFileName.lpstrDefExt = _T("dat");
+	openFileName.lpstrTitle = szTitle;
+	openFileName.Flags |= OFN_OVERWRITEPROMPT;
 
-	if (GetSaveFileName(&ofn) == 0)
+	if (GetSaveFileName(&openFileName) == 0)
 		return -1;
 
 	return create_datfile(szChoice, bType);
@@ -864,18 +864,18 @@ static void OnCommand(HWND /*hDlg*/, int id, HWND /*hwndCtl*/, UINT codeNotify)
 			TCHAR szTitle[100];
 			_stprintf(szTitle, _T("%s"), FBALoadStringEx(hAppInst, IDS_CD_SELECT_IMAGE_TITLE, true));
 			if (UseDialogs() && !bDrvOkay) {
-				memset(&ofn, 0, sizeof(ofn));
-				ofn.lStructSize = sizeof(ofn);
-				ofn.hwndOwner = hScrnWnd;
-				ofn.lpstrFile = StrReplace(CDEmuImage, _T('/'), _T('\\'));
-				ofn.nMaxFile = MAX_PATH;
-				ofn.lpstrTitle = szTitle;
-				ofn.lpstrFilter = szFilter;
-				ofn.lpstrInitialDir = _T(".");
-				ofn.Flags = OFN_NOCHANGEDIR | OFN_HIDEREADONLY;
-				ofn.lpstrDefExt = _T("cue");
+				memset(&openFileName, 0, sizeof(openFileName));
+				openFileName.lStructSize = sizeof(openFileName);
+				openFileName.hwndOwner = hScrnWnd;
+				openFileName.lpstrFile = StrReplace(CDEmuImage, _T('/'), _T('\\'));
+				openFileName.nMaxFile = MAX_PATH;
+				openFileName.lpstrTitle = szTitle;
+				openFileName.lpstrFilter = szFilter;
+				openFileName.lpstrInitialDir = _T(".");
+				openFileName.Flags = OFN_NOCHANGEDIR | OFN_HIDEREADONLY;
+				openFileName.lpstrDefExt = _T("cue");
 
-				GetOpenFileName(&ofn);
+				GetOpenFileName(&openFileName);
 			}
 			break;
 		}

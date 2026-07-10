@@ -141,7 +141,7 @@ extern int nEnableSOCD;
 
 // Used for the load/save dialog in commdlg.h
 extern TCHAR szChoice[MAX_PATH];					// File chosen by the user
-extern OPENFILENAME ofn;
+extern OPENFILENAME openFileName;
 
 // Used to convert strings when possibly needed
 /* const */ char* TCHARToANSI(const TCHAR* pszInString, char* pszOutString, int nOutSize);

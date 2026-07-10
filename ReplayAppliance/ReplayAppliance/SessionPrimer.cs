@@ -160,7 +160,7 @@ public class SessionPrimer : IDisposable
             {
               // NOTE: For convenience, I am using the FC replay extension here.
               Log.Info("Copying existing replay data...");
-              string uniquePath = FileTools.GetSequentialFileName(Options.ReplayDataDir, "replay", ".fr");
+              string uniquePath = FileTools.GetSequentialFileName(Options.ReplayDataDir, "replay", ".replay");
               File.Copy(replayPath, uniquePath, true);
             }
 

@@ -17,15 +17,15 @@ static void MakeOfn(TCHAR* pszFilter)
 		_stprintf(szChoice, _T("%s.wav"), BurnDrvGetText(DRV_NAME));
 	}
 
-	memset(&ofn, 0, sizeof(ofn));
-	ofn.lStructSize = sizeof(ofn);
-	ofn.hwndOwner = hScrnWnd;
-	ofn.lpstrFilter = pszFilter;
-	ofn.lpstrFile = szChoice;
-	ofn.nMaxFile = sizeof(szChoice) / sizeof(TCHAR);
-	ofn.lpstrInitialDir = NULL;// default "Documents" folder.. _T(".\\wav");
-	ofn.Flags = OFN_NOCHANGEDIR | OFN_HIDEREADONLY;
-	ofn.lpstrDefExt = _T("wav");
+	memset(&openFileName, 0, sizeof(openFileName));
+	openFileName.lStructSize = sizeof(openFileName);
+	openFileName.hwndOwner = hScrnWnd;
+	openFileName.lpstrFilter = pszFilter;
+	openFileName.lpstrFile = szChoice;
+	openFileName.nMaxFile = sizeof(szChoice) / sizeof(TCHAR);
+	openFileName.lpstrInitialDir = NULL;// default "Documents" folder.. _T(".\\wav");
+	openFileName.Flags = OFN_NOCHANGEDIR | OFN_HIDEREADONLY;
+	openFileName.lpstrDefExt = _T("wav");
 
 	return;
 }
@@ -84,7 +84,7 @@ int WaveLogStart()
 	MakeOfn(szFilter);
 	bOldPause = bRunPause;
 	bRunPause = 1;
-	nRet = GetSaveFileName(&ofn);
+	nRet = GetSaveFileName(&openFileName);
 	bRunPause = bOldPause;
 	if (nRet == 0) {
 		return 1;

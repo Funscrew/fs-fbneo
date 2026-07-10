@@ -8,17 +8,17 @@ int bDrvSaveAll = 0;
 static void MakeOfn(TCHAR* pszFilter)
 {
 	_stprintf(pszFilter, FBALoadStringEx(hAppInst, IDS_DISK_FILE_STATE, true), _T(APP_TITLE));
-	memcpy(pszFilter + _tcslen(pszFilter), _T(" (*.fs, *.fr)\0*.fs;*.fr\0\0"), 25 * sizeof(TCHAR));
+	memcpy(pszFilter + _tcslen(pszFilter), _T(" (*.fs, *.replay)\0*.fs;*.replay\0\0"), 25 * sizeof(TCHAR));
 
-	memset(&ofn, 0, sizeof(ofn));
-	ofn.lStructSize = sizeof(ofn);
-	ofn.hwndOwner = hScrnWnd;
-	ofn.lpstrFilter = pszFilter;
-	ofn.lpstrFile = szChoice;
-	ofn.nMaxFile = sizeof(szChoice) / sizeof(TCHAR);
-	ofn.lpstrInitialDir = _T(".\\savestates");
-	ofn.Flags = OFN_NOCHANGEDIR | OFN_HIDEREADONLY;
-	ofn.lpstrDefExt = _T("fs");
+	memset(&openFileName, 0, sizeof(openFileName));
+	openFileName.lStructSize = sizeof(openFileName);
+	openFileName.hwndOwner = hScrnWnd;
+	openFileName.lpstrFilter = pszFilter;
+	openFileName.lpstrFile = szChoice;
+	openFileName.nMaxFile = sizeof(szChoice) / sizeof(TCHAR);
+	openFileName.lpstrInitialDir = _T(".\\savestates");
+	openFileName.Flags = OFN_NOCHANGEDIR | OFN_HIDEREADONLY;
+	openFileName.lpstrDefExt = _T("fs");
 	return;
 }
 
@@ -105,11 +105,11 @@ int StatedLoad(int nSlot)
 			_stprintf(szChoice, _T("savestate"));
 		}
 		MakeOfn(szFilter);
-		ofn.lpstrTitle = FBALoadStringEx(hAppInst, IDS_STATE_LOAD, true);
+		openFileName.lpstrTitle = FBALoadStringEx(hAppInst, IDS_STATE_LOAD, true);
 
 		bOldPause = bRunPause;
 		bRunPause = 1;
-		nRet = GetOpenFileName(&ofn);
+		nRet = GetOpenFileName(&openFileName);
 		bRunPause = bOldPause;
 
 		if (nRet == 0) {		// Error
@@ -170,12 +170,12 @@ int StatedSave(int nSlot)
 			_stprintf(szChoice, _T("%s"), BurnDrvGetText(DRV_NAME));
 		}
 		MakeOfn(szFilter);
-		ofn.lpstrTitle = FBALoadStringEx(hAppInst, IDS_STATE_SAVE, true);
-		ofn.Flags |= OFN_OVERWRITEPROMPT;
+		openFileName.lpstrTitle = FBALoadStringEx(hAppInst, IDS_STATE_SAVE, true);
+		openFileName.Flags |= OFN_OVERWRITEPROMPT;
 
 		bOldPause = bRunPause;
 		bRunPause = 1;
-		nRet = GetSaveFileName(&ofn);
+		nRet = GetSaveFileName(&openFileName);
 		bRunPause = bOldPause;
 
 		if (nRet == 0) {		// Error

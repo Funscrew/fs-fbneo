@@ -71,7 +71,7 @@ CMemRecorder* MemRecorder = nullptr;
 // REFACTOR / HACK:
 // Don't use the same variable for filenames all over the system!  BAD DESIGN!
 TCHAR szChoice[MAX_PATH] = _T("");
-OPENFILENAME ofn;
+OPENFILENAME openFileName;
 
 #if defined (UNICODE)
 char* TCHARToANSI(const TCHAR* pszInString, char* pszOutString, int nOutSize)

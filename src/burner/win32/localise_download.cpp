@@ -80,19 +80,19 @@ static int LocaliseDownloadOkay()
 	_stprintf(szFilter, FBALoadStringEx(hAppInst, IDS_LOCAL_GL_FILTER, true));
 	memcpy(szFilter + _tcslen(szFilter), _T(" (*.flt)\0*.flt\0\0"), 16 * sizeof(TCHAR));
 
-	memset(&ofn, 0, sizeof(ofn));
-	ofn.lStructSize = sizeof(ofn);
-	ofn.hwndOwner = hScrnWnd;
-	ofn.lpstrFilter = szFilter;
-	ofn.lpstrFile = szChoice;
-	ofn.nMaxFile = sizeof(szChoice) / sizeof(TCHAR);
-	ofn.lpstrInitialDir = _T(".\\config\\localisation");
-	ofn.Flags = OFN_NOCHANGEDIR | OFN_HIDEREADONLY;
-	ofn.lpstrDefExt = _T("dat");
-	ofn.lpstrTitle = szTitle;
-	ofn.Flags |= OFN_OVERWRITEPROMPT;
+	memset(&openFileName, 0, sizeof(openFileName));
+	openFileName.lStructSize = sizeof(openFileName);
+	openFileName.hwndOwner = hScrnWnd;
+	openFileName.lpstrFilter = szFilter;
+	openFileName.lpstrFile = szChoice;
+	openFileName.nMaxFile = sizeof(szChoice) / sizeof(TCHAR);
+	openFileName.lpstrInitialDir = _T(".\\config\\localisation");
+	openFileName.Flags = OFN_NOCHANGEDIR | OFN_HIDEREADONLY;
+	openFileName.lpstrDefExt = _T("dat");
+	openFileName.lpstrTitle = szTitle;
+	openFileName.Flags |= OFN_OVERWRITEPROMPT;
 
-	if (GetSaveFileName(&ofn) == 0)	return 1;
+	if (GetSaveFileName(&openFileName) == 0)	return 1;
 
 	FILE *fFlt = NULL;
 

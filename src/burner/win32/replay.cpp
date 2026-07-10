@@ -275,6 +275,7 @@ INT32 ReplayInput()
   //// Just to be safe?  I guess there is some concern that some other step in the process
   //// is corrupting the inputs, but.... we are setting them again in the next block.....
   //// This code may not be needed...
+  // @@AAR: 7.10.2026 - I am going to delete this block in the next version or so....
   //for (UINT32 i = 0; i < nGameInpCount; i++) {
   //  BurnDrvGetInputInfo(&bii, i);
   //  if (bii.pVal) {
@@ -324,20 +325,20 @@ INT32 ReplayInput()
   return 0;
 }
 
-static void MakeOfn(TCHAR* pszFilter)
+static void MakeOpenFileName(TCHAR* pszFilter)
 {
   _stprintf(pszFilter, FBALoadStringEx(hAppInst, IDS_DISK_FILE_REPLAY, true), _T(APP_TITLE));
-  memcpy(pszFilter + _tcslen(pszFilter), _T(" (*.fr)\0*.fr\0\0"), 14 * sizeof(TCHAR));
+  memcpy(pszFilter + _tcslen(pszFilter), _T(" (*.replay)\0*.replay\0\0"), 22 * sizeof(TCHAR));
 
-  memset(&ofn, 0, sizeof(ofn));
-  ofn.lStructSize = sizeof(ofn);
-  ofn.hwndOwner = hScrnWnd;
-  ofn.lpstrFilter = pszFilter;
-  ofn.lpstrFile = szChoice;
-  ofn.nMaxFile = sizeof(szChoice) / sizeof(TCHAR);
-  ofn.lpstrInitialDir = _T(".\\recordings");
-  ofn.Flags = OFN_NOCHANGEDIR | OFN_HIDEREADONLY;
-  ofn.lpstrDefExt = _T("fr");
+  memset(&openFileName, 0, sizeof(openFileName));
+  openFileName.lStructSize = sizeof(openFileName);
+  openFileName.hwndOwner = hScrnWnd;
+  openFileName.lpstrFilter = pszFilter;
+  openFileName.lpstrFile = szChoice;
+  openFileName.nMaxFile = sizeof(szChoice) / sizeof(TCHAR);
+  openFileName.lpstrInitialDir = _T(".\\recordings");
+  openFileName.Flags = OFN_NOCHANGEDIR | OFN_HIDEREADONLY;
+  openFileName.lpstrDefExt = _T("fr");
 
   return;
 }
@@ -511,42 +512,6 @@ INT32 StartReplay(const TCHAR* szFileName)
   MenuEnableItems();
 
   return 0;
-
-  // TotalInputSize = _ReplayFile->TotalInputSize();
-
-  // NOTE: We are not taking the legacy approach of setting the inputs here.
-  // I don't think that it should be necessary, but I guess we will find out!
-
-  //// LEGACY:  This is setting the initial value of the inputs... is it for frame #1?  I think so since
-  //struct BurnInputInfo bii;
-  //memset(&bii, 0, sizeof(bii));
-  // LoadCompressedFile();
-  // it is also assigning 'nprevinputs'...
-  //// I guess that this is required for proper playback in the old system....
-  //// Get the baseline
-  //for (UINT32 i = 0; i < nGameInpCount; i++) {
-  //  BurnDrvGetInputInfo(&bii, i);
-  //  if (bii.pVal) {
-  //    if (bii.nType & BIT_GROUP_ANALOG) {
-  //      *bii.pShortVal = nPrevInputs[i] = (DecodeBuffer() << 8) | DecodeBuffer();
-
-  //    }
-  //    else {
-  //      *bii.pVal = nPrevInputs[i] = DecodeBuffer();
-  //    }
-  //  }
-  //  else {
-  //    DecodeBuffer();
-  //  }
-  //}
-
-
-
-//#ifdef FBNEO_DEBUG
-//  debugPrintf(_T("*** Replay of file %s started.\n"), szChoice);
-//#endif
-//
-//  return 0;
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
@@ -560,48 +525,6 @@ static void CloseRecord()
   delete(_GameRecorder);
   _GameRecorder = nullptr;
 
-  // LEGACY:
-  // WriteCompressedFile();
-
-  //fseek(fp, 0, SEEK_END);
-  //INT32 nMetadataOffset = ftell(fp);
-  //INT32 nChunkSize = ftell(fp) - 4 - nSizeOffset;		// Fill in chunk size and no of recorded frames
-  //fseek(fp, nSizeOffset, SEEK_SET);
-  //fwrite(&nChunkSize, 1, 4, fp);
-  //fwrite(&nFrames, 1, 4, fp);
-  //fwrite(&nReplayUndoCount, 1, 4, fp);
-
-  //// NOTE: chunk should be aligned here, since the compressed
-  //// file code writes 4 bytes at a time
-
-  //// write metadata
-  //INT32 nMetaLen = wcslen(wszMetadata);
-  //if (nMetaLen > 0) {
-  //  fseek(fp, nMetadataOffset, SEEK_SET);
-  //  const char szChunkHeader[] = "FRM1";
-  //  fwrite(szChunkHeader, 1, 4, fp);
-  //  INT32 nMetaSize = nMetaLen * 2;
-  //  fwrite(&nMetaSize, 1, 4, fp);
-  //  UINT8* metabuf = (UINT8*)malloc(nMetaSize);
-  //  INT32 i;
-  //  for (i = 0; i < nMetaLen; ++i) {
-  //    metabuf[i * 2 + 0] = wszMetadata[i] & 0xff;
-  //    metabuf[i * 2 + 1] = (wszMetadata[i] >> 8) & 0xff;
-  //  }
-  //  fwrite(metabuf, 1, nMetaSize, fp);
-  //  free(metabuf);
-  //}
-
-  //fclose(fp);
-  //fp = NULL;
-  //if (bReplayDontClose) {
-  //  if (!StartReplay(szCurrentMovieFilename)) return;
-  //}
-}
-
-// -------------------------------------------------------------------------------------------------------------------------
-static void CloseReplay()
-{
 }
 
 // -------------------------------------------------------------------------------------------------------------------------
@@ -619,8 +542,6 @@ void StopReplay()
 #ifdef FBNEO_DEBUG
       debugPrintf(_T(" ** Replay stopped, replayed %d frames.\n"), GetCurrentFrame() - nStartFrame);
 #endif
-
-      CloseReplay();
     }
     nReplayStatus = REPLAY_STATUS_NONE;
     nStartFrame = 0;
@@ -925,7 +846,7 @@ void DisplayReplayProperties(HWND hDlg, bool bClear)
 static BOOL CALLBACK ReplayDialogProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM)
 {
   if (Msg == WM_INITDIALOG) {
-    wchar_t szFindPath[MAX_PATH] = L"recordings\\*.fr";
+    wchar_t szFindPath[MAX_PATH] = L"recordings\\*.replay";
     WIN32_FIND_DATA wfd;
     HANDLE hFind;
     INT32 i = 0;
@@ -934,7 +855,7 @@ static BOOL CALLBACK ReplayDialogProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM
 
     memset(&wfd, 0, sizeof(WIN32_FIND_DATA));
     if (bDrvOkay) {
-      _stprintf(szFindPath, _T("recordings\\%s*.fr"), BurnDrvGetText(DRV_NAME));
+      _stprintf(szFindPath, _T("recordings\\%s*.replay"), BurnDrvGetText(DRV_NAME));
     }
 
     hFind = FindFirstFile(szFindPath, &wfd);
@@ -984,11 +905,11 @@ static BOOL CALLBACK ReplayDialogProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM
         LONG lIndex = SendDlgItemMessage(hDlg, IDC_CHOOSE_LIST, CB_GETCURSEL, 0, 0);
         if (lIndex != CB_ERR) {
           if (lIndex == lCount - 1) {
-            MakeOfn(szFilter);
-            ofn.lpstrTitle = FBALoadStringEx(hAppInst, IDS_REPLAY_REPLAY, true);
+            MakeOpenFileName(szFilter);
+            openFileName.lpstrTitle = FBALoadStringEx(hAppInst, IDS_REPLAY_REPLAY, true);
             //ofn.Flags &= ~OFN_HIDEREADONLY;
 
-            INT32 nRet = GetOpenFileName(&ofn); // Browse...
+            INT32 nRet = GetOpenFileName(&openFileName); // Browse...
             if (nRet != 0) {
               LONG lOtherIndex = SendDlgItemMessage(hDlg, IDC_CHOOSE_LIST, CB_FINDSTRING, (WPARAM)-1, (LPARAM)szChoice);
               if (lOtherIndex != CB_ERR) {
@@ -1002,7 +923,7 @@ static BOOL CALLBACK ReplayDialogProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM
               // restore focus to the dialog
               SetFocus(GetDlgItem(hDlg, IDC_CHOOSE_LIST));
               DisplayReplayProperties(hDlg, false);
-              if (ofn.Flags & OFN_READONLY || bReplayReadOnly) {
+              if (openFileName.Flags & OFN_READONLY || bReplayReadOnly) {
                 SendDlgItemMessage(hDlg, IDC_READONLY, BM_SETCHECK, BST_CHECKED, 0);
               }
               else {
@@ -1082,10 +1003,10 @@ static BOOL CALLBACK RecordDialogProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM
     wchar_t szFilename[MAX_PATH];
 
     INT32 i = 0;
-    _stprintf(szFilename, _T("%s.fr"), BurnDrvGetText(DRV_NAME));
+    _stprintf(szFilename, _T("%s.replay"), BurnDrvGetText(DRV_NAME));
     wcscpy(szPath, szFilename);
     while (VerifyRecordingAccessMode(szPath, 0) == 1) {
-      _stprintf(szFilename, _T("%s-%d.fr"), BurnDrvGetText(DRV_NAME), ++i);
+      _stprintf(szFilename, _T("%s-%d.replay"), BurnDrvGetText(DRV_NAME), ++i);
       wcscpy(szPath, szFilename);
     }
 
@@ -1109,10 +1030,10 @@ static BOOL CALLBACK RecordDialogProc(HWND hDlg, UINT Msg, WPARAM wParam, LPARAM
       case IDC_BROWSE:
       {
         _stprintf(szChoice, _T("%s"), BurnDrvGetText(DRV_NAME));
-        MakeOfn(szFilter);
-        ofn.lpstrTitle = FBALoadStringEx(hAppInst, IDS_REPLAY_RECORD, true);
-        ofn.Flags |= OFN_OVERWRITEPROMPT;
-        INT32 nRet = GetSaveFileName(&ofn);
+        MakeOpenFileName(szFilter);
+        openFileName.lpstrTitle = FBALoadStringEx(hAppInst, IDS_REPLAY_RECORD, true);
+        openFileName.Flags |= OFN_OVERWRITEPROMPT;
+        INT32 nRet = GetSaveFileName(&openFileName);
         if (nRet != 0) {
           // this should trigger an EN_CHANGE message
           SetDlgItemText(hDlg, IDC_FILENAME, szChoice);

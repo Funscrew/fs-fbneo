@@ -142,15 +142,15 @@ static void MakeOfn()
 	_stprintf(szFilter, _T("%s"), FBALoadStringEx(hAppInst, IDS_LOCAL_GL_FILTER, true));
 	memcpy(szFilter + _tcslen(szFilter), _T(" (*.glt)\0*.glt\0\0"), 16 * sizeof(TCHAR));
 
-	memset(&ofn, 0, sizeof(ofn));
-	ofn.lStructSize = sizeof(ofn);
-	ofn.hwndOwner = hScrnWnd;
-	ofn.lpstrFilter = szFilter;
-	ofn.lpstrFile = szGamelistLocalisationTemplate;
-	ofn.nMaxFile = sizeof(szGamelistLocalisationTemplate) / sizeof(TCHAR);
-	ofn.lpstrInitialDir = _T(".\\config\\localisation");
-	ofn.Flags = OFN_NOCHANGEDIR | OFN_HIDEREADONLY;
-	ofn.lpstrDefExt = _T("glt");
+	memset(&openFileName, 0, sizeof(openFileName));
+	openFileName.lStructSize = sizeof(openFileName);
+	openFileName.hwndOwner = hScrnWnd;
+	openFileName.lpstrFilter = szFilter;
+	openFileName.lpstrFile = szGamelistLocalisationTemplate;
+	openFileName.nMaxFile = sizeof(szGamelistLocalisationTemplate) / sizeof(TCHAR);
+	openFileName.lpstrInitialDir = _T(".\\config\\localisation");
+	openFileName.Flags = OFN_NOCHANGEDIR | OFN_HIDEREADONLY;
+	openFileName.lpstrDefExt = _T("glt");
 
 	return;
 }
@@ -161,12 +161,12 @@ int FBALocaliseGamelistLoadTemplate()
 	MakeOfn();
 	TCHAR szTitle[100];
 	_stprintf(szTitle, _T("%s"), FBALoadStringEx(hAppInst, IDS_LOCAL_GL_SELECT, true));
-	ofn.lpstrTitle = szTitle;
-	ofn.Flags |= OFN_OVERWRITEPROMPT;
+	openFileName.lpstrTitle = szTitle;
+	openFileName.Flags |= OFN_OVERWRITEPROMPT;
 
 	int bOldPause = bRunPause;
 	bRunPause = 1;
-	int nRet = GetOpenFileName(&ofn);
+	int nRet = GetOpenFileName(&openFileName);
 	bRunPause = bOldPause;
 
 	if (nRet == 0) {
@@ -185,12 +185,12 @@ int FBALocaliseGamelistCreateTemplate()
 	MakeOfn();
 	TCHAR szTitle[100];
 	_stprintf(szTitle, _T("%s"), FBALoadStringEx(hAppInst, IDS_LOCAL_GL_CREATE, true));
-	ofn.lpstrTitle = szTitle;
-	ofn.Flags |= OFN_OVERWRITEPROMPT;
+	openFileName.lpstrTitle = szTitle;
+	openFileName.Flags |= OFN_OVERWRITEPROMPT;
 
 	int bOldPause = bRunPause;
 	bRunPause = 1;
-	int nRet = GetSaveFileName(&ofn);
+	int nRet = GetSaveFileName(&openFileName);
 	bRunPause = bOldPause;
 
 	if (nRet == 0) {

@@ -29,6 +29,10 @@
 #include "title.h"
 #include "burn.h"
 
+
+#define REPLAY_EXT ".fr"
+#define STATE_EXT ".fs"
+
 // ---------------------------------------------------------------------------
 // OS dependent functionality
 typedef struct tagIMAGE {
