@@ -124,6 +124,8 @@ public class ReplaySession : IGGPOClient
   // --------------------------------------------------------------------------------------------------------------------------
   public void AddConnection(GGPOEndpoint endpoint)
   {
+    Log.Info($"Adding a connection on session:{this.SessionId} from: {endpoint.RemoteIP}");
+
     lock (ConnectionLock)
     {
       if (this.SessionId != endpoint.SessionId)

@@ -82,6 +82,8 @@ namespace funscrew
       // Maybe a game distribution system can figure it out?
       var stateFilePathData = Encoding.UTF8.GetBytes(stateFileName);
 
+      Log.Info("going to make a replay file.....");
+
       fixed (byte* buffer = stateFilePathData)
       {
         CGameState state = new CGameState();
@@ -98,6 +100,7 @@ namespace funscrew
         stateFilePathData = null;
       }
 
+      Log.Info("created the replay file.....");
 
 
 

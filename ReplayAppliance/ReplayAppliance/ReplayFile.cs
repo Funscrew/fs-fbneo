@@ -28,11 +28,8 @@ public class ReplayFile : IDisposable
   unsupported OS....  check .csproj to add support
 #endif
 
-  //[DllImport("NetcodeCore.dll", CallingConvention = CallingConvention.Cdecl)]
-  //private static extern IntPtr ReplayFile_OpenRead([MarshalAs(UnmanagedType.LPUTF8Str)] string path);
-
   [DllImport(LIB_NAME, EntryPoint = "ReplayFile_OpenWrite", CallingConvention = CallingConvention.Cdecl)]
-  private static extern int ReplayFile_OpenWrite(ref CGameData gameData, IntPtr gameState, byte[] path, ref IntPtr replayFile);
+  private static extern unsafe int ReplayFile_OpenWrite(ref CGameData gameData, ref CGameState gameState, byte[] path, ref IntPtr replayFile);
 
   [DllImport(LIB_NAME, EntryPoint = "ReplayFile_OpenRead", CallingConvention = CallingConvention.Cdecl)]
   private static extern int ReplayFile_OpenRead(byte[] path, ref IntPtr replayFile);
@@ -93,25 +90,23 @@ public class ReplayFile : IDisposable
   /// <summary>
   /// Open a replay file for writing at the given path, using given data + state.
   /// </summary>
-  public ReplayFile(string path_, CGameData gameData_, CGameState? state)
+  public ReplayFile(string path_, CGameData gameData_, CGameState state)
   {
     _GameData = gameData_;
 
     Path = path_;
 
-    byte[] usePath = Encoding.UTF8.GetBytes(Path);
-    GCHandle gch = GCHandle.Alloc(state, GCHandleType.Pinned);
-    IntPtr useState = gch.AddrOfPinnedObject();
+    byte[] pathBytes = Encoding.UTF8.GetBytes(Path + '\0');
 
-    try
-    {
-      int code = ReplayFile_OpenWrite(ref _GameData, useState, usePath, ref this.ReplayHandle);
-      ThrowIfNotOK(code);
-    }
-    finally
-    {
-      gch.Free();
-    }
+    Log.Info("opening the file...");
+
+    int code = ReplayFile_OpenWrite(ref _GameData, ref state, pathBytes, ref this.ReplayHandle);
+
+    Log.Info($"replay handle is: {this.ReplayHandle.ToInt64()}");
+    Log.Info($"Made the file, code is: {code}");
+
+    ThrowIfNotOK(code);
+
 
     IsModeWrite = true;
   }
@@ -202,7 +197,8 @@ public class ReplayFile : IDisposable
   {
     Debug.Assert(message != null);
 
-    if (ReplayHandle == IntPtr.Zero) { 
+    if (ReplayHandle == IntPtr.Zero)
+    {
       Log.Warning($"The replay handle is null! TID: {Thread.CurrentThread.ManagedThreadId}");
       return;
     }

@@ -173,8 +173,10 @@ namespace funscrewTesters
       const string CHAT_MSG_2 = "Their Message!";
 
 
+      var gameState = new CGameState();
+      gameState.Type = (uint8_t)EGameStateType.GAMESTATE_TYPE_NONE;
 
-      using (var replay = new ReplayFile(testPath, gameData, null))
+      using (var replay = new ReplayFile(testPath, gameData, gameState))
       {
         Console.WriteLine($"The file is open for write at:  {Path.GetFullPath(testPath)}");
 
