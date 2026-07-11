@@ -4,7 +4,7 @@ using drewCo.Tools.Logging;
 using funscrew.Clients;
 using System.Diagnostics;
 using System.Linq;
-using System.Net.WebSockets; 
+using System.Net.WebSockets;
 using System.Runtime.InteropServices;
 
 namespace funscrew;
@@ -52,7 +52,6 @@ public partial class Program
   {
     InitLogging();
 
-
     Log.Info("Welcome to ReplayAppliance");
 
     int res = Parser.Default.ParseArguments<SessionRequestOptions, ReplayOptions, InputEchoOptions>(args).MapResult(
@@ -69,6 +68,8 @@ public partial class Program
     {
       return res;
     }
+
+    return res;
 
     // NOTE: This is pretty much how echo client / replay appliance would work.
     InitializeClient();
@@ -176,27 +177,40 @@ public partial class Program
   // --------------------------------------------------------------------------------------------------------------------------
   private static int RunReplayAppliance(ReplayOptions ops)
   {
-    Log.Info("Setting up replay appliance...");
-
-    var udp = new UdpBlaster(ops.ReplayPort, UdpBlaster.ONE_SECOND);
-    ReplayAppliance replayAppliance = new ReplayAppliance(ops, udp, new ClockTimer());
-    Task raWorkTask = replayAppliance.BeginWork();
-
-    var sp = new SessionPrimer(ops, replayAppliance);
-
-    Console.CancelKeyPress += (s, e) =>
+    try
     {
-      sp.EndListen();
-      replayAppliance.EndWork();
-    };
+      Log.Info("Setting up replay appliance...");
 
-    // Session Primer looks for TCP traffic to begin new sessions.
-    Task[] fdTasks = sp.BeginListen();
+      var udp = new UdpBlaster(ops.ReplayPort, UdpBlaster.ONE_SECOND);
+      ReplayAppliance replayAppliance = new ReplayAppliance(ops, udp, new ClockTimer());
+      Task raWorkTask = replayAppliance.BeginWork();
 
-    // UUUUUUUUUUgly
-    Task.WaitAll(fdTasks.Concat(new[] { raWorkTask }).ToArray());
+      var sp = new SessionPrimer(ops, replayAppliance);
 
-    return 0;
+      Console.CancelKeyPress += (s, e) =>
+      {
+        sp.EndListen();
+        replayAppliance.EndWork();
+      };
+
+      // Session Primer looks for TCP traffic to begin new sessions.
+      Task[] fdTasks = sp.BeginListen();
+
+      // UUUUUUUUUUgly
+      var allTasks = fdTasks.Concat(new[] { raWorkTask }).ToArray();
+
+      Task.WaitAll(allTasks);
+
+      Log.Info("Everything is now donw!");
+
+      return 0;
+    }
+    catch (Exception ex)
+    {
+      int x = 10;
+      throw;
+    }
+
   }
 
 

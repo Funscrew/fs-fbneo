@@ -28,8 +28,9 @@ public class ReplayAppliance
 
   private ReplayOptions Options = null!;
 
-  private CancellationTokenSource CTSource = new CancellationTokenSource();
-  private CancellationToken CancelToken = default!;
+  //private CancellationTokenSource CTSource = new CancellationTokenSource();
+  //private CancellationToken CancelToken = default!;
+
 
   private IClockSource Clock = null!;
   public IUdpBlaster UDP { get; private set; } = null!;
@@ -40,14 +41,14 @@ public class ReplayAppliance
   private const milliseconds UPDATE_INTERVAL = 20;
   private long LastUpdateTime = 0;
 
+  public bool IsWorking { get; private set; } = true;
+
   // --------------------------------------------------------------------------------------------------------------------------
   public ReplayAppliance(ReplayOptions ops_, IUdpBlaster udp_, IClockSource clock_)
   {
     Options = ops_;
     UDP = udp_;
     Clock = clock_;
-
-    CancelToken = CTSource.Token;
 
     if (string.IsNullOrWhiteSpace(Options.ReplayDataDir))
     {
@@ -163,16 +164,12 @@ public class ReplayAppliance
   // --------------------------------------------------------------------------------------------------------------------------
   public void Update()
   {
-    // TODO: Some kind of completion flag here......
-    // if (IsComplete) { return; }
-
     lock (SessionLock)
     {
       // FIX: This is going to create garbage....
       EndPoint ep = new IPEndPoint(IPAddress.Any, 0);//  default!;
 
-      // This is a blocking call!
-      while (true)
+      while (IsWorking)
       {
         int received = UDP.Receive(_ReceiveBuffer, ref ep);
         if (received == 0)
@@ -263,12 +260,10 @@ public class ReplayAppliance
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
+  private object WorkLock = new object();
   public void EndWork()
   {
-    if (!CTSource.IsCancellationRequested)
-    {
-      CTSource.Cancel();
-    }
+    IsWorking = false;
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
@@ -279,12 +274,13 @@ public class ReplayAppliance
     {
       Log.Info("Starting ReplayAppliance update loop.");
 
-      while (!CancelToken.IsCancellationRequested)
+      while (IsWorking)
       {
         this.Update();
       }
 
-    }, CancelToken);
+      int x = 10;
+    });
 
     return res;
   }

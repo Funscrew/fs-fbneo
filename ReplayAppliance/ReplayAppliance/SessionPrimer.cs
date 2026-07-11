@@ -18,18 +18,17 @@ public class SessionPrimer : IDisposable
 
   public ReplayOptions Options { get; private set; }
 
-  private CancellationTokenSource CTSource = default!;
-  private CancellationToken CancelToken = default!;
   private TcpListener Listener = null!;
   protected ReplayAppliance ReplayAppliance = null!;
   private SessionIDGenerator IDGenerator = new SessionIDGenerator();
+
+  public bool IsWorking { get; set; } = true;
+  public void CancelWork() { this.IsWorking = false; }
 
   // --------------------------------------------------------------------------------------------------------------------------
   public SessionPrimer(ReplayOptions options_, ReplayAppliance replayAppliance_)
   {
     Options = options_;
-    CTSource = new CancellationTokenSource();
-    CancelToken = CTSource.Token;
     ReplayAppliance = replayAppliance_;
   }
 
@@ -51,7 +50,7 @@ public class SessionPrimer : IDisposable
       Listener = new TcpListener(IPAddress.Any, Options.ServicePort);
       Listener.Start();
 
-      while (!this.CancelToken.IsCancellationRequested)
+      while (this.IsWorking)
       {
 
         try
@@ -88,7 +87,7 @@ public class SessionPrimer : IDisposable
         catch (SocketException sex)
         {
           // This is the expected behaviour.
-          if (this.CancelToken.IsCancellationRequested)
+          if (!IsWorking)
           {
             Log.Info("Shutdown complete!");
           }
@@ -101,10 +100,11 @@ public class SessionPrimer : IDisposable
         catch (Exception ex)
         {
           Log.Info($"Error: {ex.Message}");
+          EndListen();
         }
       }
 
-    }, this.CancelToken);
+    });
 
     int len = testMonitor != null ? 2 : 1;
     var res = new Task[len];
@@ -131,54 +131,66 @@ public class SessionPrimer : IDisposable
       Log.Info("Setting up test session monitor!");
       testTask = Task.Factory.StartNew(() =>
       {
-        while (!this.CancelToken.IsCancellationRequested)
+        try
         {
-          const int CHECK_DELAY = 1000;
-
-          // This is a pretty crunchy way to do it, but every second we will check to see if the test session is running.
-          // If not, then we will start it up.
-          // We could also do an event based approach, but this will be OK!
-          Thread.Sleep(CHECK_DELAY);
-
-          if (activeSession != null)
+          while (this.IsWorking)
           {
-            if (activeSession.IsComplete)
-            {
-              Log.Info("The test session is marked as complete!  We will restart it!");
+            const int CHECK_DELAY = 1000;
 
-              // TODO: Cleanup, replay file copies, etc.
-              activeSession = null;
+            // This is a pretty crunchy way to do it, but every second we will check to see if the test session is running.
+            // If not, then we will start it up.
+            // We could also do an event based approach, but this will be OK!
+            Thread.Sleep(CHECK_DELAY);
+
+            if (activeSession != null)
+            {
+              if (activeSession.IsComplete)
+              {
+                Log.Info("The test session is marked as complete!  We will restart it!");
+
+                // TODO: Cleanup, replay file copies, etc.
+                activeSession = null;
+              }
+            }
+
+            if (activeSession == null)
+            {
+              // Check for + copy any output replay file first.
+              string replayPath = Path.Combine(Options.ReplayDataDir, $"{GGPOConsts.TEST_SESSION_ID}.replay");
+
+              if (File.Exists(replayPath))
+              {
+                // NOTE: For convenience, I am using the FC replay extension here.
+                Log.Info("Copying existing replay data...");
+                string uniquePath = FileTools.GetSequentialFileName(Options.ReplayDataDir, "replay", ".replay");
+                File.Copy(replayPath, uniquePath, true);
+              }
+
+              activeSession = BeginSession(GGPOConsts.TEST_SESSION_ID, new SessionOptions()
+              {
+                GameName = "sfiii3nr1",
+                GameVersion = "123-a",
+                PlayerNames = new string[] { "Joe", "Archie" },
+                MaxPlayerCount = 2,
+                TotalInputSize = 10,
+                ConnectTimeout = GGPOConsts.DEFAULT_CONNECT_TIMEOUT      // A very long timeout period is OK!
+              });
             }
           }
 
-          if (activeSession == null)
-          {
-            // Check for + copy any output replay file first.
-            string replayPath = Path.Combine(Options.ReplayDataDir, $"{GGPOConsts.TEST_SESSION_ID}.replay");
+          Log.Info("Test session monitor is complete....");
 
-            if (File.Exists(replayPath))
-            {
-              // NOTE: For convenience, I am using the FC replay extension here.
-              Log.Info("Copying existing replay data...");
-              string uniquePath = FileTools.GetSequentialFileName(Options.ReplayDataDir, "replay", ".replay");
-              File.Copy(replayPath, uniquePath, true);
-            }
-
-            activeSession = BeginSession(GGPOConsts.TEST_SESSION_ID, new SessionOptions()
-            {
-              GameName = "sfiii3nr1",
-              GameVersion = "123-a",
-              PlayerNames = new string[] { "Joe", "Archie" },
-              MaxPlayerCount = 2,
-              TotalInputSize = 10,
-              ConnectTimeout = GGPOConsts.DEFAULT_CONNECT_TIMEOUT      // A very long timeout period is OK!
-            });
-          }
         }
-      }, this.CancelToken);
+        catch (Exception ex)
+        {
+          //Log.Error("Unhandled exception while running the test session monitor!");
+          //Log.Error(ex.Message);
+          Log.Exception(ex);
 
+         // throw;
+        }
+      });
 
-      // throw new NotSupportedException("test session is not yet supported!");
     }
 
     return testTask;
@@ -196,15 +208,24 @@ public class SessionPrimer : IDisposable
   {
     Log.Info("The front door is closing....");
 
-    if (!CancelToken.IsCancellationRequested)
+    if (IsWorking)
     {
-      CTSource.Cancel();
-      Listener.Stop();
-
-      // Dirty trick to force network event.
-      using (var client = new TcpClient())
+      try
       {
-        client.Connect("127.0.0.1", Options.ServicePort);
+        IsWorking = false;
+        Listener.Stop();
+
+        // Dirty trick to force network event.
+        using (var client = new TcpClient())
+        {
+          client.Connect("127.0.0.1", Options.ServicePort);
+        }
+      }
+      catch (SocketException sex)
+      {
+        // This is OK, we kind of expect this one to happen....
+        // throw;
+        int x = 10;
       }
     }
   }

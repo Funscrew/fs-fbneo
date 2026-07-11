@@ -22,7 +22,8 @@
   </ItemGroup>
 
 
-  <!--Conditional Compilation Symbols-->
+  <!--Conditional
+  Compilation Symbols-->
   <PropertyGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
     <DefineConstants>OS_WINDOWS</DefineConstants>
   </PropertyGroup>
@@ -32,8 +33,10 @@
 
 
   <Target Name="CopyLibs" AfterTargets="Build">
-    <!--Example of conditional includes....-->
-    <!--<ItemGroup Condition="'$(OS)' == 'Windows_NT'">
+    <!--Example
+    of conditional includes....-->
+    <!--<ItemGroup
+    Condition="'$(OS)' == 'Windows_NT'">
       <NativeFiles Include="NativeLibs/win-x64/**/*.*" />
     </ItemGroup>
 
@@ -45,7 +48,14 @@
       <ExtraFiles Include="../libs/$(Configuration)/*.*" />
     </ItemGroup>
 
-    <Copy SourceFiles="@(ExtraFiles)" DestinationFiles="@(ExtraFiles->'$(OutputPath)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(ExtraFiles)"
+      DestinationFiles="@(ExtraFiles->'$(OutputPath)%(Filename)%(Extension)')"
+      SkipUnchangedFiles="true" />
+
+      <!-- <Copy
+      SourceFiles="@(ExtraFiles)"
+      DestinationFolder="$(PublishDir)"
+      SkipUnchangedFiles="true" /> -->
   </Target>
 
 </Project>
