@@ -200,7 +200,7 @@ public class TestContext
       ReplayPort = GGPOConsts.REPLAY_APPLIANCE_PORT,
       ServicePort = GGPOConsts.FRONT_DOOR_PORT
     };
-    var blaster = new SimUdp(TestBase.REPLAY_APPLIANCE_HOST, GGPOConsts.REPLAY_APPLIANCE_PORT, context.Clock, context.MsgQueue, false, TestBase.SIM_PING, TestBase.SIM_JITTER);
+    var blaster = new SimUdp(TestBase.REPLAY_APPLIANCE_HOST, GGPOConsts.REPLAY_APPLIANCE_PORT, context.Clock, context.MsgQueue, TestBase.SIM_PING, TestBase.SIM_JITTER);
     var res = new SimReplayAppliance(replayOps, blaster, context.Clock);
 
     return res;

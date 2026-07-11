@@ -17,7 +17,6 @@ namespace funscrewTesters
 
     public uint AvgPing { get; set; }
     public uint PingJitter { get; set; }
-    public bool IsBlocking { get; private set; }
     public IPEndPoint Endpoint { get; private set; }
 
     /// <summary>
@@ -27,7 +26,7 @@ namespace funscrewTesters
     public int DroppedPackets { get; private set; }
 
     // ----------------------------------------------------------------------------------------------------------------
-    public SimUdp(string host_, int port_, funscrew.IClockSource timeSource_, TestMessageQueue msgQueue_, bool isBlocking_, uint avgPing_, uint pingJitter_ = 0)
+    public SimUdp(string host_, int port_, funscrew.IClockSource timeSource_, TestMessageQueue msgQueue_, uint avgPing_, uint pingJitter_ = 0)
     {
       Host = host_;
       Port = port_;
@@ -40,7 +39,6 @@ namespace funscrewTesters
 
       AvgPing = avgPing_;
       PingJitter = pingJitter_;
-      IsBlocking = isBlocking_;
     }
 
     // NOTE: This doesn't really matter, just a name / IP will do.
@@ -67,9 +65,6 @@ namespace funscrewTesters
     // ----------------------------------------------------------------------------------------------------------------
     public int Receive(byte[] receiveBuffer, ref EndPoint remoteEP)
     {
-      // TODO: Implement blocking logic...
-      if (this.IsBlocking) { throw new NotImplementedException("do something about the blocking code!"); }
-
       SimUdpMessage? msg = MsgQueue.GetNextMessage(this);
       if (msg == null)
       {

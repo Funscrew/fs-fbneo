@@ -97,16 +97,8 @@ public class ReplayFile : IDisposable
     Path = path_;
 
     byte[] pathBytes = Encoding.UTF8.GetBytes(Path + '\0');
-
-    Log.Info("opening the file...");
-
     int code = ReplayFile_OpenWrite(ref _GameData, ref state, pathBytes, ref this.ReplayHandle);
-
-    Log.Info($"replay handle is: {this.ReplayHandle.ToInt64()}");
-    Log.Info($"Made the file, code is: {code}");
-
     ThrowIfNotOK(code);
-
 
     IsModeWrite = true;
   }

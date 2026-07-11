@@ -98,7 +98,7 @@ namespace funscrew
     public UdpBlaster(int localPort, IPAddress localAddress)
     {
       _Socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
-      _Socket.Blocking = true;
+      _Socket.Blocking = false;
       ReadSockets = new[] { _Socket };
 
       IPEndPoint bindEndPoint = new IPEndPoint(localAddress, localPort);

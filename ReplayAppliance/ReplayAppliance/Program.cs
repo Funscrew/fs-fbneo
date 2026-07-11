@@ -61,15 +61,12 @@ public partial class Program
                                             errs => 1);
 
 
-    // TEMP: ?
-    // return res;
+    return res;
 
     if (res != 0)
     {
       return res;
     }
-
-    return res;
 
     // NOTE: This is pretty much how echo client / replay appliance would work.
     InitializeClient();
@@ -189,8 +186,8 @@ public partial class Program
 
       Console.CancelKeyPress += (s, e) =>
       {
-        sp.EndListen();
         replayAppliance.EndWork();
+        sp.EndListen();
       };
 
       // Session Primer looks for TCP traffic to begin new sessions.
