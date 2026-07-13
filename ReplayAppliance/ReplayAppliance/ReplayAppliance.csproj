@@ -52,10 +52,10 @@
       DestinationFiles="@(ExtraFiles->'$(OutputPath)%(Filename)%(Extension)')"
       SkipUnchangedFiles="true" />
 
-      <!-- <Copy
+      <Copy
       SourceFiles="@(ExtraFiles)"
       DestinationFolder="$(PublishDir)"
-      SkipUnchangedFiles="true" /> -->
+      SkipUnchangedFiles="true" />
   </Target>
 
 </Project>

@@ -630,8 +630,8 @@ int InitDirectConnection(DirectConnectionOptions& ops, GGPOLogOptions& logOps)
   }
   catch (const std::exception&)
   {
-    throw std::exception("Could not parse local, remote, or replay address!");
   }
+    throw std::runtime_error("Could not parse local, remote, or replay address!");
 
   kNetVersion = NET_VERSION;
   kNetGame = 1;

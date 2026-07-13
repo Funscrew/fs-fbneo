@@ -1,10 +1,7 @@
 ﻿using CommandLine;
-using drewCo.Tools;
 using drewCo.Tools.Logging;
 using funscrew.Clients;
 using System.Diagnostics;
-using System.Linq;
-using System.Net.WebSockets;
 using System.Runtime.InteropServices;
 
 namespace funscrew;
@@ -12,17 +9,6 @@ namespace funscrew;
 // ========================================================================================================
 public partial class Program
 {
-  [Obsolete("will be removed.")]
-  enum EMode
-  {
-    Invalid = 0,
-    Echo,
-    Replay
-  }
-
-  [Obsolete("will be removed.")]
-  private static EMode ClientMode = EMode.Invalid;
-
   [DllImport("winmm.dll", EntryPoint = "timeBeginPeriod")]
   public static extern void TimeBeginPeriod(int t);
 
@@ -39,10 +25,6 @@ public partial class Program
   // REFACTOR: Move this elsehere....  Might not even want to use a const so mem can be dynamic for different games.....
   public const int INPUT_SIZE = 5;
   static byte[] TestInput = new byte[INPUT_SIZE * GGPOConsts.MAX_PLAYERS];
-
-  // NOTE: We are assuming one connected client still...
-  private const int RECONNECT_WAIT_TIME = 250;
-  private static double ReconnectTime = -1;
 
   private static Stopwatch Clock = default!;
 
@@ -62,84 +44,6 @@ public partial class Program
 
 
     return res;
-
-    if (res != 0)
-    {
-      return res;
-    }
-
-    // NOTE: This is pretty much how echo client / replay appliance would work.
-    InitializeClient();
-
-    // Game loop:
-    // No, this isn't meant to be a sophisticated timing scenario, just get us in the ballpark...
-    TimeBeginPeriod(1);
-
-    Clock = Stopwatch.StartNew();
-    const double FPS = 60.0d;
-    double frameTime = 1.0d / FPS;
-    double nextFrameTime = 0.0d;
-
-
-    int frameCount = 0;
-    while (true)
-    {
-      if (Client.IsComplete)
-      {
-        // Exit the program.
-        // Probably finalize logging, etc. and then deal with it.
-        throw new InvalidOperationException("Not sure what to do here....");
-      }
-
-      double elapsed = Clock.Elapsed.TotalSeconds;
-      if (elapsed < nextFrameTime)
-      {
-        if (ReconnectTime != -1 && elapsed >= ReconnectTime)
-        {
-          Log.Info("complete!");
-          return 0;
-
-          // TEMP: I am disabling this for now....
-          //Log.Info("Putting the client back into sync state, waiting for remote connection...");
-          //ReconnectTime = -1.0d;
-          //InitializeClient();
-
-        }
-        else
-        {
-          // This is where the endpoints are polled for data, events are sent out, etc.
-          // Because this runs at higher frequency than 'SyncInputs (RunFrame)' we
-          // can expect that many events, text, and other data messages to come through
-          // outside of the frame boundaries.
-          Client.Idle();
-        }
-      }
-      else
-      {
-        // This is so we send the correct data each time.
-        // Following the FC example, we write our inputs at the p1 address
-        // and it will pass it on to the correct input queue.
-        for (int i = 0; i < INPUT_SIZE; i++)
-        {
-          TestInput[0] = 0;
-        }
-
-        // Send + receive inputs across the network.
-        // NOTE: The bytes in TestInput will be overwritten during this process!  This is
-        // by design!  For emulators, etc. it is convenient to always use the p1 control scheme,
-        // even if you are repping p2!
-        // NOTE: RunFrame() syncs the inputs, it doesn't do any network stuff until the
-        // input sync is complete.  After that it will call DoPoll(0), but is that necessary?
-        // --> Seems to me that we should poll immediately before syncing inputs, if anything, but that
-        // may take too long... what about putting the netcode on a different thread.
-        bool synced = RunFrame(Client, TestInput);
-
-        // This is where we will increment the frame!
-        ++frameCount;
-        nextFrameTime += frameTime;
-      }
-
-    }
   }
 
 
@@ -233,6 +137,9 @@ public partial class Program
   {
     Log.Info("Setting up echo client....");
 
+
+
+
     CLIOptions = ops;
 
     ClientOptions = new GGPOClientOptions(ops.GameName, (byte)(ops.PlayerNumber - 1), ops.LocalPort, ops.ProtocolVersion, ops.SessionId)
@@ -250,9 +157,65 @@ public partial class Program
 
     ClientOptions.SetReplayOption(ops.ReplayAddress, ops.ReplayTimeout);
 
-    ClientMode = EMode.Echo;
+    // NOTE: This is pretty much how echo client / replay appliance would work.
+    InitializeClient();
 
-    return 0;
+    // Game loop:
+    // No, this isn't meant to be a sophisticated timing scenario, just get us in the ballpark...
+    TimeBeginPeriod(1);
+
+    Clock = Stopwatch.StartNew();
+    const double FPS = 60.0d;
+    double frameTime = 1.0d / FPS;
+    double nextFrameTime = 0.0d;
+
+
+    int frameCount = 0;
+    while (true)
+    {
+      if (Client.IsComplete)
+      {
+        // Exit the program.
+        // Probably finalize logging, etc. and then deal with it.
+        throw new InvalidOperationException("Not sure what to do here....");
+      }
+
+      double elapsed = Clock.Elapsed.TotalSeconds;
+      if (elapsed < nextFrameTime)
+      {
+        // This is where the endpoints are polled for data, events are sent out, etc.
+        // Because this runs at higher frequency than 'SyncInputs (RunFrame)' we
+        // can expect that many events, text, and other data messages to come through
+        // outside of the frame boundaries.
+        Client.Idle();
+      }
+      else
+      {
+        // This is so we send the correct data each time.
+        // Following the FC example, we write our inputs at the p1 address
+        // and it will pass it on to the correct input queue.
+        for (int i = 0; i < INPUT_SIZE; i++)
+        {
+          TestInput[0] = 0;
+        }
+
+        // Send + receive inputs across the network.
+        // NOTE: The bytes in TestInput will be overwritten during this process!  This is
+        // by design!  For emulators, etc. it is convenient to always use the p1 control scheme,
+        // even if you are repping p2!
+        // NOTE: RunFrame() syncs the inputs, it doesn't do any network stuff until the
+        // input sync is complete.  After that it will call DoPoll(0), but is that necessary?
+        // --> Seems to me that we should poll immediately before syncing inputs, if anything, but that
+        // may take too long... what about putting the netcode on a different thread.
+        bool synced = RunFrame(Client, TestInput);
+
+        // This is where we will increment the frame!
+        ++frameCount;
+        nextFrameTime += frameTime;
+      }
+
+    }
+
   }
 
   // ------------------------------------------------------------------------------------------------------
@@ -265,55 +228,45 @@ public partial class Program
       Client.Dispose();
     }
 
-    switch (ClientMode)
+    var cliOps = CLIOptions as InputEchoOptions;
+    var udp = new UdpBlaster(ClientOptions.LocalPort, UdpBlaster.NO_DELAY);
+    Client = new InputEchoClient(ClientOptions, cliOps, udp, new ClockTimer());
+
+    var local = Client.AddLocalPlayer(cliOps.PlayerName, (byte)(ClientOptions.PlayerIndex), null);
+
+    if (string.IsNullOrWhiteSpace(cliOps.RemotePlayers))
     {
-
-      case EMode.Echo:
-        {
-          var cliOps = CLIOptions as InputEchoOptions;
-          var udp = new UdpBlaster(ClientOptions.LocalPort, UdpBlaster.NO_DELAY);
-          Client = new InputEchoClient(ClientOptions, cliOps, udp, new ClockTimer());
-
-          var local = Client.AddLocalPlayer(cliOps.PlayerName, (byte)(ClientOptions.PlayerIndex), null);
-
-          if (string.IsNullOrWhiteSpace(cliOps.RemotePlayers))
-          {
-            throw new InvalidOperationException("Missing or invalid argument for 'remote'!");
-          }
-          var remotes = cliOps.RemotePlayers.Split(",");
-          if (remotes.Length > 1)
-          {
-            throw new InvalidOperationException("Only one remote player is supported at this time!");
-          }
-
-          foreach (var item in remotes)
-          {
-            var rOps = new RemoteEndpointData(item);
-
-            // HACK: We are going to auto-change the remote player index here if it is incorrect!
-            // Keep in mind that this really only supports two players total, so it is OK!
-            if (rOps.PlayerNumber == cliOps.PlayerNumber)
-            {
-              rOps.PlayerNumber = (byte)(cliOps.PlayerNumber == 1 ? 2 : 1);
-            }
-
-
-            Client.AddRemotePlayer(rOps);
-          }
-
-          if (ClientOptions.ReplayHost != null)
-          {
-            Client.AddReplayAppliance(ClientOptions.ReplayHost, ClientOptions.ReplayPort);
-          }
-
-          // No more endpoints can be added!
-          Client.Lock();
-        }
-        break;
-
-      default:
-        throw new ArgumentOutOfRangeException($"Unsupported client mode: {ClientMode}");
+      throw new InvalidOperationException("Missing or invalid argument for 'remote'!");
     }
+    var remotes = cliOps.RemotePlayers.Split(",");
+    if (remotes.Length > 1)
+    {
+      throw new InvalidOperationException("Only one remote player is supported at this time!");
+    }
+
+    foreach (var item in remotes)
+    {
+      var rOps = new RemoteEndpointData(item);
+
+      // HACK: We are going to auto-change the remote player index here if it is incorrect!
+      // Keep in mind that this really only supports two players total, so it is OK!
+      if (rOps.PlayerNumber == cliOps.PlayerNumber)
+      {
+        rOps.PlayerNumber = (byte)(cliOps.PlayerNumber == 1 ? 2 : 1);
+      }
+
+
+      Client.AddRemotePlayer(rOps);
+    }
+
+    if (ClientOptions.ReplayHost != null)
+    {
+      Client.AddReplayAppliance(ClientOptions.ReplayHost, ClientOptions.ReplayPort);
+    }
+
+    // No more endpoints can be added!
+    Client.Lock();
+
   }
 
   // ------------------------------------------------------------------------------------------------------
@@ -358,34 +311,7 @@ public partial class Program
   // ------------------------------------------------------------------------------------------------------
   private static unsafe bool OnEchoClientEvent(ref GGPOEvent evt)
   {
-    // LEGACY:
-    // This is just some old lumpy test code.  Leaving it in a few more revisions for historical reasons.
     return true;
-
-    //if (evt.event_code == EEventCode.GGPO_EVENTCODE_DATAGRAM)
-    //{
-    //  if (evt.u.datagram.code == (byte)EDatagramCode.DATAGRAM_CODE_CHAT)
-    //  {
-    //    fixed (byte* pData = evt.u.datagram.data)
-    //    {
-    //      string text = AnsiHelpers.PtrToFixedLengthString(pData, evt.u.datagram.dataSize, GGPOConsts.MAX_GGPO_DATA_SIZE);
-    //      Log.Info($"Text is: {text}");
-    //    }
-    //  }
-
-    //  else if (evt.u.datagram.code == (byte)EDatagramCode.DATAGRAM_CODE_DISCONNECT)
-    //  {
-    //    Log.Info("disconnect notice was received...");
-    //    ReconnectTime = Clock.Elapsed.TotalSeconds + ((float)RECONNECT_WAIT_TIME / 1000.0f);
-    //  }
-
-    //  else
-    //  {
-    //    int angaweghag = 10;
-    //  }
-    //}
-
-    //return true;
   }
 
 
@@ -394,8 +320,6 @@ public partial class Program
   {
     // We run the next frame on rollback, or it all gets fucked!
     RunFrame(Client, TestInput);
-
-    //Log.Info($"A rollback was detected!");
   }
 
 
