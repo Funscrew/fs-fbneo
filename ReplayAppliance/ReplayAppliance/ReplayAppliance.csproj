@@ -18,7 +18,13 @@
 
   <ItemGroup>
     <PackageReference Include="CommandLineParser" Version="2.9.1" />
-    <PackageReference Include="drewCo.Tools" Version="1.5.0" />
+    <PackageReference Include="drewCo.CLI" Version="1.0.0" />
+    <PackageReference Include="drewCo.Tools" Version="1.5.1.1" />
+  </ItemGroup>
+
+
+  <ItemGroup>
+    <Folder Include="CLI\" />
   </ItemGroup>
 
 
@@ -48,14 +54,9 @@
       <ExtraFiles Include="../libs/$(Configuration)/*.*" />
     </ItemGroup>
 
-    <Copy SourceFiles="@(ExtraFiles)"
-      DestinationFiles="@(ExtraFiles->'$(OutputPath)%(Filename)%(Extension)')"
-      SkipUnchangedFiles="true" />
+    <Copy SourceFiles="@(ExtraFiles)" DestinationFiles="@(ExtraFiles->'$(OutputPath)%(Filename)%(Extension)')" SkipUnchangedFiles="true" />
 
-      <Copy
-      SourceFiles="@(ExtraFiles)"
-      DestinationFolder="$(PublishDir)"
-      SkipUnchangedFiles="true" />
+      <Copy SourceFiles="@(ExtraFiles)" DestinationFolder="$(PublishDir)" SkipUnchangedFiles="true" />
   </Target>
 
 </Project>
