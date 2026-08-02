@@ -181,7 +181,7 @@ public class TestContext
     var context = this;
     SimReplayAppliance replayAppliance = CreateTestReplayAppliance();
 
-    var replayOps = new ReplayOptions();
+    var replayOps = new ReplayApplianceOptions();
     var frontDoor = new SimSessionPrimer(replayOps, replayAppliance);
     context.SetSessionPrimer(frontDoor);
     context.SetReplayAppliance(replayAppliance);
@@ -194,7 +194,7 @@ public class TestContext
   {
     var context = this;
 
-    var replayOps = new ReplayOptions()
+    var replayOps = new ReplayApplianceOptions()
     {
       ReplayDataDir = "replay-data",
       ReplayPort = GGPOConsts.REPLAY_APPLIANCE_PORT,

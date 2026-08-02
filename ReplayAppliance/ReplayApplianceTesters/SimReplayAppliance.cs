@@ -9,7 +9,7 @@ namespace funscrewTesters
     private byte[] _SendBuffer = new byte[0x400];
 
     // --------------------------------------------------------------------------------------------------------------------------
-    public SimSessionPrimer(ReplayOptions ops_, ReplayAppliance replayAppliance_)
+    public SimSessionPrimer(ReplayApplianceOptions ops_, ReplayAppliance replayAppliance_)
       : base(ops_, replayAppliance_)
     { }
 
@@ -47,7 +47,7 @@ namespace funscrewTesters
     public int SessionsEnded { get; set; }
 
     // ----------------------------------------------------------------------------------------------------------------
-    public SimReplayAppliance(ReplayOptions ops_, IUdpBlaster udp_, IClockSource clock_)
+    public SimReplayAppliance(ReplayApplianceOptions ops_, IUdpBlaster udp_, IClockSource clock_)
       : base(ops_, udp_, clock_)
     { }
 

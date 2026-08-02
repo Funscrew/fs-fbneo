@@ -1,19 +1,16 @@
-﻿using System;
-using System.ComponentModel.DataAnnotations;
-using System.Net.Sockets;
+﻿using System.Net.Sockets;
 using System.Text;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 
 namespace funscrew;
 
 // ============================================================================================================================
 public class SessionRequester
 {
-  public SessionRequestOptions Options { get; private set; }
+  public SessionRequest Options { get; private set; }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public SessionRequester(SessionRequestOptions options_)
+  public SessionRequester(SessionRequest options_)
   {
     Options = options_;
   }
@@ -34,8 +31,8 @@ public class SessionRequester
         {
           GameName = Options.GameName,
           GameVersion = Options.GameVersion,
-          MaxPlayerCount = Options.MaxPlayerCount,
-          TotalInputSize = Options.TotalInputSize,
+          MaxPlayerCount = (ushort)Options.MaxPlayerCount,
+          TotalInputSize = (ushort)Options.TotalInputSize,
           PlayerNames = (from x in Options.PlayerNames.Split(",") select x.Trim()).ToArray()
         };
         string argsString = JsonSerializer.Serialize(args);

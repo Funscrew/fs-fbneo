@@ -26,11 +26,7 @@ public class ReplayAppliance
   protected List<ReplaySession> ActiveSessions = new List<ReplaySession>(0xff);
   protected List<ReplaySession> CompleteSessions = new List<ReplaySession>(0xff);
 
-  private ReplayOptions Options = null!;
-
-  //private CancellationTokenSource CTSource = new CancellationTokenSource();
-  //private CancellationToken CancelToken = default!;
-
+  private ReplayApplianceOptions Options = null!;
 
   private IClockSource Clock = null!;
   public IUdpBlaster UDP { get; private set; } = null!;
@@ -44,7 +40,7 @@ public class ReplayAppliance
   public bool IsWorking { get; private set; } = true;
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public ReplayAppliance(ReplayOptions ops_, IUdpBlaster udp_, IClockSource clock_)
+  public ReplayAppliance(ReplayApplianceOptions ops_, IUdpBlaster udp_, IClockSource clock_)
   {
     Options = ops_;
     UDP = udp_;

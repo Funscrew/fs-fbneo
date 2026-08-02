@@ -16,7 +16,7 @@ namespace funscrew;
 public class SessionPrimer : IDisposable
 {
 
-  public ReplayOptions Options { get; private set; }
+  public ReplayApplianceOptions Options { get; private set; }
 
   private TcpListener Listener = null!;
   protected ReplayAppliance ReplayAppliance = null!;
@@ -26,7 +26,7 @@ public class SessionPrimer : IDisposable
   public void CancelWork() { this.IsWorking = false; }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public SessionPrimer(ReplayOptions options_, ReplayAppliance replayAppliance_)
+  public SessionPrimer(ReplayApplianceOptions options_, ReplayAppliance replayAppliance_)
   {
     Options = options_;
     ReplayAppliance = replayAppliance_;

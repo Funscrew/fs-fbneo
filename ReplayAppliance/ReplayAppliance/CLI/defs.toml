@@ -1,7 +1,7 @@
 # These are all commands that were converted from the project "ReplayAppliance"
 
 # @ALIAS session-request
-[SessionRequest]
+[SessionRequestOptions]
 
 # Host address to make the request on.
 Host = "localhost"
@@ -20,7 +20,7 @@ PlayerNames = "Echoman, Screwie"
 
 
 # @ALIAS replay-appliance
-[ReplayAppliance]
+[ReplayApplianceOptions]
 
 # (TCP) Port to listen on for session start requests.
 # @ALIAS --service-port
@@ -82,3 +82,6 @@ ReplayTimeout = 5000
 # Session ID.  This should match between clients and should be unique.
 # @ALIAS --session-id
 SessionId = 12345
+
+ProtocolVersion = 4
+

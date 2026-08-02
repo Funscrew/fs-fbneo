@@ -15,7 +15,7 @@ public partial class Program
   [DllImport("winmm.dll", EntryPoint = "timeEndPeriod")]
   public static extern void TimeEndPeriod(int t);
 
-  static ClientOptions CLIOptions = default!;
+  static InputEchoOptions CLIOptions = default!;
   static GGPOClientOptions ClientOptions = default!;
   static GGPOClient Client = null!;
 
@@ -36,22 +36,42 @@ public partial class Program
 
     Log.Info("Welcome to ReplayAppliance");
 
-    int res = Parser.Default.ParseArguments<SessionRequestOptions, ReplayOptions, InputEchoOptions>(args).MapResult(
-                                            (SessionRequestOptions ops) => TestSessionRequest(ops),
-                                            (ReplayOptions ops) => RunReplayAppliance(ops),
-                                            (InputEchoOptions ops) => RunEchoClient(ops),
-                                            errs => 1);
+
+    var p = new drewCo.CLI.Parser();
+    p.Register(new SessionRequest(), t => SessionRequest.FromToml(t), TestSessionRequest);
+    p.Register(new ReplayApplianceOptions(), t => ReplayApplianceOptions.FromToml(t), RunReplayAppliance);
+    p.Register(new InputEchoOptions(), t => InputEchoOptions.FromToml(t), RunEchoClient);
 
 
-    return res;
+    try
+    {
+      int res = p.ParseCommandLine(args);
+      return res;
+    }
+    catch (Exception ex)
+    {
+      Log.Error("Unhandled exception!");
+      Log.Error(ex.Message);
+      return 1;
+    }
+
+
+    //int res = Parser.Default.ParseArguments<SessionRequestOptions, ReplayOptions, InputEchoOptions>(args).MapResult(
+    //                                        (SessionRequestOptions ops) => TestSessionRequest(ops),
+    //                                        (ReplayOptions ops) => RunReplayAppliance(ops),
+    //                                        (InputEchoOptions ops) => RunEchoClient(ops),
+    //                                        errs => 1);
+
+
+    //return res;
   }
 
 
 
   // --------------------------------------------------------------------------------------------------------------------------
-  private static int TestSessionRequest(SessionRequestOptions ops)
+  private static int TestSessionRequest(object ops)
   {
-    var sr = new SessionRequester(ops);
+    var sr = new SessionRequester(ops as SessionRequest);
 
     try
     {
@@ -76,14 +96,15 @@ public partial class Program
   }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  private static int RunReplayAppliance(ReplayOptions ops)
+  private static int RunReplayAppliance(object arg)
   {
+    var ops = (ReplayApplianceOptions)arg;
     try
     {
       Log.Info("Setting up replay appliance...");
 
       var udp = new UdpBlaster(ops.ReplayPort, UdpBlaster.ONE_SECOND);
-      ReplayAppliance replayAppliance = new ReplayAppliance(ops, udp, new ClockTimer());
+      var replayAppliance = new ReplayAppliance(ops, udp, new ClockTimer());
       Task raWorkTask = replayAppliance.BeginWork();
 
       var sp = new SessionPrimer(ops, replayAppliance);
@@ -133,16 +154,15 @@ public partial class Program
   }
 
   // ------------------------------------------------------------------------------------------------------
-  private static unsafe int RunEchoClient(InputEchoOptions ops)
+  private static unsafe int RunEchoClient(object args)
   {
+    var ops = (InputEchoOptions)args;
+
     Log.Info("Setting up echo client....");
-
-
-
 
     CLIOptions = ops;
 
-    ClientOptions = new GGPOClientOptions(ops.GameName, (byte)(ops.PlayerNumber - 1), ops.LocalPort, ops.ProtocolVersion, ops.SessionId)
+    ClientOptions = new GGPOClientOptions(ops.GameName, (byte)(ops.PlayerNumber - 1), ops.LocalPort, (uint)ops.ProtocolVersion, (ulong)(ops.SessionId))
     {
       Callbacks = new GGPOSessionCallbacks()
       {

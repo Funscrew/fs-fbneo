@@ -110,18 +110,18 @@ public class SessionRequest : ICommand
   }
 }
 
-public class ReplayAppliance : ICommand
+public class ReplayApplianceOptions : ICommand
 {
   public Int32 ServicePort = 5000;
   public Int32 ReplayPort = 7002;
   public Boolean UseTestSession = false;
   public String ReplayDataDir = "replay-data";
 
-  public ReplayAppliance() { }
+  public ReplayApplianceOptions() { }
 
-  public static ReplayAppliance FromToml(TomlTable table)
+  public static ReplayApplianceOptions FromToml(TomlTable table)
   {
-    var res = new ReplayAppliance();
+    var res = new ReplayApplianceOptions();
     res.ServicePort = table.GetInt("ServicePort", 5000);
     res.ReplayPort = table.GetInt("ReplayPort", 7002);
     res.UseTestSession = table.GetBool("usetestsession", false);
@@ -192,6 +192,8 @@ public class InputEchoOptions : ICommand
   public Int32 LocalPort = 7000;
   public String ReplayAddress = "string.Empty";
   public Int32 ReplayTimeout = 5000;
+
+  public Int32 ProtocolVersion = 4;
   public Int32 SessionId = 12345;
 
   public InputEchoOptions() { }
