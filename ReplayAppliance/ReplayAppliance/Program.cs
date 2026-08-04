@@ -1,5 +1,4 @@
-﻿using CommandLine;
-using drewCo.Tools.Logging;
+﻿using drewCo.Tools.Logging;
 using funscrew.Clients;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
@@ -38,14 +37,14 @@ public partial class Program
 
 
     var p = new drewCo.CLI.Parser();
-    p.Register(new SessionRequest(), t => SessionRequest.FromToml(t), TestSessionRequest);
+    p.Register(new SessionRequestOptions(), t => SessionRequestOptions.FromToml(t), TestSessionRequest);
     p.Register(new ReplayApplianceOptions(), t => ReplayApplianceOptions.FromToml(t), RunReplayAppliance);
     p.Register(new InputEchoOptions(), t => InputEchoOptions.FromToml(t), RunEchoClient);
 
 
     try
     {
-      int res = p.ParseCommandLine(args);
+      int res = p.ExectuteCommandLine(args);
       return res;
     }
     catch (Exception ex)
@@ -54,16 +53,6 @@ public partial class Program
       Log.Error(ex.Message);
       return 1;
     }
-
-
-    //int res = Parser.Default.ParseArguments<SessionRequestOptions, ReplayOptions, InputEchoOptions>(args).MapResult(
-    //                                        (SessionRequestOptions ops) => TestSessionRequest(ops),
-    //                                        (ReplayOptions ops) => RunReplayAppliance(ops),
-    //                                        (InputEchoOptions ops) => RunEchoClient(ops),
-    //                                        errs => 1);
-
-
-    //return res;
   }
 
 
@@ -71,7 +60,7 @@ public partial class Program
   // --------------------------------------------------------------------------------------------------------------------------
   private static int TestSessionRequest(object ops)
   {
-    var sr = new SessionRequester(ops as SessionRequest);
+    var sr = new SessionRequester(ops as SessionRequestOptions);
 
     try
     {

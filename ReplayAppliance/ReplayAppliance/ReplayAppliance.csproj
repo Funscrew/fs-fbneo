@@ -17,8 +17,7 @@
 
 
   <ItemGroup>
-    <PackageReference Include="CommandLineParser" Version="2.9.1" />
-    <PackageReference Include="drewCo.CLI" Version="1.0.0" />
+    <PackageReference Include="drewCo.CLI" Version="1.0.1.1" />
     <PackageReference Include="drewCo.Tools" Version="1.5.1.1" />
   </ItemGroup>
 

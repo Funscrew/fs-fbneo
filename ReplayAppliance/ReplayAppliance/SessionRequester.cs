@@ -7,10 +7,10 @@ namespace funscrew;
 // ============================================================================================================================
 public class SessionRequester
 {
-  public SessionRequest Options { get; private set; }
+  public SessionRequestOptions Options { get; private set; }
 
   // --------------------------------------------------------------------------------------------------------------------------
-  public SessionRequester(SessionRequest options_)
+  public SessionRequester(SessionRequestOptions options_)
   {
     Options = options_;
   }

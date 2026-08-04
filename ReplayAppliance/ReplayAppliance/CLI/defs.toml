@@ -4,9 +4,11 @@
 [SessionRequestOptions]
 
 # Host address to make the request on.
+# @ALIAS --host
 Host = "localhost"
 
 #(TCP) Port to listen on for session start requests.
+# @ALIAS --port
 Port = 5000
 
 # Request timeout in milliseconds
@@ -67,12 +69,11 @@ InvertLeftRightControls = true
 # @ALIAS --delay-frames
 DelayFrameCount = 30
 
-
+# @ALIAS --local-port
 LocalPort = 7000
 
 # Address of the replay applicance in the form of: <host>:<port>
 # @ALIAS --replay-options
-# @REQUIRED
 ReplayAddress = ""
 
 # Time in ms. that attempts to sync will time out.  Gameplay will continue as normal, but no replay data will be sent.
