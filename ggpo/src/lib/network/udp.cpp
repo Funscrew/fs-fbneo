@@ -30,9 +30,8 @@ CreateSocket(uint16 bind_port, int retries)
     sin.sin_port = htons(port);
 
     auto bindRes = bind(s, (sockaddr*)&sin, sizeof sin) ;
-    if (bindRes == SOCKET_ERROR) { 
-      // TODO: Some kind of better logging here!
-      ASSERT(bindRes != SOCKET_ERROR, "Error creating the socket!");
+    if (bindRes == SOCKET_ERROR) {
+      Utils::LogIt(CATEGORY_UDP, "Error binding to port: %d.", port);
     }
     else {
       Utils::LogIt(CATEGORY_UDP, "Udp bound to port: %d.", port);
